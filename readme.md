@@ -55,10 +55,17 @@ monster-roguelike/
 
 ## 🔹 ゲームの起動方法
 
-本ゲームは JavaScript の ESモジュール（`type="module"`）を使用しているため、HTMLファイルを直接ダブルクリックしてブラウザで開いても遊ぶことができません（CORSエラーが発生します）。
-必ず**ローカルサーバー**を立ち上げて起動してください。
+### 【方法1】GitHub Pagesで遊ぶ（Webですぐにプレイ）
+以下のリンクから、ブラウザ上ですぐにゲームを遊ぶことができます（ローカルサーバーの立ち上げやインストールは不要です）。
+👉 **[Monster Rogue をプレイする](https://wakapai-game.github.io/monster-roguelike/monster_roguelike_web/)**
 
-### 【方法】Mac標準のPythonを使う（推奨）
+---
+
+### 【方法2】ローカル環境で起動する（開発用）
+本ゲームは JavaScript の ESモジュール（`type="module"`）を使用しているため、PC上でHTMLファイルを直接ダブルクリックして開いても遊ぶことができません（CORSエラーが発生します）。
+ローカルで動作確認・開発を行う場合は、必ず**ローカルサーバー**を立ち上げて起動してください。
+
+#### Mac標準のPythonを使う（推奨）
 
 1. ターミナルを開き、ゲームのWeb版フォルダ（`monster_roguelike_web`）に移動します。
    ```bash

@@ -6,10 +6,13 @@ import {
   screenInventory, screenParty, screenHub,
   invSkillsContent, invFoodContent, invTargetSelection,
   invRosterGrid, invTargetMsg, btnCancelUse,
-  partyDetailsGrid
+  partyDetailsGrid, btnCloseInventory, btnCloseParty
 } from './dom.js';
 
 let activeInvItem = null;
+
+btnCloseInventory.onclick = () => switchScreen(screenInventory, appState.returnScreen || screenHub);
+btnCloseParty.onclick = () => switchScreen(screenParty, appState.returnScreen || screenHub);
 
 export function openInventory(fromScreen) {
     appState.returnScreen = fromScreen;
@@ -88,7 +91,12 @@ export function applyItemToMonster(m) {
         const itemData = MAP_ITEMS_DATA.find(i => i.id === itemId);
 
         if (!m.params) m.params = { size:0, hardness:0, weight:0, smartness:0 };
-        m.params[itemData.effect.target_stat] = (m.params[itemData.effect.target_stat] || 0) + itemData.effect.value;
+        const beforeVal = m.params[itemData.effect.target_stat] || 0;
+        m.params[itemData.effect.target_stat] = beforeVal + itemData.effect.value;
+        const afterVal = m.params[itemData.effect.target_stat];
+        if (typeof m.logGrowth === 'function') {
+            m.logGrowth(itemId, itemData.effect.target_stat, beforeVal, afterVal);
+        }
 
         if (typeof m.recalculateStats === 'function') {
             m.recalculateStats();
@@ -114,6 +122,23 @@ btnCancelUse.onclick = () => {
     document.querySelectorAll('.inv-item-row').forEach(e => e.classList.remove('selected'));
     activeInvItem = null;
 };
+
+function renderGrowthLog(monster) {
+    const log = monster.growth_log;
+    if (!log || log.length === 0) return '';
+    const recent = log.slice(-5).reverse();
+    const rows = recent.map(e => {
+        const date = new Date(e.timestamp);
+        const time = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
+        return `<div style="font-size:0.7rem; color:#94a3b8; padding:2px 0;">${time} | ${e.param}: ${e.before} -> ${e.after}</div>`;
+    }).join('');
+    return `
+        <div style="margin-top:10px; border-top:1px dashed #334155; padding-top:8px;">
+            <div style="font-size:0.85rem; font-weight:bold; color:#cbd5e1; margin-bottom:5px;">育成記録 (Growth Log)</div>
+            ${rows}
+        </div>
+    `;
+}
 
 export function renderParty() {
     partyDetailsGrid.innerHTML = '';
@@ -153,6 +178,7 @@ export function renderParty() {
                 <div style="font-size:0.85rem; font-weight:bold; color:#cbd5e1; margin-bottom:5px;">Equipped Skills</div>
                 <div class="party-skills">${skillsHtml}</div>
             </div>
+            ${renderGrowthLog(data)}
         `;
         partyDetailsGrid.appendChild(card);
     });

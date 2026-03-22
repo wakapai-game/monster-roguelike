@@ -193,7 +193,26 @@ export function showAttackPhase(monster) {
     btn.className = 'btn skill-btn';
     let stCostTxt = skillData.cost_st > 0 ? ` [ST:${skillData.cost_st}]` : '';
     let isBrokeWarn = (monster.is_break && skillData.cost_st > 0) ? ' <span style="color:#ef4444;">★HP自傷</span>' : '';
-    btn.innerHTML = `${skillData.name}${stCostTxt}${isBrokeWarn}`;
+    
+    let affinityBadge = '';
+    if (skillData.category === "attack" || skillData.category === "trap") {
+        const defender = appState.timeline.p2_active;
+        if (defender) {
+            const s_elem = skillData.element || "none";
+            const multi_main = appState.engine.getAffinityMultiplier(s_elem, defender.main_element);
+            const multi_sub = appState.engine.getAffinityMultiplier(s_elem, defender.sub_element);
+            let affinity_mult = multi_main * multi_sub;
+            if (multi_main > 1.0 && multi_sub > 1.0) affinity_mult = 4.0;
+
+            if (affinity_mult > 1.0) {
+                affinityBadge = ' <span style="color:#ef4444; font-size:0.7rem; border:1px solid #ef4444; padding:0 3px; border-radius:3px; margin-left:5px;">バツグン</span>';
+            } else if (affinity_mult < 1.0) {
+                affinityBadge = ' <span style="color:#94a3b8; font-size:0.7rem; border:1px solid #94a3b8; padding:0 3px; border-radius:3px; margin-left:5px;">いまいち</span>';
+            }
+        }
+    }
+    
+    btn.innerHTML = `${skillData.name}${affinityBadge}${stCostTxt}${isBrokeWarn}`;
     btn.onclick = () => {
         actionMenu.classList.add('hide');
         executeAction(1, monster, appState.timeline.p2_active, skillId);
@@ -206,7 +225,23 @@ export function showAttackPhase(monster) {
 
 export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
   const enemySkillData = appState.engine.getSkill(enemySkillId);
-  actionPhaseHeader.innerHTML = `<span style="color:#fca5a5; font-size:1.1em;">DEFENSE PHASE (敵の攻撃が来る！)</span><br><span style="font-size:0.85rem; font-weight:normal;">${enemyAttacker.name} の ${enemySkillData.name}</span>`;
+  
+  let affinityBadge = '';
+  if (enemySkillData.category === "attack" || enemySkillData.category === "trap") {
+      const s_elem = enemySkillData.element || "none";
+      const multi_main = appState.engine.getAffinityMultiplier(s_elem, playerTarget.main_element);
+      const multi_sub = appState.engine.getAffinityMultiplier(s_elem, playerTarget.sub_element);
+      let affinity_mult = multi_main * multi_sub;
+      if (multi_main > 1.0 && multi_sub > 1.0) affinity_mult = 4.0;
+
+      if (affinity_mult > 1.0) {
+          affinityBadge = ' <span style="color:#ef4444; font-weight:bold; font-size:0.9rem;">[バツグン]</span>';
+      } else if (affinity_mult < 1.0) {
+          affinityBadge = ' <span style="color:#94a3b8; font-weight:bold; font-size:0.9rem;">[いまいち]</span>';
+      }
+  }
+
+  actionPhaseHeader.innerHTML = `<span style="color:#fca5a5; font-size:1.1em;">DEFENSE PHASE (敵の攻撃が来る！)</span><br><span style="font-size:0.85rem; font-weight:normal;">${enemyAttacker.name} の ${enemySkillData.name}${affinityBadge}</span>`;
   actionPhaseHeader.style.background = "rgba(239, 68, 68, 0.2)";
   actionPhaseHeader.style.borderColor = "#ef4444";
   actionPhaseHeader.style.color = "white";

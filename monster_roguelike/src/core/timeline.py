@@ -1,6 +1,8 @@
 from typing import List, Tuple
 from src.models.monster import Monster
 
+DEFAULT_SPD = 10
+
 class Timeline:
     GAUGE_MAX = 100.0
 
@@ -26,9 +28,9 @@ class Timeline:
 
             # ゲージ進行 (SPDを加算)
             if self.p1_active:
-                self.p1_active.gauge += self.p1_active.stats.get("spd", 10)
+                self.p1_active.gauge += self.p1_active.stats.get("spd", DEFAULT_SPD)
             if self.p2_active:
-                self.p2_active.gauge += self.p2_active.stats.get("spd", 10)
+                self.p2_active.gauge += self.p2_active.stats.get("spd", DEFAULT_SPD)
 
     def on_action_completed(self, player_num: int):
         """行動完了時の処理・控えのST回復"""
@@ -46,6 +48,8 @@ class Timeline:
     def swap_active(self, player_num: int, new_active_index: int):
         """モンスターの交代とペナルティ(ゲージ0)処理"""
         team = self.p1_monsters if player_num == 1 else self.p2_monsters
+        if new_active_index < 0 or new_active_index >= len(team) or not team[new_active_index]:
+            return False
         new_active = team[new_active_index]
         if new_active.current_hp <= 0:
             return False # 倒れているモンスターには交代不可

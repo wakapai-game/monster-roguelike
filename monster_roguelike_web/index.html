@@ -63,6 +63,14 @@
       <button id="btn-submit-name" class="btn primary-btn pulse-glow">決定</button>
     </section>
 
+    <!-- 画面0.6.5: モンスター受け渡しイベント画面 -->
+    <section id="screen-starter-event" class="screen full-center hide glass-panel">
+      <h2>WELCOME to the TOWER</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px;" id="starter-event-msg">あなたの冒険のパートナーとなる3匹のモンスターが授けられた！</p>
+      <div id="starter-event-grid" class="monster-grid" style="margin-bottom: 30px; justify-content: center;"></div>
+      <button id="btn-starter-event-proceed" class="btn primary-btn pulse-glow">拠点へ進む</button>
+    </section>
+
     <!-- 画面0.7: 卵選択画面 -->
     <section id="screen-egg" class="screen full-center hide glass-panel">
       <h2>Select Your Starter Egg</h2>
@@ -85,6 +93,8 @@
       <div style="display:flex; justify-content:center; gap:20px; margin-bottom:30px;">
         <button id="btn-hub-party" class="btn skill-btn active-tab" style="font-size:1.1rem; padding:10px 20px;">PARTY</button>
         <button id="btn-hub-inventory" class="btn skill-btn" style="font-size:1.1rem; padding:10px 20px;">INVENTORY</button>
+        <button id="save-btn" class="btn skill-btn" style="font-size:1.1rem; padding:10px 20px;">SAVE</button>
+        <button id="delete-save-btn" class="btn skill-btn" style="font-size:1.1rem; padding:10px 20px; color:#ef4444;">DELETE SAVE</button>
       </div>
       
       <div class="stage-container">

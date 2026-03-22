@@ -1,4 +1,8 @@
 import math
+import datetime
+
+GROWTH_LOG_MAX_SIZE = 50
+MIN_STAT_VALUE = 1
 
 class Monster:
     # 係数の定義 (HP, ATK, DEF, MAG, SPD, MaxST, ST_REC)
@@ -14,7 +18,8 @@ class Monster:
         self.base_stats = data.get("base_stats", {})
         self.params = data.get("params", {"size": 50, "hardness": 50, "intelligence": 50})
         self.skills = data.get("skills", [])
-        
+        self.growth_log: list[dict] = data.get("growth_log", [])
+
         # 実行時管理用
         self.stats = self._calculate_final_stats()
         self.current_hp = self.stats["hp"]
@@ -45,10 +50,43 @@ class Monster:
 
             # 計算式: FinalStat = BaseStat * (1 + 係数和)
             calculated = base_val * (1.0 + coeff_sum)
-            final_stats[stat] = max(1, math.floor(calculated)) # 最小値1、切り捨て
+            final_stats[stat] = max(MIN_STAT_VALUE, math.floor(calculated)) # 最小値1、切り捨て
 
         return final_stats
     
+    def apply_growth_item(self, item_id: str, param: str, delta: int) -> None:
+        """Apply a growth item: modify param and log the change."""
+        if hasattr(self, param) and param in ("size", "hardness", "intelligence"):
+            before = self.params.get(param, 0)
+        elif param in self.params:
+            before = self.params[param]
+        else:
+            before = getattr(self, param, 0)
+
+        after = before + delta
+
+        if param in self.params:
+            self.params[param] = after
+        elif hasattr(self, param):
+            setattr(self, param, after)
+        else:
+            self.params[param] = after
+
+        self.growth_log.append({
+            "item_id": item_id,
+            "param": param,
+            "before": before,
+            "after": after,
+            "timestamp": datetime.datetime.now().isoformat()
+        })
+        if len(self.growth_log) > GROWTH_LOG_MAX_SIZE:
+            self.growth_log = self.growth_log[-GROWTH_LOG_MAX_SIZE:]
+        self.recalculate_stats()
+
+    def recalculate_stats(self) -> None:
+        """Recalculate final stats from current params."""
+        self.stats = self._calculate_final_stats()
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -57,5 +95,6 @@ class Monster:
             "sub_element": self.sub_element,
             "base_stats": self.base_stats,
             "params": self.params,
-            "skills": self.skills
+            "skills": self.skills,
+            "growth_log": self.growth_log
         }

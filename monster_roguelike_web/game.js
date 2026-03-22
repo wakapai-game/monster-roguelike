@@ -1,5 +1,16 @@
 import { AFFINITY, SKILLS, BATTLE_ITEMS_DATA } from './data.js';
 
+const CONSTANTS = {
+  GAUGE_MAX: 100.0,
+  BREAK_DAMAGE_MULTIPLIER: 2.0,
+  DOUBLE_WEAKNESS_MULTIPLIER: 8.0,
+  MIN_ST_COST: 10,
+  BASELINE_ATTACK_PENALTY: 10,
+  MIN_STAT_VALUE: 1,
+  GROWTH_LOG_MAX_SIZE: 50,
+  DEFAULT_SPD: 10,
+};
+
 export class Monster {
   constructor(data) {
     this.id = data.id;
@@ -12,11 +23,13 @@ export class Monster {
     this.params = {
       size: data.params?.size || 0,
       hardness: data.params?.hardness || 0,
-      weight: data.params?.weight || 0,
-      smartness: data.params?.smartness || 0
+      weight: data.params?.weight || 0,  // deprecated
+      smartness: data.params?.smartness || 0,
+      intelligence: data.params?.intelligence || 0
     };
     
     this.skills = data.skills;
+    this.growth_log = data.growth_log || [];
 
     this.stats = this.calculateFinalStats();
     this.current_hp = this.stats.hp;
@@ -28,17 +41,29 @@ export class Monster {
   calculateFinalStats() {
     const base = this.base_stats;
     const p = this.params;
-    
+    // TODO: Unity port - standardize to {size, hardness, intelligence}
+    // Accept both `smartness` and `intelligence` (prefer `intelligence` if present)
+    // `weight` is deprecated — treat as 0 if absent
+    const intel = p.intelligence !== undefined ? p.intelligence : (p.smartness || 0);
+
     return {
-      hp: Math.max(1, Math.floor(base.hp + (p.size * 5) - (p.smartness * 2))),
-      max_st: Math.max(1, Math.floor(base.max_st + (p.size * 2) + (p.hardness * 1))),
-      atk: Math.max(1, Math.floor(base.atk + (p.weight * 1))),
-      def: Math.max(1, Math.floor(base.def + (p.hardness * 1) + (p.weight * 0.5))),
-      mag: Math.max(1, Math.floor(base.mag + (p.smartness * 1))),
-      spd: Math.max(1, Math.floor(base.spd - (p.size * 0.2) - (p.hardness * 0.1) - (p.weight * 0.2) + (p.smartness * 0.5)))
+      hp: Math.max(CONSTANTS.MIN_STAT_VALUE, Math.floor(base.hp + (p.size * 5) - (intel * 2))),
+      max_st: Math.max(CONSTANTS.MIN_STAT_VALUE, Math.floor(base.max_st + (p.size * 2) + (p.hardness * 1))),
+      atk: Math.max(CONSTANTS.MIN_STAT_VALUE, Math.floor(base.atk + ((p.weight || 0) * 1))),
+      def: Math.max(CONSTANTS.MIN_STAT_VALUE, Math.floor(base.def + (p.hardness * 1) + ((p.weight || 0) * 0.5))),
+      mag: Math.max(CONSTANTS.MIN_STAT_VALUE, Math.floor(base.mag + (intel * 1))),
+      spd: Math.max(CONSTANTS.MIN_STAT_VALUE, Math.floor(base.spd - (p.size * 0.2) - (p.hardness * 0.1) - ((p.weight || 0) * 0.2) + (intel * 0.5)))
     };
   }
   
+  logGrowth(itemId, param, before, after) {
+    // timestamp is Unix ms (number), not Date object
+    this.growth_log.push({ itemId, param, before, after, timestamp: Date.now() });
+    if (this.growth_log.length > CONSTANTS.GROWTH_LOG_MAX_SIZE) {
+      this.growth_log = this.growth_log.slice(-CONSTANTS.GROWTH_LOG_MAX_SIZE);
+    }
+  }
+
   recalculateStats() {
     this.stats = this.calculateFinalStats();
     if (this.current_hp > this.stats.hp) this.current_hp = this.stats.hp;
@@ -48,7 +73,7 @@ export class Monster {
 
 export class Timeline {
   constructor(p1_monsters, p2_monsters) {
-    this.GAUGE_MAX = 100.0;
+    this.GAUGE_MAX = CONSTANTS.GAUGE_MAX;
     this.p1_monsters = p1_monsters;
     this.p2_monsters = p2_monsters;
     this.p1_active = p1_monsters[0] || null;
@@ -62,8 +87,8 @@ export class Timeline {
       if (this.p1_active && this.p1_active.gauge >= this.GAUGE_MAX) return { player: 1, active: this.p1_active };
       if (this.p2_active && this.p2_active.gauge >= this.GAUGE_MAX) return { player: 2, active: this.p2_active };
 
-      if (this.p1_active) this.p1_active.gauge += this.p1_active.stats.spd || 10;
-      if (this.p2_active) this.p2_active.gauge += this.p2_active.stats.spd || 10;
+      if (this.p1_active) this.p1_active.gauge += this.p1_active.stats.spd || CONSTANTS.DEFAULT_SPD;
+      if (this.p2_active) this.p2_active.gauge += this.p2_active.stats.spd || CONSTANTS.DEFAULT_SPD;
     }
   }
 
@@ -87,6 +112,7 @@ export class Timeline {
 
   swapActive(player_num, index) {
     const team = player_num === 1 ? this.p1_monsters : this.p2_monsters;
+    if (index < 0 || index >= team.length || !team[index]) return false;
     const new_active = team[index];
     if (new_active.current_hp <= 0) return false;
     
@@ -127,7 +153,7 @@ export class BattleEngine {
       self_damage: 0
     };
 
-    const cost = skill.cost_st || 0;
+    const cost = Math.max(CONSTANTS.MIN_ST_COST, skill.cost_st || 0);
     if (attacker.is_break) {
       attacker.current_hp -= cost;
       result.self_damage = cost;
@@ -138,7 +164,40 @@ export class BattleEngine {
 
     // Baseline Incoming Attack Penalty
     if (attacker.id !== defender.id && (skill.category === "attack" || skill.category === "trap")) {
-        const penalty = 10;
+        let penalty = CONSTANTS.BASELINE_ATTACK_PENALTY;
+
+        // Advantageous Element Penalty (-10)
+        const s_elem = skill.element || "none";
+        const multi_main = this.getAffinityMultiplier(s_elem, defender.main_element);
+        const multi_sub = this.getAffinityMultiplier(s_elem, defender.sub_element);
+        let affinity_mult = multi_main * multi_sub;
+        if (multi_main > 1.0 && multi_sub > 1.0) affinity_mult = 4.0;
+
+        if (affinity_mult > 1.0) {
+            penalty += 10;
+        }
+
+        // Overpower Penalty (-10)
+        let base_power = 0;
+        if (skill.effects) {
+            const attack_effect = skill.effects.find(e => e.type === "damage_st" || e.type === "damage_hp_direct");
+            if (attack_effect) base_power = attack_effect.base_power || 0;
+        }
+
+        const is_stab = (attacker.main_element === s_elem || attacker.sub_element === s_elem);
+        const effective_skill_power = is_stab ? base_power * 1.5 : base_power;
+        
+        const s_type = skill.type || "physical";
+        const atk_stat = attacker.stats[s_type === "physical" ? "atk" : "mag"] || CONSTANTS.DEFAULT_SPD;
+        const def_stat = defender.stats[s_type === "physical" ? "def" : "mag"] || CONSTANTS.DEFAULT_SPD;
+
+        const total_attack_power = effective_skill_power * atk_stat;
+        const total_defense_power = defender.current_st * def_stat;
+
+        if (total_attack_power > total_defense_power) {
+            penalty += 10;
+        }
+
         if (defender.is_break) {
             defender.current_hp -= penalty;
             result.hp_damage += penalty;
@@ -170,7 +229,7 @@ export class BattleEngine {
       } else if (effect.type === "damage_hp_direct") {
         let dmg_hp = effect.base_power || 0;
         if (defender.is_defending) dmg_hp *= 0.5;
-        if (defender.is_break) dmg_hp *= 2.0;
+        if (defender.is_break) dmg_hp *= CONSTANTS.BREAK_DAMAGE_MULTIPLIER;
         dmg_hp = Math.floor(dmg_hp);
         defender.current_hp -= dmg_hp;
         result.hp_damage += dmg_hp;
@@ -205,8 +264,8 @@ export class BattleEngine {
     const s_type = skill.type || "physical";
     const s_elem = skill.element || "none";
 
-    const atk_stat = attacker.stats[s_type === "physical" ? "atk" : "mag"] || 10;
-    const def_stat = defender.stats[s_type === "physical" ? "def" : "mag"] || 10;
+    const atk_stat = attacker.stats[s_type === "physical" ? "atk" : "mag"] || CONSTANTS.DEFAULT_SPD;
+    const def_stat = defender.stats[s_type === "physical" ? "def" : "mag"] || CONSTANTS.DEFAULT_SPD;
 
     const multi_main = this.getAffinityMultiplier(s_elem, defender.main_element);
     const multi_sub = this.getAffinityMultiplier(s_elem, defender.sub_element);
@@ -221,9 +280,9 @@ export class BattleEngine {
     }
 
     if (defender.is_break) {
-      let hp_mult = 2.0;
-      if (affinity_mult === 4.0) hp_mult = 8.0;
-      else if (affinity_mult > 1.0) hp_mult = affinity_mult * 2.0;
+      let hp_mult = CONSTANTS.BREAK_DAMAGE_MULTIPLIER;
+      if (affinity_mult === 4.0) hp_mult = CONSTANTS.DOUBLE_WEAKNESS_MULTIPLIER;
+      else if (affinity_mult > 1.0) hp_mult = affinity_mult * CONSTANTS.BREAK_DAMAGE_MULTIPLIER;
 
       const hp_damage = Math.floor(raw_damage * hp_mult);
       defender.current_hp -= hp_damage;
@@ -236,7 +295,7 @@ export class BattleEngine {
 
     if (crush_power > crush_threshold) {
       armor_crush = true;
-      raw_damage *= 2.0;
+      raw_damage *= CONSTANTS.BREAK_DAMAGE_MULTIPLIER;
     }
 
     return { st_damage: Math.floor(raw_damage), armor_crush };

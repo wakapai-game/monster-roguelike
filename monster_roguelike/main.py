@@ -75,5 +75,27 @@ def main():
     loaded_data = save_mgr.load_hall_of_fame()
     print(f"Loaded {len(loaded_data)} monsters perfectly with valid hash.")
 
+    # 5. セッションセーブ/ロードのデモ
+    #
+    # from datetime import datetime
+    #
+    # session_data = {
+    #     "version": 1,
+    #     "player_name": "DemoPlayer",
+    #     "roster": [m.to_dict() for m in p1_team],
+    #     "inventory": {"potion": 3, "growth_seed": 1},
+    #     "stage": 5,
+    #     "timestamp": datetime.now().isoformat()
+    # }
+    # save_mgr.save_session(session_data)
+    # print("Session saved!")
+    #
+    # loaded = save_mgr.load_session()
+    # if loaded:
+    #     print(f"Session loaded: player={loaded['player_name']}, stage={loaded['stage']}")
+    #
+    # save_mgr.delete_session()
+    # print("Session deleted.")
+
 if __name__ == "__main__":
     main()

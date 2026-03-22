@@ -4,10 +4,10 @@ import { MapGenerator } from './map.js';
 import { appState } from './state.js';
 import {
   screenStart, screenStory, screenEgg, screenMap, screenSelection,
-  screenBattle, screenName, screenHub, screenReward,
+  screenBattle, screenName, screenStarterEvent, screenHub, screenReward,
   mainHeader, rosterGrid, btnStartBattle, battleLog, resultMenu,
   btnHubInventory, btnMapInventory, btnHubParty, btnMapParty,
-  btnSubmitName, inputPlayerName,
+  btnSubmitName, inputPlayerName, starterEventGrid, btnStarterEventProceed,
   btnStage1, btnStage2, btnStage3, btnCollectReward,
   switchScreen
 } from './ui/dom.js';
@@ -15,6 +15,60 @@ import { openInventory, openParty } from './ui/inventory.js';
 import { renderMap, generateRewards } from './ui/map-render.js';
 import { toast, updateUI, resumeLoop } from './ui/battle.js';
 import { openEncyclopedia } from './ui/encyclopedia.js';
+import { saveGame, loadGame, deleteSave } from './persistence.js';
+
+// ---- Save / Load ----
+
+document.getElementById('save-btn').onclick = () => {
+  saveGame(appState);
+  alert('セーブしました！');
+};
+
+document.getElementById('delete-save-btn').onclick = () => {
+  if (confirm('セーブデータを削除しますか？')) {
+    deleteSave();
+    alert('セーブデータを削除しました。');
+  }
+};
+
+// Restore save data on load
+(function restoreSave() {
+  const data = loadGame();
+  if (!data) return;
+  appState.playerName = data.playerName || 'ハンター';
+  appState.unlockedStages = data.unlockedStages || 1;
+  appState.currentStage = data.currentStage || 1;
+  appState.hubVisited = data.hubVisited || false;
+  appState.stageCleared = data.stageCleared || false;
+  appState.currentNodeId = data.currentNodeId || null;
+  appState.selectedIds = data.selectedIds || [];
+  appState.monsterIdCounter = data.monsterIdCounter || 0;
+  appState.globalInventory = data.globalInventory || { skills: [], battleItems: [], mapItems: [] };
+
+  if (data.globalRoster && data.globalRoster.length > 0) {
+    appState.globalRoster = (data.globalRoster || []).map(d => new Monster(d));
+    // Skip start/story/name screens, go directly to hub
+    switchScreen(screenStart, screenHub);
+    rosterGrid.innerHTML = '';
+    appState.globalRoster.forEach(data => {
+      const card = document.createElement('div');
+      card.className = 'roster-card glass-panel';
+      card.dataset.id = data.id;
+      card.innerHTML = `
+        <h3>${data.name}</h3>
+        <p style="font-size: 0.8rem; margin-top: 5px; color: #94a3b8;">Elem: ${data.main_element.toUpperCase()}</p>
+        <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
+          <span style="font-size: 0.75rem; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px;">HP ${data.base_stats.hp}</span>
+          <span style="font-size: 0.75rem; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px;">ST ${data.base_stats.max_st}</span>
+        </div>
+      `;
+      card.onclick = () => toggleRosterSelection(card, data.id);
+      rosterGrid.appendChild(card);
+    });
+    btnStartBattle.onclick = confirmBattleSetup;
+    updateHubUI();
+  }
+})();
 
 // ---- App Flow ----
 
@@ -26,7 +80,11 @@ document.getElementById('btn-skip-story').onclick = () => switchScreen(screenSto
 btnSubmitName.onclick = () => {
   appState.playerName = inputPlayerName.value.trim() || 'ハンター';
   grantStarterMonsters();
-  switchScreen(screenName, screenHub);
+  switchScreen(screenName, screenStarterEvent);
+};
+
+btnStarterEventProceed.onclick = () => {
+  switchScreen(screenStarterEvent, screenHub);
 };
 
 function grantStarterMonsters() {
@@ -41,6 +99,23 @@ function grantStarterMonsters() {
       granted.push(newMonster);
     }
   });
+
+  starterEventGrid.innerHTML = '';
+  granted.forEach(data => {
+    const card = document.createElement('div');
+    card.className = 'roster-card glass-panel';
+    card.style.pointerEvents = 'none';
+    card.innerHTML = `
+      <h3>${data.name}</h3>
+      <p style="font-size: 0.8rem; margin-top: 5px; color: #94a3b8;">Elem: ${data.main_element.toUpperCase()}</p>
+      <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+        <span style="font-size: 0.75rem; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px;">HP ${data.base_stats.hp}</span>
+        <span style="font-size: 0.75rem; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px;">ST ${data.base_stats.max_st}</span>
+      </div>
+    `;
+    starterEventGrid.appendChild(card);
+  });
+
   initGameSession(granted);
   appState.hubVisited = true;
   updateHubUI();
@@ -102,7 +177,8 @@ function confirmBattleSetup() {
     new Monster(JSON.parse(JSON.stringify(appState.globalRoster.find(m => m.id === id))))
   );
 
-  const currentNode = appState.mapGenerator.getNodes().find(n => n.id === appState.currentNodeId);
+  const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
+  if (!currentNode) { console.warn('Node not found:', appState.currentNodeId); return; }
   const shuffled = [...ENEMY_DATA].sort(() => 0.5 - Math.random());
 
   let p2Count = 1;

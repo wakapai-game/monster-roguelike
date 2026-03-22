@@ -53,7 +53,7 @@ const MAP_ITEMS_DATA = [
   { id: "mitem_size_meat", name: "巨大な肉", type: "item_map", description: "大きさを+3（HP・ST大アップ、SPDダウン）", effect: { target_stat: "size", value: 3 } },
   { id: "mitem_hard_shell", name: "硬化の甲羅", type: "item_map", description: "硬さを+3（DEF・STアップ、SPD微減）", effect: { target_stat: "hardness", value: 3 } },
   { id: "mitem_weight_stone", name: "重力石", type: "item_map", description: "重さを+3（ATK・DEFアップ、SPDダウン）", effect: { target_stat: "weight", value: 3 } },
-  { id: "mitem_smart_nut", name: "賢者の木の実", type: "item_map", description: "賢さを+3（MAG・SPDアップ、HPダウン）", effect: { target_stat: "smartness", value: 3 } }
+  { id: "mitem_smart_nut", name: "賢者の木の実", type: "item_map", description: "賢さを+3（MAG・SPDアップ、HPダウン）", effect: { target_stat: "intelligence", value: 3 } }
 ];
 
 export { AFFINITY, SKILLS, MONSTERS_DATA, ENEMY_DATA, BATTLE_ITEMS_DATA, MAP_ITEMS_DATA };

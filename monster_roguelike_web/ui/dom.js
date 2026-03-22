@@ -6,6 +6,7 @@ export const screenMap = document.getElementById('screen-map');
 export const screenSelection = document.getElementById('screen-selection');
 export const screenBattle = document.getElementById('screen-battle');
 export const screenName = document.getElementById('screen-name');
+export const screenStarterEvent = document.getElementById('screen-starter-event');
 export const screenHub = document.getElementById('screen-hub');
 export const screenInventory = document.getElementById('screen-inventory');
 export const screenReward = document.getElementById('screen-reward');
@@ -60,6 +61,8 @@ export const partyDetailsGrid = document.getElementById('party-details-grid');
 // Name Input UI
 export const inputPlayerName = document.getElementById('input-player-name');
 export const btnSubmitName = document.getElementById('btn-submit-name');
+export const starterEventGrid = document.getElementById('starter-event-grid');
+export const btnStarterEventProceed = document.getElementById('btn-starter-event-proceed');
 
 export const timelineQueue = document.getElementById('timeline-queue');
 export const toastContainer = document.getElementById('toast-container');
@@ -78,7 +81,7 @@ export function switchScreen(fromId, toId) {
   toId.classList.remove('hide');
   toId.classList.add('active');
 
-  if (toId !== screenStart && toId !== screenStory && toId !== screenEgg && toId !== screenReward && toId !== screenName && toId !== screenHub) {
+  if (toId !== screenStart && toId !== screenStory && toId !== screenEgg && toId !== screenReward && toId !== screenName && toId !== screenStarterEvent && toId !== screenHub) {
     mainHeader.style.display = 'block';
   } else {
     mainHeader.style.display = 'none';

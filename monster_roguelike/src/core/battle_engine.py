@@ -2,6 +2,11 @@ from src.models.monster import Monster
 from src.systems.loader import DataLoader
 import math
 
+BREAK_DAMAGE_MULTIPLIER = 2.0
+DOUBLE_WEAKNESS_MULTIPLIER = 8.0
+MIN_ST_COST = 10
+BASELINE_ATTACK_PENALTY = 10
+
 class BattleEngine:
     def __init__(self, data_loader: DataLoader):
         self.loader = data_loader
@@ -23,7 +28,7 @@ class BattleEngine:
         }
 
         # STコストの支払い（ブレイク状態ならHP自傷ダメージ）
-        cost = skill.get("cost_st", 0)
+        cost = max(MIN_ST_COST, skill.get("cost_st", MIN_ST_COST))
         if attacker.is_break:
             attacker.current_hp -= cost
             result_log["self_damage"] = cost
@@ -53,7 +58,7 @@ class BattleEngine:
                 # 貫通スキル等、STを無視してHPを削る
                 dmg_hp = effect.get("base_power", 0)
                 if defender.is_break:
-                    dmg_hp *= 2.0  # ブレイク時はダメージ2倍
+                    dmg_hp *= BREAK_DAMAGE_MULTIPLIER  # ブレイク時はダメージ2倍
                 
                 dmg_hp = math.floor(dmg_hp)
                 defender.current_hp -= dmg_hp
@@ -63,6 +68,10 @@ class BattleEngine:
                 delay_val = effect.get("value", 0)
                 defender.gauge = max(0, defender.gauge - delay_val)
                 
+            elif e_type == "recover_hp":
+                amount = int(effect.get("base_val", effect.get("value", 0)) * defender.stats.get("hp", 1))
+                defender.current_hp = min(defender.stats["hp"], defender.current_hp + amount)
+
             elif e_type == "recover_st":
                 pct = effect.get("percent", 0) / 100.0
                 recover_val = attacker.stats.get("max_st", 100) * pct + attacker.stats.get("st_rec", 0)
@@ -101,12 +110,12 @@ class BattleEngine:
         
         # --- ブレイク時のHPダメージ処理 ---
         if defender.is_break:
-            hp_mult = 2.0
+            hp_mult = BREAK_DAMAGE_MULTIPLIER
             # ブレイク状態＆4倍弱点直撃なら合計8.0倍 (4.0 * 2.0)
             if affinity_mult == 4.0:
-                hp_mult = 8.0
+                hp_mult = DOUBLE_WEAKNESS_MULTIPLIER
             elif affinity_mult > 1.0:
-                hp_mult = affinity_mult * 2.0
+                hp_mult = affinity_mult * BREAK_DAMAGE_MULTIPLIER
                 
             hp_damage = raw_damage * hp_mult
             # 直節HPを削る（STダメージは0）
@@ -120,7 +129,7 @@ class BattleEngine:
         
         if crush_power > crush_threshold:
             armor_crush = True
-            raw_damage *= 2.0  # STダメージ2倍
+            raw_damage *= BREAK_DAMAGE_MULTIPLIER  # STダメージ2倍
             
         return {"st_damage": math.floor(raw_damage), "armor_crush": armor_crush}
 
