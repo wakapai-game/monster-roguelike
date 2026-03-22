@@ -689,3 +689,109 @@ header h1 {
   color: #fff;
   white-space: nowrap;
 }
+
+/* ---- Mobile / Responsive ---- */
+
+/* タブレット・中サイズ */
+@media (max-width: 900px) {
+  .mega-title { font-size: 2.8rem; }
+  .battle-arena { gap: 12px; }
+}
+
+/* ポートレート スマホ */
+@media (max-width: 600px) and (orientation: portrait) {
+  #app-container { padding: 10px; gap: 12px; }
+  .mega-title { font-size: 2rem; letter-spacing: 2px; }
+  .subtitle { font-size: 1rem; }
+  .modern-input { width: 90%; max-width: 280px; }
+
+  .battle-arena {
+    grid-template-columns: 1fr;
+    height: auto;
+    gap: 10px;
+  }
+  .center-panel { order: -1; }
+  .timeline-queue { max-height: 180px; }
+
+  .map-container { height: 70vw; max-height: 400px; }
+
+  .monster-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .stage-container { flex-direction: column; align-items: center; }
+  .stage-card { width: 100%; max-width: 300px; }
+}
+
+/* ランドスケープ スマホ（横向き） */
+@media (orientation: landscape) and (max-height: 500px) {
+  body { overflow-y: auto; }
+
+  #app-container {
+    padding: env(safe-area-inset-top, 10px) env(safe-area-inset-right, 10px) env(safe-area-inset-bottom, 10px) env(safe-area-inset-left, 10px);
+    gap: 8px;
+  }
+
+  /* スタート・ストーリー等の全画面センター画面 */
+  .full-center {
+    min-height: 100dvh;
+    padding: 15px 20px;
+  }
+  .mega-title { font-size: 2rem; letter-spacing: 2px; }
+  .title-container { margin-bottom: 15px; }
+  .subtitle { font-size: 1rem; }
+  .story-content { font-size: 1rem; line-height: 1.8; }
+
+  /* 名前入力 */
+  .modern-input { font-size: 1.1rem; padding: 10px 15px; }
+
+  /* ハブ画面 */
+  #screen-hub { width: 100% !important; max-width: 100% !important; }
+  .stage-container { flex-wrap: nowrap; gap: 12px; }
+  .stage-card { width: 160px; padding: 15px 10px; }
+
+  /* バトルアリーナ：横向きでは3列を維持しつつ高さを画面に合わせる */
+  .battle-arena {
+    grid-template-columns: 3fr 4fr 3fr;
+    height: calc(100dvh - 20px);
+    gap: 8px;
+  }
+
+  .side-panel { padding: 10px; gap: 6px; }
+  .center-panel { padding: 10px; gap: 6px; }
+
+  .active-monster-card { padding: 10px; }
+  .active-monster-card h4 { font-size: 1rem; }
+  .card-header { margin-bottom: 8px; padding-bottom: 8px; }
+
+  .bars { gap: 4px; }
+  .bars label { font-size: 0.7rem; }
+  .bar-container { height: 10px; }
+
+  .action-menu { padding: 8px; margin-top: 6px; }
+  .cmd-grid { gap: 6px; }
+  .btn { padding: 8px 10px; font-size: 0.8rem; }
+
+  .reserve-list { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+
+  .timeline-queue { max-height: calc(100dvh - 220px); gap: 6px; }
+  .queue-item { padding: 6px 10px; font-size: 0.85rem; }
+
+  .toast-container { min-height: 60px; }
+  .toast { font-size: 0.8rem; padding: 5px 8px; }
+
+  /* マップ画面 */
+  .map-screen { padding: 10px 15px; }
+  .map-container {
+    height: calc(100dvh - 110px);
+    max-width: 100%;
+  }
+
+  /* パーティ・インベントリ画面 */
+  #screen-party { max-height: 100dvh; padding: 15px; }
+  #screen-inventory { padding: 15px; }
+  .inv-container { flex-direction: row; }
+
+  /* 図鑑モーダル */
+  .enc-panel { max-height: 95dvh; padding: 15px; }
+
+  /* モンスターグリッド */
+  .monster-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 15px 0; }
+}
