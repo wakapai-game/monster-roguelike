@@ -133,7 +133,7 @@
     </section>
 
     <!-- 画面: パーティ詳細 -->
-    <section id="screen-party" class="screen hide glass-panel" style="max-height:80vh; overflow-y:auto;">
+    <section id="screen-party" class="screen hide glass-panel" style="padding:30px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <h2>PARTY STATUS</h2>
         <button id="btn-close-party" class="btn skill-btn">閉じる</button>
@@ -207,27 +207,6 @@
             </div>
           </div>
           
-          <!-- コマンドメニューをモンスター情報の下に移動 -->
-          <div id="action-menu" class="action-menu hide">
-            <div id="action-phase-header" style="text-align:center; font-weight:bold; margin-bottom:10px; padding:5px; border-radius:5px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6;">ATTACK PHASE</div>
-            
-            <div class="cmd-tabs" id="action-tabs" style="display:flex; gap:10px; margin-bottom:10px;">
-              <button id="btn-tab-skills" class="btn skill-btn active-tab" style="flex:1;">Skills</button>
-              <button id="btn-tab-items" class="btn skill-btn inactive-tab" style="flex:1;">Items <span id="item-count-badge" style="font-size:0.7em; background:#ef4444; padding:2px 6px; border-radius:10px; margin-left:5px;">0</span></button>
-            </div>
-            
-            <div id="skill-buttons" class="cmd-grid"></div>
-            <div id="item-buttons" class="cmd-grid hide" style="margin-top:10px;"></div>
-            
-            <div id="defend-wrapper" class="hide" style="margin-top:10px;">
-                <button id="btn-defend-action" class="btn" style="width:100%; padding: 10px; background: #fbbf24; color: #1e293b; border: none; font-weight: bold;">🛡 身を守る (Defend) - ST消費半減</button>
-            </div>
-            
-            <div id="swap-wrapper" style="margin-top:10px;">
-                <button id="btn-swap-action" class="btn" style="width:100%; padding: 10px; background: #475569; color: white; border: none; font-weight: bold; cursor: pointer;">🔄 控えと入れ替える (Swap)</button>
-            </div>
-          </div>
-
           <div class="reserve-list" id="p1-reserves"></div>
         </div>
 
@@ -265,6 +244,27 @@
             </div>
           </div>
           <div class="reserve-list" id="p2-reserves"></div>
+        </div>
+
+        <!-- アクションメニュー（コマンド入力） -->
+        <div id="action-menu" class="action-menu hide">
+          <div id="action-phase-header" style="text-align:center; font-weight:bold; margin-bottom:10px; padding:5px; border-radius:5px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6;">ATTACK PHASE</div>
+
+          <div class="cmd-tabs" id="action-tabs" style="display:flex; gap:10px; margin-bottom:10px;">
+            <button id="btn-tab-skills" class="btn skill-btn active-tab" style="flex:1;">Skills</button>
+            <button id="btn-tab-items" class="btn skill-btn inactive-tab" style="flex:1;">Items <span id="item-count-badge" style="font-size:0.7em; background:#ef4444; padding:2px 6px; border-radius:10px; margin-left:5px;">0</span></button>
+          </div>
+
+          <div id="skill-buttons" class="cmd-grid"></div>
+          <div id="item-buttons" class="cmd-grid hide" style="margin-top:10px;"></div>
+
+          <div id="defend-wrapper" class="hide" style="margin-top:10px;">
+            <button id="btn-defend-action" class="btn" style="width:100%; padding: 10px; background: #fbbf24; color: #1e293b; border: none; font-weight: bold;">🛡 身を守る (Defend) - ST消費半減</button>
+          </div>
+
+          <div id="swap-wrapper" style="margin-top:10px;">
+            <button id="btn-swap-action" class="btn" style="width:100%; padding: 10px; background: #475569; color: white; border: none; font-weight: bold; cursor: pointer;">🔄 控えと入れ替える (Swap)</button>
+          </div>
         </div>
 
       </div>
