@@ -84,7 +84,7 @@ header h1 {
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
 
-.screen.hide { display: none; }
+.screen.hide { display: none !important; }
 .screen.active { animation: fade-in 0.5s ease; }
 
 /* Visible screen fills remaining container space */
