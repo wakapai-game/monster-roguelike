@@ -1,5 +1,5 @@
 import { appState } from '../state.js';
-import { SKILLS, MAP_ITEMS_DATA } from '../data.js';
+import { SKILLS, FOOD_DATA } from '../data.js';
 import { Monster } from '../game.js';
 import {
   switchScreen,
@@ -44,7 +44,7 @@ export function renderInventory() {
     });
 
     appState.globalInventory.mapItems.forEach((id, index) => {
-        const item = MAP_ITEMS_DATA.find(s => s.id === id);
+        const item = FOOD_DATA.find(s => s.id === id);
         if(!item) return;
         const el = document.createElement('div');
         el.className = 'inv-item-row';
@@ -87,20 +87,44 @@ export function applyItemToMonster(m) {
             return;
         }
     } else if (activeInvItem.type === 'mapItem') {
-        const itemId = appState.globalInventory.mapItems[activeInvItem.index];
-        const itemData = MAP_ITEMS_DATA.find(i => i.id === itemId);
-
-        if (!m.params) m.params = { size:0, hardness:0, weight:0, smartness:0 };
-        const beforeVal = m.params[itemData.effect.target_stat] || 0;
-        m.params[itemData.effect.target_stat] = beforeVal + itemData.effect.value;
-        const afterVal = m.params[itemData.effect.target_stat];
-        if (typeof m.logGrowth === 'function') {
-            m.logGrowth(itemId, itemData.effect.target_stat, beforeVal, afterVal);
+        const MAX_FEED = 10;
+        if ((m.feed_count || 0) >= MAX_FEED) {
+            alert(`${m.name} はもうこれ以上えさを食べられない！（上限${MAX_FEED}回）`);
+            return;
         }
+
+        const itemId = appState.globalInventory.mapItems[activeInvItem.index];
+        const itemData = FOOD_DATA.find(i => i.id === itemId);
+        if (!itemData) return;
+
+        if (!m.params) m.params = { size: 0, hardness: 0, weight: 0, intelligence: 0 };
+
+        // Apply base_stats changes
+        if (itemData.effect.base_stats) {
+            for (const [stat, delta] of Object.entries(itemData.effect.base_stats)) {
+                const before = m.base_stats[stat] || 0;
+                m.base_stats[stat] = before + delta;
+                if (typeof m.logGrowth === 'function') {
+                    m.logGrowth(itemId, stat, before, m.base_stats[stat]);
+                }
+            }
+        }
+
+        // Apply params changes (size, intelligence)
+        if (itemData.effect.params) {
+            for (const [param, delta] of Object.entries(itemData.effect.params)) {
+                const before = m.params[param] || 0;
+                m.params[param] = before + delta;
+                if (typeof m.logGrowth === 'function') {
+                    m.logGrowth(itemId, param, before, m.params[param]);
+                }
+            }
+        }
+
+        m.feed_count = (m.feed_count || 0) + 1;
 
         if (typeof m.recalculateStats === 'function') {
             m.recalculateStats();
-            // Since food should heal them slightly as a bonus when max HP goes up, let's just maximize it
             m.current_hp = m.stats.hp;
         } else {
             const mc = new Monster(m);
@@ -109,7 +133,8 @@ export function applyItemToMonster(m) {
         }
 
         appState.globalInventory.mapItems.splice(activeInvItem.index, 1);
-        alert(`${m.name} は ${itemData.name} を食べて強くなった！`);
+        const remaining = MAX_FEED - m.feed_count;
+        alert(`${m.name} は ${itemData.name} を食べた！（残り${remaining}回）`);
     }
 
     invTargetSelection.classList.add('hide');
@@ -144,7 +169,7 @@ export function renderParty() {
     partyDetailsGrid.innerHTML = '';
 
     appState.globalRoster.forEach(data => {
-        const mc = new Monster(JSON.parse(JSON.stringify(data)));
+        const mc = (data instanceof Monster) ? data : new Monster(data);
 
         let skillsHtml = mc.skills.map(sid => {
             const skillInfo = SKILLS.find(s => s.id === sid);
@@ -169,10 +194,9 @@ export function renderParty() {
             </div>
             <div style="font-size:0.85rem; font-weight:bold; color:#cbd5e1; margin-top:10px; margin-bottom:5px;">可変ステータス (Variable Extras)</div>
             <div class="party-stat-grid" style="border-top:1px dashed #334155; padding-top:10px; margin-bottom:10px;">
-                <div class="stat-row"><span class="stat-label">大きさ (Size)</span> <span class="stat-val" style="color:#fde047;">+${mc.params.size||0}</span></div>
-                <div class="stat-row"><span class="stat-label">硬さ (Hard)</span> <span class="stat-val" style="color:#fde047;">+${mc.params.hardness||0}</span></div>
-                <div class="stat-row"><span class="stat-label">重さ (Weight)</span> <span class="stat-val" style="color:#fde047;">+${mc.params.weight||0}</span></div>
-                <div class="stat-row"><span class="stat-label">賢さ (Smart)</span> <span class="stat-val" style="color:#fde047;">+${mc.params.smartness||0}</span></div>
+                <div class="stat-row"><span class="stat-label">大きさ</span> <span class="stat-val" style="color:#fde047;">${mc.getSizeLabel()} (${mc.params.size||0})</span></div>
+                <div class="stat-row"><span class="stat-label">賢さランク</span> <span class="stat-val" style="color:#fde047;">Lv.${mc.getIntelligenceLevel()} (${mc.params.intelligence||0})</span></div>
+                <div class="stat-row"><span class="stat-label">えさ回数</span> <span class="stat-val" style="color:${(mc.feed_count||0)>=10?'#ef4444':'#94a3b8'};">${mc.feed_count||0} / 10</span></div>
             </div>
             <div>
                 <div style="font-size:0.85rem; font-weight:bold; color:#cbd5e1; margin-bottom:5px;">Equipped Skills</div>

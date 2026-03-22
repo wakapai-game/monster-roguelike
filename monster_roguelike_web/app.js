@@ -75,6 +75,10 @@ document.getElementById('delete-save-btn').onclick = () => {
 document.getElementById('btn-begin').onclick = () => switchScreen(screenStart, screenStory);
 document.getElementById('btn-encyclopedia').onclick = () => openEncyclopedia();
 
+const roadmapOverlay = document.getElementById('screen-roadmap');
+document.getElementById('btn-roadmap').onclick = () => roadmapOverlay.classList.remove('hide');
+document.getElementById('btn-close-roadmap').onclick = () => roadmapOverlay.classList.add('hide');
+
 document.getElementById('btn-skip-story').onclick = () => switchScreen(screenStory, screenName);
 
 btnSubmitName.onclick = () => {
@@ -305,9 +309,9 @@ function generateRosterFromEgg(type) {
     if (pool.length === 0) pool = MONSTERS_DATA;
   }
   const picked = pool[Math.floor(Math.random() * pool.length)];
-  const monsterInst = JSON.parse(JSON.stringify(picked));
-  monsterInst.id = monsterInst.id + '_inst' + (instCount++);
-  roster.push(monsterInst);
+  const monsterData = JSON.parse(JSON.stringify(picked));
+  monsterData.id = monsterData.id + '_inst' + (instCount++);
+  roster.push(new Monster(monsterData));
   return roster;
 }
 

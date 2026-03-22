@@ -2,7 +2,7 @@ import { appState } from '../state.js';
 import { BATTLE_ITEMS_DATA } from '../data.js';
 import {
   actionMenu, actionPhaseHeader, actionTabs,
-  defendWrapper, btnDefendAction, swapWrapper, btnSwapAction,
+  defendWrapper, btnDefendAction, swapWrapper, btnSwapAction, swapSelectPanel,
   skillButtons, itemButtons, btnTabSkills, btnTabItems,
   itemCountBadge, resultMenu, resultText,
   timelineQueue, toastContainer, battleLog
@@ -129,6 +129,7 @@ export function updateUI(onlyGauges = false) {
 export function resumeLoop() {
   if (appState.loopInterval) clearInterval(appState.loopInterval);
   actionMenu.classList.add('hide');
+  swapSelectPanel.classList.add('hide');
 
   appState.loopInterval = setInterval(() => {
     updateUI(true);
@@ -298,22 +299,46 @@ export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
 }
 
 export function setupSwapButton(phaseType, currentMonster, enemyAttacker, enemySkillId) {
-    const nextAliveIdx = appState.p1Team.findIndex(m => m.current_hp > 0 && m.id !== currentMonster.id);
-    if (nextAliveIdx !== -1) {
+    const benchCandidates = appState.p1Team
+        .map((m, idx) => ({ m, idx }))
+        .filter(({ m }) => m.current_hp > 0 && m.id !== currentMonster.id);
+
+    swapSelectPanel.classList.add('hide');
+    swapSelectPanel.innerHTML = '';
+
+    if (benchCandidates.length > 0) {
         btnSwapAction.disabled = false;
         btnSwapAction.style.opacity = '1';
         btnSwapAction.onclick = () => {
-            appState.timeline.swapActive(1, nextAliveIdx);
-            toast(`<span class="log-system">控えの ${appState.timeline.p1_active.name} と交代した！</span>`);
-            updateUI();
+            const isOpen = !swapSelectPanel.classList.contains('hide');
+            swapSelectPanel.classList.toggle('hide', isOpen);
+            if (!isOpen) {
+                // Build bench selection cards
+                swapSelectPanel.innerHTML = '';
+                benchCandidates.forEach(({ m, idx }) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn swap-bench-btn';
+                    const hpPct = Math.round((m.current_hp / m.stats.hp) * 100);
+                    btn.innerHTML = `
+                        <span class="swap-bench-name">${m.name}</span>
+                        <span class="swap-bench-elem elem-badge elem-${m.main_element}">${m.main_element.toUpperCase()}</span>
+                        <span class="swap-bench-hp">HP ${m.current_hp}/${m.stats.hp} (${hpPct}%)</span>
+                    `;
+                    btn.onclick = () => {
+                        swapSelectPanel.classList.add('hide');
+                        appState.timeline.swapActive(1, idx);
+                        toast(`<span class="log-system">控えの ${appState.timeline.p1_active.name} と交代した！</span>`);
+                        updateUI();
 
-            if (phaseType === 1) {
-                // Was Attack Phase -> Turn ends, enemy plays
-                actionMenu.classList.add('hide');
-                setTimeout(() => { resumeLoop(); }, 1000);
-            } else {
-                // Was Defense Phase -> Enemy hits the newly swapped monster!
-                resolveDefensePhase(appState.timeline.p1_active, "swapped", enemyAttacker, enemySkillId, false);
+                        if (phaseType === 1) {
+                            actionMenu.classList.add('hide');
+                            setTimeout(() => { resumeLoop(); }, 1000);
+                        } else {
+                            resolveDefensePhase(appState.timeline.p1_active, "swapped", enemyAttacker, enemySkillId, false);
+                        }
+                    };
+                    swapSelectPanel.appendChild(btn);
+                });
             }
         };
     } else {

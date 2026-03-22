@@ -674,6 +674,45 @@ header h1 {
   to { transform: scale(1.1); }
 }
 
+/* ---- Swap Bench Selection ---- */
+.swap-select-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+
+.swap-select-panel.hide { display: none; }
+
+.swap-bench-btn {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(71, 85, 105, 0.6);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.swap-bench-btn:hover {
+  background: rgba(100, 116, 139, 0.8);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.swap-bench-name { font-weight: 600; font-size: 0.88rem; }
+.swap-bench-elem { font-size: 0.68rem; padding: 1px 5px; }
+.swap-bench-hp { font-size: 0.75rem; color: #86efac; white-space: nowrap; }
+
 /* ---- Encyclopedia Modal ---- */
 .enc-overlay {
   position: fixed;
@@ -695,6 +734,68 @@ header h1 {
   padding: 30px;
   display: flex;
   flex-direction: column;
+}
+
+/* ---- Roadmap Modal ---- */
+.roadmap-panel {
+  width: 800px;
+  max-width: 95vw;
+  max-height: 90vh;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.roadmap-intro {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.roadmap-content {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+
+.roadmap-chapter {
+  margin-bottom: 28px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.roadmap-chapter h3 {
+  font-size: 1.05rem;
+  color: var(--accent);
+  margin-bottom: 6px;
+  letter-spacing: 0.03em;
+}
+
+.roadmap-chapter-desc {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-bottom: 14px;
+}
+
+.roadmap-list {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.roadmap-list li {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+
+.roadmap-list li strong {
+  color: #e2e8f0;
 }
 
 .enc-content {

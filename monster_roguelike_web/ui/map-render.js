@@ -1,5 +1,5 @@
 import { appState } from '../state.js';
-import { SKILLS, BATTLE_ITEMS_DATA, MAP_ITEMS_DATA } from '../data.js';
+import { SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA } from '../data.js';
 import { mapNodesContainer, mapLinesContainer, rosterGrid, screenMap, screenSelection, switchScreen } from './dom.js';
 
 export function generateRewards() {
@@ -9,7 +9,7 @@ export function generateRewards() {
     const pools = [
        { type: 'skill', data: SKILLS },
        { type: 'battleItem', data: BATTLE_ITEMS_DATA },
-       { type: 'mapItem', data: MAP_ITEMS_DATA }
+       { type: 'food', data: FOOD_DATA }
     ];
 
     // Give 2 random items
@@ -19,11 +19,11 @@ export function generateRewards() {
 
         if (pool.type === 'skill') appState.globalInventory.skills.push(item.id);
         if (pool.type === 'battleItem') appState.globalInventory.battleItems.push(item.id);
-        if (pool.type === 'mapItem') appState.globalInventory.mapItems.push(item.id);
+        if (pool.type === 'food') appState.globalInventory.mapItems.push(item.id);
 
         const box = document.createElement('div');
         box.className = 'reward-box';
-        let typeLabel = pool.type === 'skill' ? '技 (Skill)' : pool.type === 'battleItem' ? 'バトル用 (Battle)' : 'ステUP (Food)';
+        let typeLabel = pool.type === 'skill' ? '技 (Skill)' : pool.type === 'battleItem' ? 'バトル用 (Battle)' : 'えさ (Food)';
         box.innerHTML = `<h4>${item.name}</h4><p>${typeLabel}</p>`;
         rBoxes.appendChild(box);
     }

@@ -29,6 +29,7 @@ export class Monster {
     };
     
     this.skills = data.skills;
+    this.feed_count = data.feed_count || 0;
     this.growth_log = data.growth_log || [];
 
     this.stats = this.calculateFinalStats();
@@ -62,6 +63,19 @@ export class Monster {
     if (this.growth_log.length > CONSTANTS.GROWTH_LOG_MAX_SIZE) {
       this.growth_log = this.growth_log.slice(-CONSTANTS.GROWTH_LOG_MAX_SIZE);
     }
+  }
+
+  getSizeLabel() {
+    const s = this.params.size || 0;
+    if (s >= 10) return 'LL';
+    if (s >= 5)  return 'L';
+    if (s >= 0)  return 'M';
+    if (s >= -5) return 'S';
+    return 'SS';
+  }
+
+  getIntelligenceLevel() {
+    return Math.min(5, Math.floor((this.params.intelligence || 0) / 4) + 1);
   }
 
   recalculateStats() {

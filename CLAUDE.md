@@ -23,19 +23,27 @@
 
 ### game.js
 - `Monster` クラス: 全体（ステータス計算・育成）
+  - `feed_count`: えさ回数（最大10回）
+  - `getSizeLabel()`: params.size → SS/S/M/L/LL ラベル（0=M, 5=L, 10=LL, -5=S, -10=SS）
+  - `getIntelligenceLevel()`: params.intelligence → Lv.1〜5（4ポイントごとにランクアップ）
 - `Timeline` クラス: ATB制御・交代
 - `BattleEngine` クラス: 攻撃実行・属性相性
 
 ### ui/battle.js
 - `showAttackPhase(monster)`: 攻撃フェーズUI
 - `showDefensePhase(target, attacker, skillId)`: 防御フェーズUI
+- `setupSwapButton(phaseType, currentMonster, enemyAttacker, enemySkillId)`: 交代ボタン設定（控えモンスター選択UI付き）
 - `resumeLoop()`: バトルループ（100msインターバル）
 - `updateUI(onlyGauges)`: HP/ST/ATBゲージ更新
+
+### ui/inventory.js
+- `applyItemToMonster(m)`: えさ適用（最大10回チェック、base_stats直接変更）
+- `renderParty()`: パーティ詳細（大きさラベル・賢さランク・えさ回数表示）
 
 ### app.js
 - `confirmBattleSetup()`: バトル開始・敵生成
 - `startStage(stageNum, floors)`: ステージ開始
-- `generateRosterFromEgg(type)`: 卵からモンスター生成
+- `generateRosterFromEgg(type)`: 卵からモンスター生成（`new Monster()` インスタンスで返す）
 
 ## バトル画面HTML構造
 ```
@@ -45,6 +53,7 @@
         ├── .center-panel (col2/row1-2): アクションキュー + トースト + 結果
         ├── .p2-side (col3/row1-2): 敵ステータス + 控えリスト
         └── #action-menu (col1/row2): スキル/アイテム/防御/交代ボタン
+              └── #swap-wrapper: 交代ボタン + #swap-select-panel（控え選択UI）
 ```
 
 ## CSSレイアウト原則（ノースクロール設計）
@@ -62,9 +71,20 @@
 `screen-start` → `screen-story` → `screen-name` → `screen-starter-event` → `screen-egg` → `screen-hub` → `screen-map` → `screen-selection` → `screen-battle` → `screen-reward`
 
 モーダル系: `screen-encyclopedia`（オーバーレイ）、`screen-party`・`screen-inventory`（サブ画面として切替）
+スタート画面追加モーダル: `screen-roadmap`（将来の実装アイデア一覧）
 
 ## データ構造（data.js）
 - `MONSTERS_DATA`: モンスター定義（id, name, base_stats, elements, skills）
-- `SKILLS_DATA`: スキル定義（id, name, category, power, element, cost_st）
-- `ITEMS_DATA` / `BATTLE_ITEMS_DATA` / `FOOD_DATA`: アイテム・えさ
-- `AFFINITY_TABLE`: 8x8 属性相性マトリクス
+- `SKILLS`: スキル定義（id, name, category, power, element, cost_st）
+- `BATTLE_ITEMS_DATA`: バトル中使用アイテム
+- `FOOD_DATA`: えさ定義（9種）。`effect.base_stats` と `effect.params` で直接加算値を指定
+  - `effect.base_stats`: hp/max_st/atk/def/mag/spd の加算値
+  - `effect.params`: size/intelligence の加算値
+- `AFFINITY`: 8x8 属性相性マトリクス
+
+## えさシステム（FOOD_DATA）
+- モンスター1体につき最大10回（`feed_count` で管理）
+- えさは `base_stats` を直接変更 + `params`（size/intelligence）を加算
+- `Monster.calculateFinalStats()` で params を元に最終ステータスを再計算
+- サイズ表示: `getSizeLabel()` で SS/S/M/L/LL に変換（params.size 基準）
+- 賢さ表示: `getIntelligenceLevel()` で Lv.1〜5 に変換（4ポイントごと）

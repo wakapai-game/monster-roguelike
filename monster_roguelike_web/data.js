@@ -48,12 +48,55 @@ const BATTLE_ITEMS_DATA = [
   { id: "bitem_bomb", name: "バクダン", type: "item_battle", description: "敵に30の防御無視ダメージ", effect: { type: "damage_hp_direct", value: 30 } }
 ];
 
-// マップ画面で使用可能なアイテム（餌による恒久的なステータスアップ）
-const MAP_ITEMS_DATA = [
-  { id: "mitem_size_meat", name: "巨大な肉", type: "item_map", description: "大きさを+3（HP・ST大アップ、SPDダウン）", effect: { target_stat: "size", value: 3 } },
-  { id: "mitem_hard_shell", name: "硬化の甲羅", type: "item_map", description: "硬さを+3（DEF・STアップ、SPD微減）", effect: { target_stat: "hardness", value: 3 } },
-  { id: "mitem_weight_stone", name: "重力石", type: "item_map", description: "重さを+3（ATK・DEFアップ、SPDダウン）", effect: { target_stat: "weight", value: 3 } },
-  { id: "mitem_smart_nut", name: "賢者の木の実", type: "item_map", description: "賢さを+3（MAG・SPDアップ、HPダウン）", effect: { target_stat: "intelligence", value: 3 } }
+// えさ（モンスターに与えられる、最大10回まで。ベースステータスと大きさ・賢さを直接変動させる）
+// effect.base_stats: ベースステータスへの加算値
+// effect.params: params（size / intelligence）への加算値
+const FOOD_DATA = [
+  {
+    id: "food_01", name: "たっぷりの肉", type: "food",
+    description: "HP+2 ST+10 攻+1 防+1 大きさ+1 速-1",
+    effect: { base_stats: { hp: 2, max_st: 10, atk: 1, def: 1, spd: -1 }, params: { size: 1 } }
+  },
+  {
+    id: "food_02", name: "巨大な肉", type: "food",
+    description: "HP+1 ST+20 攻+1 防+1 大きさ+1 速-1",
+    effect: { base_stats: { hp: 1, max_st: 20, atk: 1, def: 1, spd: -1 }, params: { size: 1 } }
+  },
+  {
+    id: "food_03", name: "戦士の肉", type: "food",
+    description: "HP+1 ST+10 攻+2 防+1 大きさ+1 速-1",
+    effect: { base_stats: { hp: 1, max_st: 10, atk: 2, def: 1, spd: -1 }, params: { size: 1 } }
+  },
+  {
+    id: "food_04", name: "鎧の肉", type: "food",
+    description: "HP+1 ST+10 攻+1 防+2 大きさ+1 速-1",
+    effect: { base_stats: { hp: 1, max_st: 10, atk: 1, def: 2, spd: -1 }, params: { size: 1 } }
+  },
+  {
+    id: "food_05", name: "賢者のキノコ", type: "food",
+    description: "魔力+2 速-1 賢さ+1",
+    effect: { base_stats: { mag: 2, spd: -1 }, params: { intelligence: 1 } }
+  },
+  {
+    id: "food_06", name: "軽量フルーツ", type: "food",
+    description: "HP-2 ST-5 攻-1 防-1 大きさ-1 速+1",
+    effect: { base_stats: { hp: -2, max_st: -5, atk: -1, def: -1, spd: 1 }, params: { size: -1 } }
+  },
+  {
+    id: "food_07", name: "絞りジュース", type: "food",
+    description: "HP-1 ST-10 攻-1 防-1 大きさ-1 速+1",
+    effect: { base_stats: { hp: -1, max_st: -10, atk: -1, def: -1, spd: 1 }, params: { size: -1 } }
+  },
+  {
+    id: "food_08", name: "研ぎすまし果実", type: "food",
+    description: "HP-1 ST-5 攻-2 防-1 大きさ-1 速+1",
+    effect: { base_stats: { hp: -1, max_st: -5, atk: -2, def: -1, spd: 1 }, params: { size: -1 } }
+  },
+  {
+    id: "food_09", name: "機動の実", type: "food",
+    description: "HP-1 ST-5 攻-1 防-2 大きさ-1 速+1",
+    effect: { base_stats: { hp: -1, max_st: -5, atk: -1, def: -2, spd: 1 }, params: { size: -1 } }
+  }
 ];
 
-export { AFFINITY, SKILLS, MONSTERS_DATA, ENEMY_DATA, BATTLE_ITEMS_DATA, MAP_ITEMS_DATA };
+export { AFFINITY, SKILLS, MONSTERS_DATA, ENEMY_DATA, BATTLE_ITEMS_DATA, FOOD_DATA };

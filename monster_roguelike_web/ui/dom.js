@@ -30,6 +30,7 @@ export const defendWrapper = document.getElementById('defend-wrapper');
 export const btnDefendAction = document.getElementById('btn-defend-action');
 export const swapWrapper = document.getElementById('swap-wrapper');
 export const btnSwapAction = document.getElementById('btn-swap-action');
+export const swapSelectPanel = document.getElementById('swap-select-panel');
 export const skillButtons = document.getElementById('skill-buttons');
 export const itemButtons = document.getElementById('item-buttons');
 export const btnTabSkills = document.getElementById('btn-tab-skills');

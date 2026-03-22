@@ -1,4 +1,4 @@
-import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, MAP_ITEMS_DATA } from '../data.js';
+import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA } from '../data.js';
 
 const overlay = document.getElementById('screen-encyclopedia');
 const content = document.getElementById('enc-content');
@@ -113,7 +113,7 @@ function renderItems() {
 }
 
 function renderFood() {
-  MAP_ITEMS_DATA.forEach(item => {
+  FOOD_DATA.forEach(item => {
     const card = document.createElement('div');
     card.className = 'enc-card';
     card.innerHTML = `
