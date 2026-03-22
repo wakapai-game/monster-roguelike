@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monster Rogue: Web Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="bg-gradient"></div>
+
+  <main id="app-container">
+    <header class="glass-panel" id="main-header" style="display:none;">
+      <h1>MONSTER ROGUE</h1>
+    </header>
+
+    <!-- 画面0: スタート画面 -->
+    <section id="screen-start" class="screen full-center active">
+      <div class="title-container">
+        <h1 class="mega-title">MONSTER ROGUE</h1>
+        <p class="subtitle">Tactical Stamina Battles</p>
+      </div>
+      <button id="btn-begin" class="btn primary-btn pulse-glow">START GAME</button>
+      <button id="btn-encyclopedia" class="btn skill-btn" style="margin-top:15px;">図鑑を見る</button>
+    </section>
+
+    <!-- 図鑑モーダル -->
+    <div id="screen-encyclopedia" class="enc-overlay hide">
+      <div class="glass-panel enc-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2>図鑑</h2>
+          <button id="btn-close-encyclopedia" class="btn skill-btn">✕ 閉じる</button>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+          <button class="btn skill-btn active-tab" data-enc-tab="monsters">モンスター</button>
+          <button class="btn skill-btn inactive-tab" data-enc-tab="skills">技</button>
+          <button class="btn skill-btn inactive-tab" data-enc-tab="items">アイテム</button>
+          <button class="btn skill-btn inactive-tab" data-enc-tab="food">えさ</button>
+        </div>
+        <div id="enc-content" class="enc-content"></div>
+      </div>
+    </div>
+
+    <!-- 画面0.5: ストーリー画面 -->
+    <section id="screen-story" class="screen full-center hide glass-panel">
+      <div class="story-content" id="story-text">
+        <p>スタミナを装甲とし、タイムラインを支配せよ。</p>
+        <p>ここは果てなき仮想の塔。</p>
+        <p>敗北は個体のロストを意味する。</p>
+        <p>6体の仲間を率いて、頂上に待つ「完全体」を打ち破れ。</p>
+      </div>
+      <button id="btn-skip-story" class="btn skill-btn mt-2">NEXT >></button>
+    </section>
+
+    <!-- 画面0.6: 名前入力画面 -->
+    <section id="screen-name" class="screen full-center hide glass-panel">
+      <h2>Enter Your Name</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px;">あなたの名前を教えてください。</p>
+      <input type="text" id="input-player-name" class="modern-input" placeholder="Name" maxlength="12" style="margin-bottom: 20px;">
+      <button id="btn-submit-name" class="btn primary-btn pulse-glow">決定</button>
+    </section>
+
+    <!-- 画面0.7: 卵選択画面 -->
+    <section id="screen-egg" class="screen full-center hide glass-panel">
+      <h2>Select Your Starter Egg</h2>
+      <p style="color: #94a3b8; margin-bottom: 30px;">未知の塔に挑む、最初の仲間を孵化させよう。</p>
+      
+      <div id="egg-container" class="egg-container">
+        <div class="egg egg-red" data-type="red"><div class="egg-spot"></div></div>
+        <div class="egg egg-blue" data-type="blue"><div class="egg-spot"></div></div>
+        <div class="egg egg-green" data-type="green"><div class="egg-spot"></div></div>
+      </div>
+      <p id="egg-hatch-text" class="hide" style="margin-top:20px; font-weight:bold; color:#f8fafc;"></p>
+      <button id="btn-egg-proceed" class="btn primary-btn hide mt-2">マップへ進む</button>
+    </section>
+
+    <!-- 画面0.8: ハブ（ステージ選択）画面 -->
+    <section id="screen-hub" class="screen full-center hide glass-panel" style="width: 800px; max-width: 90vw;">
+      <h2>HUB: STAGE SELECTION</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px;">拠点で準備を整え、ステージへ出発しよう。</p>
+      
+      <div style="display:flex; justify-content:center; gap:20px; margin-bottom:30px;">
+        <button id="btn-hub-party" class="btn skill-btn active-tab" style="font-size:1.1rem; padding:10px 20px;">PARTY</button>
+        <button id="btn-hub-inventory" class="btn skill-btn" style="font-size:1.1rem; padding:10px 20px;">INVENTORY</button>
+      </div>
+      
+      <div class="stage-container">
+        <div id="btn-stage-1" class="stage-card">
+           <h3 style="color:#fbbf24; margin-bottom:10px;">Stage 1</h3>
+           <p style="font-size:1.1rem; font-weight:bold;">始まりの草原</p>
+           <p style="font-size:0.8rem; color:#94a3b8; margin-top:5px;">階層: 3F</p>
+        </div>
+        <div id="btn-stage-2" class="stage-card locked">
+           <h3 style="color:#94a3b8; margin-bottom:10px;">Stage 2</h3>
+           <p style="font-size:1.1rem; font-weight:bold;">迷いの森</p>
+           <p style="font-size:0.8rem; color:#64748b; margin-top:5px;">階層: 5F</p>
+           <div class="lock-icon">🔒</div>
+        </div>
+        <div id="btn-stage-3" class="stage-card locked">
+           <h3 style="color:#94a3b8; margin-bottom:10px;">Stage 3</h3>
+           <p style="font-size:1.1rem; font-weight:bold;">試練の塔</p>
+           <p style="font-size:0.8rem; color:#64748b; margin-top:5px;">階層: 7F</p>
+           <div class="lock-icon">🔒</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 画面1: マップ画面 -->
+    <section id="screen-map" class="screen hide glass-panel map-screen" style="position:relative;">
+      <h2>SPIRE MAP</h2>
+      <p class="map-desc">ノードを選択して進んでください。</p>
+      <div style="position:absolute; top:20px; right:20px; display:flex; gap:10px;">
+        <button id="btn-map-party" class="btn skill-btn active-tab" style="font-size:0.9rem; padding:6px 12px;">PARTY</button>
+        <button id="btn-map-inventory" class="btn skill-btn" style="font-size:0.9rem; padding:6px 12px;">INVENTORY</button>
+      </div>
+      <div id="map-container" class="map-container">
+        <svg id="map-lines" class="map-lines"></svg>
+        <div id="map-nodes" class="map-nodes"></div>
+      </div>
+    </section>
+
+    <!-- 画面: パーティ詳細 -->
+    <section id="screen-party" class="screen hide glass-panel" style="max-height:80vh; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>PARTY STATUS</h2>
+        <button id="btn-close-party" class="btn skill-btn">閉じる</button>
+      </div>
+      <p style="color:#94a3b8; margin-bottom:20px;">仲間の詳細なパラメーターを確認できます。</p>
+      <div id="party-details-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+      </div>
+    </section>
+
+    <!-- 画面: インベントリ -->
+    <section id="screen-inventory" class="screen hide glass-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>INVENTORY</h2>
+        <button id="btn-close-inventory" class="btn skill-btn">閉じる</button>
+      </div>
+      <p>技をセットしたり、餌を与えてステータスを強化できます。</p>
+      
+      <div class="inv-container" style="display:flex; gap:20px; margin-top:20px;">
+        <div class="inv-list" style="flex:1; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; min-height:200px;">
+          <h3>Skills</h3>
+          <div id="inv-skills-content" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
+        </div>
+        <div class="inv-list" style="flex:1; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; min-height:200px;">
+          <h3>Food (Stats)</h3>
+          <div id="inv-food-content" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
+        </div>
+      </div>
+      
+      <div id="inv-target-selection" class="hide" style="margin-top:20px; background:rgba(0,0,0,0.5); padding:15px; border-radius:8px;">
+         <h3 id="inv-target-msg">誰に使いますか？</h3>
+         <div id="inv-roster-grid" class="monster-grid" style="margin-top:10px;"></div>
+         <button id="btn-cancel-use" class="btn skill-btn mt-2">やめる</button>
+      </div>
+    </section>
+
+    <!-- 画面: リザルト報酬 -->
+    <section id="screen-reward" class="screen hide glass-panel full-center">
+      <h2>BATTLE REWARDS</h2>
+      <p>戦利品を獲得しました！</p>
+      <div id="reward-boxes" style="display:flex; gap:15px; margin:30px 0; flex-wrap:wrap; justify-content:center;">
+      </div>
+      <button id="btn-collect-reward" class="btn primary-btn">回収して進む</button>
+    </section>
+
+    <!-- 画面2: 選抜画面 -->
+    <section id="screen-selection" class="screen hide glass-panel">
+      <h2>Select 3 Monsters</h2>
+      <p>このバトルに出撃する3体を選んでください。</p>
+      <div id="roster-grid" class="monster-grid"></div>
+      <button id="btn-start-battle" class="btn primary-btn" disabled>BATTLE START</button>
+    </section>
+
+    <!-- 画面3: バトル画面 -->
+    <section id="screen-battle" class="screen hide">
+      <div class="battle-arena">
+        <!-- P1 エリア -->
+        <div class="side-panel p1-side glass-panel">
+          <h3>Your Team</h3>
+          <div class="active-monster-card" id="p1-active-card">
+            <div class="card-header">
+              <h4 id="p1-name">-</h4>
+              <span class="elem-badge" id="p1-elem">-</span>
+            </div>
+            <div class="bars">
+              <label>HP</label>
+              <div class="bar-container hp-bar"><div class="bar-fill hp" id="p1-hp-fill"></div></div>
+              <label>ST (Armor)</label>
+              <div class="bar-container st-bar"><div class="bar-fill st" id="p1-st-fill"></div></div>
+              <label>ATB</label>
+              <div class="bar-container atb-bar"><div class="bar-fill atb" id="p1-atb-fill"></div></div>
+            </div>
+          </div>
+          
+          <!-- コマンドメニューをモンスター情報の下に移動 -->
+          <div id="action-menu" class="action-menu hide">
+            <div id="action-phase-header" style="text-align:center; font-weight:bold; margin-bottom:10px; padding:5px; border-radius:5px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6;">ATTACK PHASE</div>
+            
+            <div class="cmd-tabs" id="action-tabs" style="display:flex; gap:10px; margin-bottom:10px;">
+              <button id="btn-tab-skills" class="btn skill-btn active-tab" style="flex:1;">Skills</button>
+              <button id="btn-tab-items" class="btn skill-btn inactive-tab" style="flex:1;">Items <span id="item-count-badge" style="font-size:0.7em; background:#ef4444; padding:2px 6px; border-radius:10px; margin-left:5px;">0</span></button>
+            </div>
+            
+            <div id="skill-buttons" class="cmd-grid"></div>
+            <div id="item-buttons" class="cmd-grid hide" style="margin-top:10px;"></div>
+            
+            <div id="defend-wrapper" class="hide" style="margin-top:10px;">
+                <button id="btn-defend-action" class="btn" style="width:100%; padding: 10px; background: #fbbf24; color: #1e293b; border: none; font-weight: bold;">🛡 身を守る (Defend) - ST消費半減</button>
+            </div>
+            
+            <div id="swap-wrapper" style="margin-top:10px;">
+                <button id="btn-swap-action" class="btn" style="width:100%; padding: 10px; background: #475569; color: white; border: none; font-weight: bold; cursor: pointer;">🔄 控えと入れ替える (Swap)</button>
+            </div>
+          </div>
+
+          <div class="reserve-list" id="p1-reserves"></div>
+        </div>
+
+        <!-- キュー＆結果エリア（中央） -->
+        <div class="center-panel glass-panel">
+          <h3>ACTION QUEUE</h3>
+          <div id="timeline-queue" class="timeline-queue">
+            <!-- JSで行動順アイコンが並ぶ -->
+          </div>
+          
+          <!-- トースト通知用エリア -->
+          <div id="toast-container" class="toast-container"></div>
+
+          <div id="battle-result-menu" class="action-menu hide" style="text-align:center; margin-top: auto;">
+             <h3 id="battle-result-text" style="margin-bottom:10px;"></h3>
+             <button id="btn-return-map" class="btn primary-btn">マップへ戻る</button>
+          </div>
+        </div>
+
+        <!-- P2 エリア -->
+        <div class="side-panel p2-side glass-panel">
+          <h3>Opponent</h3>
+          <div class="active-monster-card" id="p2-active-card">
+            <div class="card-header">
+              <h4 id="p2-name">-</h4>
+              <span class="elem-badge" id="p2-elem">-</span>
+            </div>
+            <div class="bars">
+               <label>HP</label>
+               <div class="bar-container hp-bar"><div class="bar-fill hp" id="p2-hp-fill"></div></div>
+               <label>ST (Armor)</label>
+               <div class="bar-container st-bar"><div class="bar-fill st" id="p2-st-fill"></div><div class="break-text hide" id="p2-break-text">ゼーゼー...!!</div></div>
+               <label>ATB</label>
+               <div class="bar-container atb-bar"><div class="bar-fill atb" id="p2-atb-fill"></div></div>
+            </div>
+          </div>
+          <div class="reserve-list" id="p2-reserves"></div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ES Modules -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

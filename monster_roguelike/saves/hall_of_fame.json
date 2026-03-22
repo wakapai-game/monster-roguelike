@@ -1,0 +1,78 @@
+{
+  "data": [
+    {
+      "id": "m_001",
+      "name": "フレイムパピー",
+      "main_element": "fire",
+      "sub_element": "none",
+      "base_stats": {
+        "hp": 200,
+        "atk": 40,
+        "def": 30,
+        "mag": 20,
+        "spd": 25,
+        "max_st": 80,
+        "st_rec": 5
+      },
+      "params": {
+        "size": 60,
+        "hardness": 50,
+        "intelligence": 40
+      },
+      "skills": [
+        "strike",
+        "fireball"
+      ]
+    },
+    {
+      "id": "m_002",
+      "name": "アクアタートル",
+      "main_element": "water",
+      "sub_element": "earth",
+      "base_stats": {
+        "hp": 250,
+        "atk": 25,
+        "def": 50,
+        "mag": 15,
+        "spd": 10,
+        "max_st": 120,
+        "st_rec": 5
+      },
+      "params": {
+        "size": 50,
+        "hardness": 70,
+        "intelligence": 30
+      },
+      "skills": [
+        "strike",
+        "water_gun",
+        "heal_st"
+      ]
+    },
+    {
+      "id": "m_003",
+      "name": "サンダーバード",
+      "main_element": "thunder",
+      "sub_element": "wind",
+      "base_stats": {
+        "hp": 150,
+        "atk": 30,
+        "def": 20,
+        "mag": 45,
+        "spd": 40,
+        "max_st": 70,
+        "st_rec": 15
+      },
+      "params": {
+        "size": 40,
+        "hardness": 40,
+        "intelligence": 70
+      },
+      "skills": [
+        "strike",
+        "smash"
+      ]
+    }
+  ],
+  "hash": "d9ff3efe292237a11949e10c0583f07ac393bdd157d254fa6b1a9cdc718521ad"
+}

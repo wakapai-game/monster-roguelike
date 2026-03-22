@@ -1,0 +1,73 @@
+[
+  {
+    "id": "strike",
+    "name": "たいあたり",
+    "type": "physical",
+    "element": "none",
+    "cost_st": 0,
+    "effects": [
+      { "type": "damage_st", "base_power": 50 }
+    ]
+  },
+  {
+    "id": "fireball",
+    "name": "ファイアボール",
+    "type": "magic",
+    "element": "fire",
+    "cost_st": 5,
+    "effects": [
+      { "type": "damage_st", "base_power": 80 }
+    ]
+  },
+  {
+    "id": "water_gun",
+    "name": "みずでっぽう",
+    "type": "magic",
+    "element": "water",
+    "cost_st": 5,
+    "effects": [
+      { "type": "damage_st", "base_power": 80 }
+    ]
+  },
+  {
+    "id": "smash",
+    "name": "フルスイング",
+    "type": "physical",
+    "element": "none",
+    "cost_st": 10,
+    "effects": [
+      { "type": "damage_st", "base_power": 120 },
+      { "type": "delay_gauge", "value": 20 }
+    ]
+  },
+  {
+    "id": "heal_st",
+    "name": "きゅうけい",
+    "type": "buff",
+    "element": "none",
+    "cost_st": 0,
+    "effects": [
+      { "type": "recover_st", "percent": 30 }
+    ]
+  },
+  {
+    "id": "pierce_needle",
+    "name": "どくばり（貫通）",
+    "type": "pierce",
+    "element": "none",
+    "cost_st": 20,
+    "effects": [
+      { "type": "damage_hp_direct", "base_power": 20 }
+    ]
+  },
+  {
+    "id": "fire_trap",
+    "name": "じらい（罠）",
+    "type": "trap",
+    "element": "fire",
+    "cost_st": 15,
+    "effects": [
+      { "type": "add_status", "status": "trap_fire" }
+    ]
+  }
+]

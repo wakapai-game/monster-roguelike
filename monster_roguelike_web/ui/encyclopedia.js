@@ -1,0 +1,128 @@
+import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, MAP_ITEMS_DATA } from '../data.js';
+
+const overlay = document.getElementById('screen-encyclopedia');
+const content = document.getElementById('enc-content');
+const tabBtns = document.querySelectorAll('[data-enc-tab]');
+
+export function openEncyclopedia() {
+  overlay.classList.remove('hide');
+  renderTab('monsters');
+}
+
+document.getElementById('btn-close-encyclopedia').onclick = () => {
+  overlay.classList.add('hide');
+};
+
+tabBtns.forEach(btn => {
+  btn.onclick = () => {
+    tabBtns.forEach(b => b.className = 'btn skill-btn inactive-tab');
+    btn.className = 'btn skill-btn active-tab';
+    renderTab(btn.dataset.encTab);
+  };
+});
+
+function renderTab(tab) {
+  content.innerHTML = '';
+
+  if (tab === 'monsters') {
+    renderMonsters();
+  } else if (tab === 'skills') {
+    renderSkills();
+  } else if (tab === 'items') {
+    renderItems();
+  } else if (tab === 'food') {
+    renderFood();
+  }
+}
+
+function renderMonsters() {
+  const section = (label, list) => {
+    const heading = document.createElement('p');
+    heading.style.cssText = 'color:#94a3b8; font-size:0.8rem; font-weight:bold; margin:10px 0 6px;';
+    heading.textContent = label;
+    content.appendChild(heading);
+
+    list.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'enc-card';
+      const subBadge = m.sub_element !== 'none'
+        ? `<span class="elem-badge elem-${m.sub_element}">${m.sub_element.toUpperCase()}</span>`
+        : '';
+      const skillNames = m.skills.map(sid => {
+        const s = SKILLS.find(sk => sk.id === sid);
+        return s ? s.name : sid;
+      }).join(' / ');
+      card.innerHTML = `
+        <div class="enc-card-header">
+          <span class="elem-badge elem-${m.main_element}">${m.main_element.toUpperCase()}</span>
+          ${subBadge}
+          <strong>${m.name}</strong>
+        </div>
+        <div class="enc-stats">
+          <span>HP: ${m.base_stats.hp}</span>
+          <span>ST: ${m.base_stats.max_st}</span>
+          <span>ATK: ${m.base_stats.atk}</span>
+          <span>DEF: ${m.base_stats.def}</span>
+          <span>MAG: ${m.base_stats.mag}</span>
+          <span>SPD: ${m.base_stats.spd}</span>
+        </div>
+        <div class="enc-skills">技: ${skillNames}</div>
+      `;
+      content.appendChild(card);
+    });
+  };
+
+  section('味方モンスター', MONSTERS_DATA);
+  section('敵モンスター', ENEMY_DATA);
+}
+
+function renderSkills() {
+  const catColor = { attack: '#ef4444', defense: '#3b82f6', trap: '#eab308' };
+  SKILLS.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'enc-card';
+    const color = catColor[s.category] || '#64748b';
+    const elemTxt = s.element !== 'none' ? `　属性: <span class="elem-badge elem-${s.element}">${s.element.toUpperCase()}</span>` : '';
+    card.innerHTML = `
+      <div class="enc-card-header">
+        <span class="enc-badge" style="background:${color};">${s.category.toUpperCase()}</span>
+        <strong>${s.name}</strong>
+        <span style="margin-left:auto; color:#94a3b8; font-size:0.85rem;">ST コスト: ${s.cost_st}</span>
+      </div>
+      <div style="font-size:0.85rem; color:#cbd5e1; margin-top:6px;">
+        タイプ: ${s.type}${elemTxt}
+      </div>
+    `;
+    content.appendChild(card);
+  });
+}
+
+function renderItems() {
+  BATTLE_ITEMS_DATA.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'enc-card';
+    card.innerHTML = `
+      <div class="enc-card-header">
+        <span class="enc-badge" style="background:#7c3aed;">BATTLE ITEM</span>
+        <strong>${item.name}</strong>
+      </div>
+      <div style="font-size:0.85rem; color:#94a3b8; margin-top:6px;">${item.description}</div>
+    `;
+    content.appendChild(card);
+  });
+}
+
+function renderFood() {
+  MAP_ITEMS_DATA.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'enc-card';
+    card.innerHTML = `
+      <div class="enc-card-header">
+        <span class="enc-badge" style="background:#10b981;">えさ</span>
+        <strong>${item.name}</strong>
+      </div>
+      <div style="font-size:0.85rem; color:#94a3b8; margin-top:6px;">${item.description}</div>
+    `;
+    content.appendChild(card);
+  });
+}
