@@ -41,6 +41,9 @@ const ENEMY_DATA = [
   { id: "e_boss_01", name: "【ボス】暴走ゴーレム", main_element: "earth", sub_element: "none", base_stats: {hp: 300, atk: 40, def: 50, mag: 5, spd: 10, max_st: 150, st_rec: 0}, skills: ["smash"] }
 ];
 
+// チュートリアル専用敵（ice属性でfireballがバツグン、ST高めでST削り体験用、st_rec:0でブレイクしやすい）
+const TUTORIAL_ENEMY = { id: "e_tutorial", name: "修行用ダミー", main_element: "ice", sub_element: "none", base_stats: {hp: 300, atk: 12, def: 45, mag: 55, spd: 8, max_st: 200, st_rec: 0}, skills: ["strike"] };
+
 // バトル中に使用可能なアイテム（Inventoryから消費）
 const BATTLE_ITEMS_DATA = [
   { id: "bitem_hp_potion", name: "キズぐすり", type: "item_battle", description: "味方のHPを50回復", effect: { type: "recover_hp", value: 50 } },
@@ -99,4 +102,4 @@ const FOOD_DATA = [
   }
 ];
 
-export { AFFINITY, SKILLS, MONSTERS_DATA, ENEMY_DATA, BATTLE_ITEMS_DATA, FOOD_DATA };
+export { AFFINITY, SKILLS, MONSTERS_DATA, ENEMY_DATA, BATTLE_ITEMS_DATA, FOOD_DATA, TUTORIAL_ENEMY };

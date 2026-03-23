@@ -1,21 +1,27 @@
-import { MONSTERS_DATA, ENEMY_DATA } from './data.js';
+import { MONSTERS_DATA, ENEMY_DATA, TUTORIAL_ENEMY } from './data.js';
 import { Monster, Timeline, BattleEngine } from './game.js';
 import { MapGenerator } from './map.js';
 import { appState } from './state.js';
 import {
   screenStart, screenStory, screenEgg, screenMap, screenSelection,
-  screenBattle, screenName, screenStarterEvent, screenHub, screenReward,
+  screenBattle, screenName, screenStarterEvent, screenTutorialSelect, screenHub, screenReward,
   mainHeader, rosterGrid, btnStartBattle, battleLog,
   btnHubInventory, btnMapInventory, btnHubParty, btnMapParty,
   btnSubmitName, inputPlayerName, starterEventGrid, btnStarterEventProceed,
   btnStage1, btnStage2, btnStage3, btnCollectReward,
   switchScreen
 } from './ui/dom.js';
+import { initTutorial, showTutorialStep } from './ui/tutorial.js';
 import { openInventory, openParty } from './ui/inventory.js';
 import { renderMap, generateRewards } from './ui/map-render.js';
 import { toast, updateUI, resumeLoop } from './ui/battle.js';
 import { openEncyclopedia } from './ui/encyclopedia.js';
 import { saveGame, loadGame, deleteSave } from './persistence.js';
+import { openHelp, initHelp } from './ui/help.js';
+
+// ---- Help System ----
+initHelp();
+document.getElementById('btn-help-global').onclick = openHelp;
 
 // ---- Save / Load ----
 
@@ -85,7 +91,19 @@ btnSubmitName.onclick = () => {
 };
 
 btnStarterEventProceed.onclick = () => {
-  switchScreen(screenStarterEvent, screenHub);
+  switchScreen(screenStarterEvent, screenTutorialSelect);
+};
+
+document.getElementById('btn-tutorial-full').onclick = () => {
+  initTutorial('full');
+  startTutorialBattle();
+};
+document.getElementById('btn-tutorial-simple').onclick = () => {
+  initTutorial('simple');
+  startTutorialBattle();
+};
+document.getElementById('btn-tutorial-skip').onclick = () => {
+  switchScreen(screenTutorialSelect, screenHub);
 };
 
 function grantStarterMonsters() {
@@ -205,10 +223,41 @@ function confirmBattleSetup() {
   resumeLoop();
 }
 
+// ---- Tutorial Battle ----
+function startTutorialBattle() {
+  switchScreen(screenTutorialSelect, screenBattle);
+  mainHeader.style.display = 'block';
+
+  if (battleLog) battleLog.innerHTML = '';
+
+  // チュートリアル用アイテムをインベントリに追加（キズぐすり×2、スタミナドリンク×1）
+  appState.globalInventory.battleItems.push('bitem_hp_potion', 'bitem_hp_potion', 'bitem_st_potion');
+
+  appState.engine = new BattleEngine();
+  appState.p1Team = appState.globalRoster.map(d => new Monster(JSON.parse(JSON.stringify(d))));
+
+  const enemyData = JSON.parse(JSON.stringify(TUTORIAL_ENEMY));
+  appState.p2Team = [new Monster(enemyData)];
+
+  appState.timeline = new Timeline(appState.p1Team, appState.p2Team);
+  toast(`<span class="log-system">【チュートリアルバトル】修行用ダミーと戦ってシステムを学ぼう！</span>`);
+  updateUI();
+  resumeLoop();
+}
+
 // ---- Map / Reward Flow ----
 document.addEventListener('battle-end', (e) => {
   if (!e.detail.win) {
     window.location.reload();
+    return;
+  }
+
+  // チュートリアル終了：報酬画面を経由して拠点へ
+  if (appState.tutorialMode && appState.tutorialMode !== 'none') {
+    appState.tutorialReward = true;
+    generateRewards();
+    switchScreen(screenBattle, screenReward);
+    setTimeout(() => showTutorialStep('reward', null), 300);
     return;
   }
 
@@ -226,6 +275,14 @@ document.addEventListener('battle-end', (e) => {
 });
 
 btnCollectReward.onclick = () => {
+  if (appState.tutorialReward) {
+    appState.tutorialReward = false;
+    appState.tutorialMode = null;
+    appState.tutorialShownSteps = new Set();
+    mainHeader.style.display = 'none';
+    switchScreen(screenReward, screenHub);
+    return;
+  }
   if (appState.stageCleared) {
     resetEggScreen();
     switchScreen(screenReward, screenEgg);

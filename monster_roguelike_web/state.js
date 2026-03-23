@@ -17,5 +17,8 @@ export const appState = {
   timeline: null,
   loopInterval: null,
   p1Team: [],
-  p2Team: []
+  p2Team: [],
+  tutorialMode: null,
+  tutorialShownSteps: new Set(),
+  tutorialReward: false
 };

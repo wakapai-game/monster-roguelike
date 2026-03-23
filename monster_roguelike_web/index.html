@@ -74,6 +74,26 @@
       <button id="btn-starter-event-proceed" class="btn primary-btn pulse-glow">拠点へ進む</button>
     </section>
 
+    <!-- チュートリアル選択画面 -->
+    <section id="screen-tutorial-select" class="screen full-center hide glass-panel">
+      <h2>チュートリアル</h2>
+      <p style="color:#94a3b8; margin-bottom:8px; text-align:center;">実際のバトルでシステムを学べます。</p>
+      <p style="color:#64748b; font-size:0.85rem; margin-bottom:24px; text-align:center;">いつでもスキップできます。</p>
+      <div class="tutorial-select-buttons">
+        <button id="btn-tutorial-full" class="btn primary-btn pulse-glow">
+          🎓 フル版チュートリアル
+          <span style="display:block; font-size:0.75rem; font-weight:normal; color:#bfdbfe; margin-top:4px;">ゲームが一時停止して丁寧に説明</span>
+        </button>
+        <button id="btn-tutorial-simple" class="btn skill-btn">
+          💬 シンプルチュートリアル
+          <span style="display:block; font-size:0.75rem; font-weight:normal; color:#94a3b8; margin-top:4px;">ヒントを見ながら自分で操作</span>
+        </button>
+        <button id="btn-tutorial-skip" class="btn skill-btn" style="color:#64748b;">
+          スキップして拠点へ進む
+        </button>
+      </div>
+    </section>
+
     <!-- 画面0.7: 卵選択画面 -->
     <section id="screen-egg" class="screen full-center hide glass-panel">
       <h2>Select Your Starter Egg</h2>
@@ -172,6 +192,32 @@
       </div>
     </section>
 
+    <!-- HELPオーバーレイ -->
+    <div id="screen-help" class="help-overlay hide">
+      <div class="help-panel glass-panel">
+        <div class="help-header">
+          <h2 style="font-size:1.3rem;">📖 HELP / ゲームシステム</h2>
+          <button id="btn-close-help" class="btn skill-btn">✕ 閉じる</button>
+        </div>
+        <div class="help-tabs-bar" id="help-tabs-bar">
+          <button class="btn help-tab-btn active-tab"  data-help-tab="battle">バトル</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="st">ST/ブレイク</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="affinity">属性相性</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="skills">技・アイテム</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="training">育成・強化</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="map">マップ・用語</button>
+        </div>
+        <div class="help-body">
+          <div id="help-content-battle"   class="help-tab-content"></div>
+          <div id="help-content-st"       class="help-tab-content hide"></div>
+          <div id="help-content-affinity" class="help-tab-content hide"></div>
+          <div id="help-content-skills"   class="help-tab-content hide"></div>
+          <div id="help-content-training" class="help-tab-content hide"></div>
+          <div id="help-content-map"      class="help-tab-content hide"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- 画面: リザルト報酬 -->
     <section id="screen-reward" class="screen hide glass-panel full-center">
       <h2>BATTLE REWARDS</h2>
@@ -188,6 +234,16 @@
       <div id="roster-grid" class="monster-grid"></div>
       <button id="btn-start-battle" class="btn primary-btn" disabled>BATTLE START</button>
     </section>
+
+    <!-- チュートリアルオーバーレイ（フル版） -->
+    <div id="tutorial-overlay" class="tutorial-overlay hide">
+      <div class="tutorial-overlay-panel glass-panel">
+        <div class="tutorial-overlay-step-badge">TUTORIAL</div>
+        <h3 id="tutorial-overlay-title"></h3>
+        <p id="tutorial-overlay-body"></p>
+        <button id="btn-tutorial-ok" class="btn primary-btn" style="width:100%; margin-top:8px;">OK、わかった！</button>
+      </div>
+    </div>
 
     <!-- 画面3: バトル画面 -->
     <section id="screen-battle" class="screen hide">
@@ -243,6 +299,10 @@
         <div id="action-menu" class="action-menu hide">
           <div id="action-phase-header" style="text-align:center; font-weight:bold; margin-bottom:10px; padding:5px; border-radius:5px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6;">ATTACK PHASE</div>
 
+          <div id="tutorial-hint" class="tutorial-hint hide">
+            <span id="tutorial-hint-text"></span>
+          </div>
+
           <div class="cmd-tabs" id="action-tabs" style="display:flex; gap:10px; margin-bottom:10px;">
             <button id="btn-tab-skills" class="btn skill-btn active-tab" style="flex:1;">Skills</button>
             <button id="btn-tab-items" class="btn skill-btn inactive-tab" style="flex:1;">Items <span id="item-count-badge" style="font-size:0.7em; background:#ef4444; padding:2px 6px; border-radius:10px; margin-left:5px;">0</span></button>
@@ -264,6 +324,8 @@
       </div>
     </section>
   </main>
+
+  <button id="btn-help-global" class="help-float-btn" title="ゲームシステムを確認">?</button>
 
   <!-- ES Modules -->
   <script type="module" src="app.js"></script>

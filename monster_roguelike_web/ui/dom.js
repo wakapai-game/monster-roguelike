@@ -7,6 +7,7 @@ export const screenSelection = document.getElementById('screen-selection');
 export const screenBattle = document.getElementById('screen-battle');
 export const screenName = document.getElementById('screen-name');
 export const screenStarterEvent = document.getElementById('screen-starter-event');
+export const screenTutorialSelect = document.getElementById('screen-tutorial-select');
 export const screenHub = document.getElementById('screen-hub');
 export const screenInventory = document.getElementById('screen-inventory');
 export const screenReward = document.getElementById('screen-reward');
@@ -80,7 +81,7 @@ export function switchScreen(fromId, toId) {
   toId.classList.remove('hide');
   toId.classList.add('active');
 
-  if (toId !== screenStart && toId !== screenStory && toId !== screenEgg && toId !== screenReward && toId !== screenName && toId !== screenStarterEvent && toId !== screenHub) {
+  if (toId !== screenStart && toId !== screenStory && toId !== screenEgg && toId !== screenReward && toId !== screenName && toId !== screenStarterEvent && toId !== screenTutorialSelect && toId !== screenHub) {
     mainHeader.style.display = 'block';
   } else {
     mainHeader.style.display = 'none';

@@ -1,5 +1,6 @@
 import { appState } from '../state.js';
 import { BATTLE_ITEMS_DATA } from '../data.js';
+import { isTutorialActive, isTutorialFullMode, hasShownStep, showTutorialStep, hideTutorialHint } from './tutorial.js';
 import {
   actionMenu, actionPhaseHeader, actionTabs,
   defendWrapper, btnDefendAction, swapWrapper, btnSwapAction, swapSelectPanel,
@@ -148,6 +149,15 @@ export function resumeLoop() {
   actionMenu.classList.add('hide');
   swapSelectPanel.classList.add('hide');
 
+  // チュートリアル: ACTION QUEUEステップ（フル版は表示後にループ開始）
+  if (isTutorialActive() && !hasShownStep('action-queue')) {
+    showTutorialStep('action-queue', () => _startLoop());
+    return;
+  }
+  _startLoop();
+}
+
+function _startLoop() {
   appState.loopInterval = setInterval(() => {
     updateUI(true);
     const result = appState.timeline.tick();
@@ -187,6 +197,9 @@ btnTabItems.onclick = () => {
     btnTabSkills.className = 'btn skill-btn inactive-tab';
     itemButtons.classList.remove('hide');
     skillButtons.classList.add('hide');
+
+    // チュートリアルフック: アイテムタブを初めて開いたとき
+    if (isTutorialActive()) showTutorialStep('item-use', null);
 };
 
 export function showAttackPhase(monster) {
@@ -240,6 +253,19 @@ export function showAttackPhase(monster) {
   });
 
   setupSwapButton(1, monster, null, null);
+
+  // チュートリアルフック（表示順: attack-phase → player-break(条件) → swap → affinity）
+  if (isTutorialActive()) {
+    if (!hasShownStep('attack-phase')) {
+      showTutorialStep('attack-phase', null);
+    } else if (monster.is_break && !hasShownStep('player-break')) {
+      showTutorialStep('player-break', null);
+    } else if (hasShownStep('st-chip') && !hasShownStep('swap')) {
+      showTutorialStep('swap', null);
+    } else if (hasShownStep('break') && !hasShownStep('affinity')) {
+      showTutorialStep('affinity', null);
+    }
+  }
 }
 
 export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
@@ -315,6 +341,15 @@ export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
   }
 
   setupSwapButton(2, playerTarget, enemyAttacker, enemySkillId);
+
+  // チュートリアルフック（防御フェーズ説明後にアイテム説明も案内）
+  if (isTutorialActive()) {
+    if (!hasShownStep('swap') && !hasShownStep('defense-phase')) {
+      showTutorialStep('defense-phase', null);
+    } else if (!hasShownStep('swap')) {
+      showTutorialStep('swap', null);
+    }
+  }
 }
 
 export function setupSwapButton(phaseType, currentMonster, enemyAttacker, enemySkillId) {
@@ -426,6 +461,26 @@ export function executeAction(playerNum, attacker, defender, skillId) {
 
   appState.timeline.onActionCompleted(playerNum);
   updateUI();
+
+  // チュートリアル: ST削り説明（プレイヤー攻撃でSTダメージを与えたがブレイクしていない場合）
+  if (isTutorialActive() && !hasShownStep('st-chip') && playerNum === 1 && result.st_damage > 0 && !result.is_break) {
+    showTutorialStep('st-chip', null);
+  }
+
+  // チュートリアル: BREAKステップ（フル版はoverlay表示までloopを遅延）
+  if (isTutorialActive() && !hasShownStep('break') && result.is_break) {
+    if (isTutorialFullMode()) {
+      setTimeout(() => {
+        showTutorialStep('break', () => resumeLoop());
+      }, 600);
+    } else {
+      setTimeout(() => {
+        showTutorialStep('break', null);
+        resumeLoop();
+      }, 1200);
+    }
+    return;
+  }
 
   setTimeout(() => { resumeLoop(); }, 1200);
 }
