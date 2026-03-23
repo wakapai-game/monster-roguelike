@@ -4,7 +4,7 @@ import {
   actionMenu, actionPhaseHeader, actionTabs,
   defendWrapper, btnDefendAction, swapWrapper, btnSwapAction, swapSelectPanel,
   skillButtons, itemButtons, btnTabSkills, btnTabItems,
-  itemCountBadge, resultMenu, resultText,
+  itemCountBadge,
   timelineQueue, toastContainer, battleLog
 } from './dom.js';
 
@@ -99,30 +99,47 @@ export function updateUI(onlyGauges = false) {
 
       setBar(document.getElementById(`${side}-hp-fill`), activeMonster.current_hp, activeMonster.stats.hp);
 
-      const stBar = document.getElementById(`${side}-st-fill`);
-      if (side === 'p2' && !activeMonster.is_break) {
-          setBar(stBar, 100, 100);
-      } else if (side === 'p2' && activeMonster.is_break) {
-          setBar(stBar, 0, 100);
-      } else {
-          setBar(stBar, activeMonster.current_st, activeMonster.stats.max_st);
+      if (side === 'p1') {
+          setBar(document.getElementById('p1-st-fill'), activeMonster.current_st, activeMonster.stats.max_st);
       }
-
-      setBar(document.getElementById(`${side}-atb-fill`), activeMonster.gauge, appState.timeline.GAUGE_MAX);
 
       const cardEl = document.getElementById(`${side}-active-card`);
-      if(!onlyGauges) {
-          cardEl.classList.toggle('is-broken', activeMonster.is_break);
-          if(side==='p2') document.getElementById('p2-break-text').classList.toggle('hide', !activeMonster.is_break);
-      }
+      cardEl.classList.toggle('is-broken', activeMonster.is_break);
   };
 
   if (appState.timeline.p1_active) setCard('p1', appState.timeline.p1_active);
   if (appState.timeline.p2_active) setCard('p2', appState.timeline.p2_active);
 
+  renderEnemyRoster();
+
   if(!appState.timeline.p1_active || !appState.timeline.p2_active || actionMenu.classList.contains('hide')) {
       renderTimelineQueue();
   }
+}
+
+function renderEnemyRoster() {
+  const container = document.getElementById('p2-reserves');
+  if (!container || !appState.p2Team) return;
+
+  container.innerHTML = '';
+  appState.p2Team.forEach(m => {
+    const isActive = appState.timeline?.p2_active?.id === m.id;
+    const isDead = m.current_hp <= 0;
+    const hpPct = Math.max(0, Math.round((m.current_hp / m.stats.hp) * 100));
+
+    const div = document.createElement('div');
+    div.className = 'enemy-roster-card' + (isActive ? ' enemy-roster-active' : '') + (isDead ? ' enemy-roster-dead' : '');
+    div.innerHTML = `
+      <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+        <span style="font-size:0.75rem; font-weight:bold;">${isActive ? '▶ ' : ''}${m.name}</span>
+        <span class="elem-badge elem-${m.main_element}" style="font-size:0.55rem; padding:1px 3px;">${m.main_element.toUpperCase()}</span>
+      </div>
+      <div style="height:3px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:3px;">
+        <div style="width:${hpPct}%; height:100%; background:${isDead ? '#475569' : hpPct < 30 ? '#ef4444' : '#10b981'}; border-radius:2px; transition:width 0.3s;"></div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
 }
 
 // ---- Battle Flow ----
@@ -179,6 +196,7 @@ export function showAttackPhase(monster) {
   actionPhaseHeader.style.color = "#bfdbfe";
 
   btnTabItems.style.display = "none";
+  actionTabs.style.display = "none";
   defendWrapper.classList.add('hide');
 
   skillButtons.innerHTML = '';
@@ -248,6 +266,7 @@ export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
   actionPhaseHeader.style.color = "white";
 
   btnTabItems.style.display = "block";
+  actionTabs.style.display = "flex";
   defendWrapper.classList.remove('hide');
 
   skillButtons.innerHTML = '';
@@ -414,24 +433,16 @@ export function executeAction(playerNum, attacker, defender, skillId) {
 export function endBattle(isPlayerWin) {
     updateUI();
     actionMenu.classList.add('hide');
-    resultMenu.classList.remove('hide');
 
     if (isPlayerWin) {
-        toast(`<span style="font-size:1.5rem; color:#10b981; font-weight:bold;">VICTORY!</span>`);
-        resultText.innerText = "戦闘に勝利した！";
-        resultText.style.color = "#10b981";
-
-        const currentNode = appState.mapGenerator.getNodes().find(n => n.id === appState.currentNodeId);
-        if(currentNode.type === 'boss') {
-            resultText.innerText = "STAGE CLEAR! ボスを撃破した！";
-        }
-        document.getElementById('btn-return-map').innerText = "マップへ戻る";
-        // Do NOT overwrite onclick here; the global handler manages rewards and hub-routing!
+        const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
+        const isBoss = currentNode?.type === 'boss';
+        toast(`<span style="font-size:1.5rem; color:#10b981; font-weight:bold;">${isBoss ? 'STAGE CLEAR!' : 'VICTORY!'}</span>`);
     } else {
         toast(`<span style="font-size:1.5rem; color:#ef4444; font-weight:bold;">PARTY ANNIHILATED...</span>`);
-        resultText.innerText = "全滅した... GAME OVER";
-        resultText.style.color = "#ef4444";
-        document.getElementById('btn-return-map').innerText = "タイトルに戻る";
-        document.getElementById('btn-return-map').onclick = () => window.location.reload();
     }
+
+    setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('battle-end', { detail: { win: isPlayerWin } }));
+    }, 1500);
 }

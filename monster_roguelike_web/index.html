@@ -23,9 +23,10 @@
         <h1 class="mega-title">MONSTER ROGUE</h1>
         <p class="subtitle">Tactical Stamina Battles</p>
       </div>
-      <button id="btn-begin" class="btn primary-btn pulse-glow">START GAME</button>
-      <button id="btn-encyclopedia" class="btn skill-btn" style="margin-top:15px;">図鑑を見る</button>
-      <button id="btn-roadmap" class="btn skill-btn" style="margin-top:8px;">将来の実装アイデア</button>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:8px;">
+        <button id="btn-begin" class="btn primary-btn pulse-glow start-btn">START GAME</button>
+        <button id="btn-encyclopedia" class="btn skill-btn start-btn">図鑑を見る</button>
+      </div>
     </section>
 
     <!-- 図鑑モーダル -->
@@ -45,102 +46,6 @@
       </div>
     </div>
 
-    <!-- 拡張計画案モーダル -->
-    <div id="screen-roadmap" class="enc-overlay hide">
-      <div class="glass-panel roadmap-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-          <h2>モンスター・タクティクス：将来の実装アイデア集</h2>
-          <button id="btn-close-roadmap" class="btn skill-btn">✕ 閉じる</button>
-        </div>
-        <p class="roadmap-intro">コアシステム（MVP）完成後に順次実装を検討する、ゲームの拡張・発展プランを体系的にまとめたロードマップです。</p>
-        <div class="enc-content roadmap-content">
-
-          <div class="roadmap-chapter">
-            <h3>Ⅰ. バトルシステムの深化</h3>
-            <p class="roadmap-chapter-desc">盤面の駆け引きをよりダイナミックにし、ドラマチックな展開を生み出す要素。</p>
-            <ol class="roadmap-list">
-              <li><strong>マルチバトル（2対2 / 3対3）</strong><br>複数モンスターが同時に並ぶバトル形式。タンクとアタッカーの役割分担、全体攻撃の概念が生まれる。</li>
-              <li><strong>環境要因（天候・地形）とバトルステージ</strong><br>「晴天（炎強化）」「茨の陣地」などフィールド全体のルールを変える。特定の天候・地形が永続するステージも用意。</li>
-              <li><strong>テンションゲージ ＆ バトル中進化</strong><br>被弾や交代で溜まり、MAXで超必殺技が解放。特定条件で戦闘中に永続的な上位種へ進化する。</li>
-              <li><strong>プレイヤー応援（マスターエール）</strong><br>1バトルに1回、プレイヤーが直接介入できるコマンド。「テンション瞬時MAX」「致死ダメージをHP1で耐える」など限界突破の逆転劇を演出。</li>
-              <li><strong>初心者向けAIアシスタント（パーソナルコーチ）</strong><br>戦闘中、最善手や相手ブラフの可能性をAIがナビゲートして初心者をアシスト。</li>
-              <li><strong>条件一致による特殊エフェクト技（隠し奥義/環境コンボ）</strong><br>特定の環境条件を満たした状態で特定の技を使うと、技の名称・性能・演出が劇的に変化する隠し要素。</li>
-              <li><strong>コンボ（連続技）システム</strong><br>「コンボ1 → 2 → フィニッシュ」と連続ヒットするシステム。途中で割り込まれると失敗するが、決まればST無視の特大ダメージ。</li>
-              <li><strong>多彩な勝利条件（スコアポイント制 / 判定ルール）</strong><br>全滅以外に、制限ターン内のスコアを競う新ルール。耐久ループを防ぐメタとなる。</li>
-              <li><strong>ST消費型・フォームチェンジ（形態変化）</strong><br>交代枠を使わず別形態へチェンジ。代償として自身のSTを消費するハイリスク・ハイリターンなリソース管理。</li>
-            </ol>
-          </div>
-
-          <div class="roadmap-chapter">
-            <h3>Ⅱ. モンスターの個性と育成拡張</h3>
-            <p class="roadmap-chapter-desc">ステータスの数値だけでなく、モンスターごとの役割やビルドの幅を無限に広げる要素。</p>
-            <ol class="roadmap-list">
-              <li><strong>10回限定の『エサ』によるチューニングシステム</strong><br>1体につき最大10回エサを与え、ステータスを尖らせる。物理特化・魔法特化・高速化などのトレードオフによるビルド構築。</li>
-              <li><strong>ダイナミック・サイズシステム（5段階ランク）</strong><br>基本サイズ「M」からスタート。エサの蓄積で「SS・S・M・L・LL」の5段階にサイズとビジュアルが変動。</li>
-              <li><strong>賢さランクシステム（オーラエフェクト）</strong><br>賢さレベル（1〜5）が上がるにつれて、モンスターの周囲に激しいオーラエフェクトが纏われる。</li>
-              <li><strong>種族カテゴリ（神話・伝承の獣たち）</strong><br>「北欧神話の幻獣」「東洋の妖怪」「干支」「四聖獣」などクリーチャーモチーフに限定。同じ種族を揃えるとシナジーが発動。</li>
-              <li><strong>特性（パッシブスキル） / 性格（せいかく）</strong><br>生まれつき持つ常時発動能力と、非同期対戦やテンションの上がりやすさに直結する性格。</li>
-              <li><strong>レリック（未知の機械装備）システム</strong><br>探索で発見される「機械部品」や「呪物」をモンスターに装備し特殊パッシブ効果を持たせる。ハクスラの楽しみ。</li>
-              <li><strong>ビジュアル変異（色違い・模様）システム</strong><br>エサの成分や遺伝により体色が変化したり不気味な模様が発現。希少性に直結する経済的な価値を持つ。</li>
-            </ol>
-          </div>
-
-          <div class="roadmap-chapter">
-            <h3>Ⅲ. 対人戦と競技性（PvP & Competitive）</h3>
-            <p class="roadmap-chapter-desc">最強のテンプレをなくし、常に環境が循環するメタゲームを作る要素。</p>
-            <ol class="roadmap-list">
-              <li><strong>ローグライク・アリーナ形式（PvE to PvP ループ）</strong><br>ダンジョンを探索しながらモンスターをチューニングし、最終層で同じように生き抜いた他プレイヤーと対戦する複合モード。</li>
-              <li><strong>ダイナミック・オッズシステム（ランクマッチ）</strong><br>強い（人気な）モンスターは報酬オッズが下がり、マイナーな不遇モンスターはオッズが跳ね上がる。</li>
-              <li><strong>Pick & Ban（ドラフト）モード</strong><br>お互いのBOXから10体を提示し合い、Banを交互に指定してから編成を組む。</li>
-              <li><strong>観戦ビュー ＆ リプレイ機能</strong><br>「企業秘密（装備やST残量）」を伏せつつハイライトを共有。大会では神の視点UIを解放。</li>
-              <li><strong>公式大会と『名誉の特権』リワード</strong><br>優勝者には限定アバターや、任意のモンスターへの特殊モーション追加権など永遠の名誉が授与される。</li>
-            </ol>
-          </div>
-
-          <div class="roadmap-chapter">
-            <h3>Ⅳ. ソーシャルとコミュニティ</h3>
-            <p class="roadmap-chapter-desc">プレイヤー同士の熱狂を生み、ゲーム外でのコミュニケーションを活発にする要素。</p>
-            <ol class="roadmap-list">
-              <li><strong>クエスト＆ダンジョン・クリエイト機能（UGCメーカー）</strong><br>プレイヤー自身がマップ・ボスを配置してオリジナルクエストを作成・販売できる機能。良質なクエストはランキング化され作者が通貨を稼げる。</li>
-              <li><strong>ゲーム専用SNS『マスターズ・ネット』</strong><br>タイムラインでフレンドやランカーの動向を把握。試合中の相手の観戦にリアルタイムで乱入・応援が可能。</li>
-              <li><strong>ゴースト・スパーリング</strong><br>フォロー相手の殿堂入りモンスター（性格を反映したAI）と練習試合ができる。</li>
-              <li><strong>リアルなギルド経営とリーグ戦</strong><br>ギルドは毎月維持費をシステムに支払わなければ強制解散。資金繰りを管理するリアルな経営要素とギルド対抗戦。</li>
-              <li><strong>AI実況・解説システム</strong><br>LLMを活用し試合ログから状況に合わせた自然で熱狂的な実況を自動生成する。</li>
-              <li><strong>アバター（マスター）機能</strong><br>プレイヤー自身のビジュアルカスタマイズ。マスターエール発動時に画面にカットインする。</li>
-              <li><strong>BGMクリエイト＆テーマソング機能</strong><br>ゲーム内素材でオリジナルのバトルBGMを作成。エースモンスター出陣時に入場曲として相手画面にも鳴り響く。</li>
-            </ol>
-          </div>
-
-          <div class="roadmap-chapter">
-            <h3>Ⅴ. 経済とエコシステム</h3>
-            <p class="roadmap-chapter-desc">プレイのモチベーションを永続化させ、職人プレイや強固な公平性を担保する要素。</p>
-            <ol class="roadmap-list">
-              <li><strong>リージョン別・月額サブスクリプション制（フェアプレイの根幹）</strong><br>ガチャ課金（Pay to Win）を一切排除。国内500円/月、海外1,000円/月。サブスク登録者には毎月支払額の1/10にあたるゲーム内通貨を配給。</li>
-              <li><strong>デュアルカレンシー（ゲーム内通貨）</strong><br>ラン限定の「ダンジョン通貨」と、永続して残る「メタ進行通貨」の2軸。</li>
-              <li><strong>モンスタートレード（取引所）</strong><br>育てたモンスターを他プレイヤーと通貨で取引する。初代育成者の名前が刻まれる。</li>
-              <li><strong>ブロックチェーンによるデータ証明（チート対策）</strong><br>改造ツールによる不正なステータス操作を完全に排除し、トレード市場価値とPvPの公平性を絶対的なものにする。</li>
-            </ol>
-          </div>
-
-          <div class="roadmap-chapter">
-            <h3>Ⅵ. ゲーム外エコシステムとコミュニティ運営</h3>
-            <p class="roadmap-chapter-desc">ゲーム実況者やプレイヤーを「公式パートナー」として迎え入れ、共にゲームを育てる要素。</p>
-            <ol class="roadmap-list">
-              <li><strong>まる見え運営資金『トランスペアレント・トレジャリー』</strong><br>サブスクリプション収益が「いくら集まり何に使われているか」を1円単位で公式サイト上にリアルタイム公開。サーバー費・開発費・賞金プールなど運営のサイフを完全ガラス張りにする。</li>
-              <li><strong>声が届く開発マニフェスト『コミュニティ・ロードマップ』</strong><br>次に実装する機能の候補と必要予算をマニフェストとして提示し、サブスク登録プレイヤー全員の投票で開発優先順位を決める民主的なシステム。</li>
-              <li><strong>ブロードリスニング窓口（非プレイヤー参加型エコシステム）</strong><br>サブスク未加入の観戦者・考察勢でも参加できる窓口。優れた世界観設定アイデアを公式設定として逆輸入する。</li>
-              <li><strong>ストリーマーモード（配信最適化UI）</strong><br>ワイプ用の空白スペース確保機能や、アカウントIDなど見えてはいけない情報を自動伏せ字化する機能。</li>
-              <li><strong>ハイライト自動生成 ＆ 切り抜きサポート（Shorts対応）</strong><br>激熱シーンを自動検知し、YouTube ShortsやTikTok向けの縦型動画フォーマットとして自動トリミング＆書き出し。</li>
-              <li><strong>戦術ボード（お絵かき解説）機能</strong><br>リプレイ画面や観戦ビューを一時停止し、画面に直接矢印や丸を書き込める機能。</li>
-              <li><strong>公式アンバサダー・プログラム</strong><br>熱心な配信活動を行うストリーマーを「公式アンバサダー」として認定。特別な称号と「クリエイターコード」を配布。</li>
-              <li><strong>視聴者参加型・配信拡張機能（Twitch/YouTube連携）</strong><br>視聴者がコメントやスタンプを通じて、配信者のプレイに直接干渉できる機能。</li>
-              <li><strong>公認コミュニティ大会支援ツール</strong><br>ストリーマーが独自ルールで視聴者参加型大会を簡単に開催できるWebベースのトーナメント管理ツール。</li>
-            </ol>
-          </div>
-
-        </div>
-      </div>
-    </div>
 
     <!-- 画面0.5: ストーリー画面 -->
     <section id="screen-story" class="screen full-center hide glass-panel">
@@ -184,7 +89,7 @@
     </section>
 
     <!-- 画面0.8: ハブ（ステージ選択）画面 -->
-    <section id="screen-hub" class="screen full-center hide glass-panel" style="width: 800px; max-width: 90vw;">
+    <section id="screen-hub" class="screen full-center hide glass-panel" style="width: 800px; max-width: 90vw; align-self: center;">
       <h2>HUB: STAGE SELECTION</h2>
       <p style="color: #94a3b8; margin-bottom: 20px;">拠点で準備を整え、ステージへ出発しよう。</p>
       
@@ -300,8 +205,6 @@
               <div class="bar-container hp-bar"><div class="bar-fill hp" id="p1-hp-fill"></div></div>
               <label>ST (Armor)</label>
               <div class="bar-container st-bar"><div class="bar-fill st" id="p1-st-fill"></div></div>
-              <label>ATB</label>
-              <div class="bar-container atb-bar"><div class="bar-fill atb" id="p1-atb-fill"></div></div>
             </div>
           </div>
           
@@ -318,10 +221,6 @@
           <!-- トースト通知用エリア -->
           <div id="toast-container" class="toast-container"></div>
 
-          <div id="battle-result-menu" class="action-menu hide" style="text-align:center; margin-top: auto;">
-             <h3 id="battle-result-text" style="margin-bottom:10px;"></h3>
-             <button id="btn-return-map" class="btn primary-btn">マップへ戻る</button>
-          </div>
         </div>
 
         <!-- P2 エリア -->
@@ -335,10 +234,6 @@
             <div class="bars">
                <label>HP</label>
                <div class="bar-container hp-bar"><div class="bar-fill hp" id="p2-hp-fill"></div></div>
-               <label>ST (Armor)</label>
-               <div class="bar-container st-bar"><div class="bar-fill st" id="p2-st-fill"></div><div class="break-text hide" id="p2-break-text">ゼーゼー...!!</div></div>
-               <label>ATB</label>
-               <div class="bar-container atb-bar"><div class="bar-fill atb" id="p2-atb-fill"></div></div>
             </div>
           </div>
           <div class="reserve-list" id="p2-reserves"></div>

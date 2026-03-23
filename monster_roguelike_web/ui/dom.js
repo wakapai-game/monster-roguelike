@@ -36,8 +36,6 @@ export const itemButtons = document.getElementById('item-buttons');
 export const btnTabSkills = document.getElementById('btn-tab-skills');
 export const btnTabItems = document.getElementById('btn-tab-items');
 export const itemCountBadge = document.getElementById('item-count-badge');
-export const resultMenu = document.getElementById('battle-result-menu');
-export const resultText = document.getElementById('battle-result-text');
 
 // Inventory UI
 export const btnHubInventory = document.getElementById('btn-hub-inventory');

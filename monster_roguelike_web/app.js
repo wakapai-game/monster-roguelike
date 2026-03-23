@@ -5,7 +5,7 @@ import { appState } from './state.js';
 import {
   screenStart, screenStory, screenEgg, screenMap, screenSelection,
   screenBattle, screenName, screenStarterEvent, screenHub, screenReward,
-  mainHeader, rosterGrid, btnStartBattle, battleLog, resultMenu,
+  mainHeader, rosterGrid, btnStartBattle, battleLog,
   btnHubInventory, btnMapInventory, btnHubParty, btnMapParty,
   btnSubmitName, inputPlayerName, starterEventGrid, btnStarterEventProceed,
   btnStage1, btnStage2, btnStage3, btnCollectReward,
@@ -75,9 +75,6 @@ document.getElementById('delete-save-btn').onclick = () => {
 document.getElementById('btn-begin').onclick = () => switchScreen(screenStart, screenStory);
 document.getElementById('btn-encyclopedia').onclick = () => openEncyclopedia();
 
-const roadmapOverlay = document.getElementById('screen-roadmap');
-document.getElementById('btn-roadmap').onclick = () => roadmapOverlay.classList.remove('hide');
-document.getElementById('btn-close-roadmap').onclick = () => roadmapOverlay.classList.add('hide');
 
 document.getElementById('btn-skip-story').onclick = () => switchScreen(screenStory, screenName);
 
@@ -174,12 +171,12 @@ function confirmBattleSetup() {
   mainHeader.style.display = 'block';
 
   if (battleLog) battleLog.innerHTML = '';
-  resultMenu.classList.add('hide');
 
   appState.engine = new BattleEngine();
-  appState.p1Team = appState.selectedIds.map(id =>
-    new Monster(JSON.parse(JSON.stringify(appState.globalRoster.find(m => m.id === id))))
-  );
+  const rosterOrder = appState.globalRoster.map(m => m.id);
+  appState.p1Team = [...appState.selectedIds]
+    .sort((a, b) => rosterOrder.indexOf(a) - rosterOrder.indexOf(b))
+    .map(id => new Monster(JSON.parse(JSON.stringify(appState.globalRoster.find(m => m.id === id)))));
 
   const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
   if (!currentNode) { console.warn('Node not found:', appState.currentNodeId); return; }
@@ -209,7 +206,12 @@ function confirmBattleSetup() {
 }
 
 // ---- Map / Reward Flow ----
-document.getElementById('btn-return-map').onclick = () => {
+document.addEventListener('battle-end', (e) => {
+  if (!e.detail.win) {
+    window.location.reload();
+    return;
+  }
+
   appState.mapGenerator.unlockNextNodes(appState.currentNodeId);
   renderMap(confirmBattleSetup);
 
@@ -221,7 +223,7 @@ document.getElementById('btn-return-map').onclick = () => {
 
   generateRewards();
   switchScreen(screenBattle, screenReward);
-};
+});
 
 btnCollectReward.onclick = () => {
   if (appState.stageCleared) {

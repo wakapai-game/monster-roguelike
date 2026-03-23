@@ -28,7 +28,19 @@ export class Monster {
       intelligence: data.params?.intelligence || 0
     };
     
-    this.skills = data.skills;
+    // known_skills: 修得技リスト（最大10個）
+    // 旧フォーマット（skills + benched_skills）から自動マイグレーション
+    if (data.known_skills) {
+      this.known_skills = [...data.known_skills].slice(0, 10);
+      this.skills = (data.skills || []).filter(id => this.known_skills.includes(id)).slice(0, 4);
+    } else {
+      const combined = [...new Set([...(data.skills || []), ...(data.benched_skills || [])])];
+      this.known_skills = combined.slice(0, 10);
+      this.skills = combined.slice(0, 4);
+    }
+    if (this.skills.length === 0 && this.known_skills.length > 0) {
+      this.skills = [this.known_skills[0]];
+    }
     this.feed_count = data.feed_count || 0;
     this.growth_log = data.growth_log || [];
 
