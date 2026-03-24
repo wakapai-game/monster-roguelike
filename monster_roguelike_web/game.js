@@ -242,16 +242,14 @@ export class BattleEngine {
     const effects = skill.effects || [];
     for (const effect of effects) {
       if (effect.type === "damage_st") {
-        const dmg = this._calcStDamage(attacker, defender, skill, effect);
-        defender.current_st -= dmg.st_damage;
-        result.st_damage += dmg.st_damage;
-        result.armor_crush = result.armor_crush || dmg.armor_crush;
-
-        if (defender.current_st <= 0) {
-          defender.current_st = 0;
-          this._triggerBreak(defender);
-          result.is_break = defender.is_break;
+        if (defender.is_break) {
+          // ブレイク中のみ: スキル威力でHPダメージを計算
+          const hpBefore = defender.current_hp;
+          const dmg = this._calcStDamage(attacker, defender, skill, effect);
+          result.hp_damage += hpBefore - defender.current_hp;
+          result.armor_crush = result.armor_crush || dmg.armor_crush;
         }
+        // 通常時: STダメージはペナルティのみ（最大-30）なのでここでは処理しない
       } else if (effect.type === "damage_hp_direct") {
         let dmg_hp = effect.base_power || 0;
         if (defender.is_defending) dmg_hp *= 0.5;
