@@ -210,7 +210,7 @@ export class BattleEngine {
             if (attack_effect) base_power = attack_effect.base_power || 0;
         }
 
-        const is_stab = (attacker.main_element === s_elem || attacker.sub_element === s_elem);
+        const is_stab = s_elem !== 'none' && (attacker.main_element === s_elem || attacker.sub_element === s_elem);
         const effective_skill_power = is_stab ? base_power * 1.5 : base_power;
         
         const s_type = skill.type || "physical";

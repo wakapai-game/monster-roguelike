@@ -50,7 +50,22 @@
     /* モンスターカード */
     .test-monster-card {
       background: rgba(30,41,59,0.7); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px; padding: 14px;
+      border-radius: 12px; padding: 14px; position: relative; overflow: visible;
+    }
+
+    /* ダメージエフェクト */
+    .dmg-popup {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      font-weight: 800; font-size: 1.3rem; pointer-events: none; white-space: nowrap;
+      animation: dmg-float 1s ease-out forwards;
+      z-index: 100;
+    }
+    .dmg-popup.hp  { color: #ef4444; text-shadow: 0 0 6px #ef444488; }
+    .dmg-popup.st  { color: #eab308; text-shadow: 0 0 6px #eab30888; }
+    .dmg-popup.big { font-size: 1.7rem; }
+    @keyframes dmg-float {
+      0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-60px); }
     }
     .test-monster-card h3 { font-size: 1rem; margin-bottom: 4px; }
     .elem-tag {
@@ -295,7 +310,7 @@
     <div class="test-tabs">
       <button class="test-tab-btn active" data-mode="case1">案1: 現行</button>
       <button class="test-tab-btn" data-mode="case2">案2: ブレイク強化</button>
-      <button class="test-tab-btn" data-mode="case3">案3: グラデーション</button>
+      <button class="test-tab-btn" data-mode="case3">案3: ST固定+HP溢れ</button>
       <button class="test-tab-btn" data-mode="spec" style="border-color:rgba(251,191,36,0.4); color:#fde68a;">📋 仕様解説</button>
     </div>
     <div id="mode-desc"></div>
@@ -350,9 +365,10 @@
         <div id="action-area">
           <div id="wait-msg" style="display:none;">相手のターン…</div>
           <div class="action-panel" id="player-actions" style="display:none;">
-            <h4>あなたのターン (P1)</h4>
+            <h4 id="action-panel-title">あなたのターン (P1)</h4>
             <div class="skill-btns" id="skill-btns"></div>
             <button class="defend-btn-test" id="btn-defend">🛡 Defend (ST +30%)</button>
+            <button class="defend-btn-test" id="btn-skip-reaction" style="display:none; background:rgba(100,100,100,0.3);">⏩ スキップ</button>
           </div>
         </div>
       </div>
@@ -382,6 +398,7 @@
           <div class="stat-row">SPD <span id="p2-spd">-</span></div>
           <div class="stat-row">MAG <span id="p2-mag">-</span></div>
         </div>
+        <div id="p2-skills" style="margin-top:10px;"></div>
       </div>
     </div>
 
@@ -393,7 +410,7 @@
       <a href="#spec-common">共通システム</a>
       <a href="#spec-case1">案1: 現行</a>
       <a href="#spec-case2">案2: ブレイク強化</a>
-      <a href="#spec-case3">案3: グラデーション</a>
+      <a href="#spec-case3">案3: ST固定+HP溢れ</a>
       <a href="#spec-compare">3案 比較表</a>
       <a href="#spec-effects">スキルエフェクト一覧</a>
     </nav>
@@ -403,14 +420,14 @@
       <h2>共通システム <span class="badge badge-common">全案共通</span></h2>
 
       <h3>ATB（アクティブタイムバトル）</h3>
-      <p>毎ティック、各モンスターの ATBゲージ が <strong>SPD 値</strong> 分ずつ増加する。ゲージが 100 に達したモンスターの行動順が来る。行動完了後はゲージが -100 される。</p>
+      <p>毎ティック、各モンスターの ATBゲージ が <strong>SPD 値</strong> 分ずつ増加する。ゲージが 100 に達したモンスターの行動順が来る。行動完了後はゲージが <strong>0 にリセット</strong> される。</p>
       <div class="formula-box">
 <span class="comment">// Timelineクラス tick() より</span>
 <span class="key">gauge</span> += <span class="key">stats.spd</span>
-<span class="comment">// gauge &gt;= 100 で行動</span>
-<span class="key">gauge</span> -= 100  <span class="comment">// 行動完了後</span>
+<span class="comment">// gauge &gt;= 100 で行動（コマンド選択中は 100% 表示）</span>
+<span class="key">gauge</span> = 0  <span class="comment">// 行動完了後にリセット</span>
       </div>
-      <div class="callout info">SPD が高いほど連続行動しやすい。「速攻 vs 耐久」プリセットではSPD 50 vs 5 なので速攻側が圧倒的に先手を取り続ける。</div>
+      <div class="callout info">SPD が高いほど連続行動しやすい。「速攻 vs 耐久」プリセットでは SPD 50 vs 30。</div>
 
       <h3>控えモンスター ST 自動回復</h3>
       <p>いずれかのモンスターが行動を完了するたびに、<strong>同チームの控えモンスター</strong>の ST が max_st の <strong>5%</strong> 回復する。</p>
@@ -438,7 +455,12 @@ aff = <span class="key">AFFINITY[skill.element][defender.main_element]</span>
       </div>
 
       <h3>STAB（同属性ボーナス）</h3>
-      <p>攻撃側の主属性または副属性がスキル属性と一致する場合、スキルの実効威力が <strong>×1.5</strong> になる。</p>
+      <p>攻撃側の主属性または副属性がスキル属性と一致する場合、スキルの実効威力が <strong>×1.5</strong> になる。<strong>無属性技（element: "none"）はSTABの対象外。</strong></p>
+      <div class="formula-box">
+is_stab = s_elem !== <span class="val">'none'</span>
+       &amp;&amp; (attacker.main_element === s_elem || attacker.sub_element === s_elem)
+effPow  = is_stab ? base_power × <span class="val">1.5</span> : base_power
+      </div>
 
       <h3>連続行動ペナルティ（ST コスト増加）</h3>
       <p>自分のターンが連続するたびに、<strong>攻撃カテゴリのスキル</strong>の ST 消費が増加する。素早さが高いモンスターが一方的に攻め続けることへの抑制として機能する。</p>
@@ -464,15 +486,26 @@ cost       = max(<span class="val">10</span>, skill.cost_st) + extra_cost
         <li>attack カテゴリのスキルのみ対象。Defend・回復技にはペナルティなし</li>
         <li>バトルログに <span style="color:#f97316; font-weight:700;">「連続+XST」</span> と表示される</li>
       </ul>
-      <div class="callout warn">SPD が極端に高いモンスター（例: SPD 50 vs 5）でも ST が枯渇するまでの猶予が生まれ、速度差を一定程度緩和する効果がある。</div>
 
       <h3>Defend アクション</h3>
-      <p>攻撃せずに防御体制を取るアクション。全案で以下の効果がある。</p>
+      <p>攻撃せずに防御体制を取るアクション。<strong>自分のターン</strong>でも<strong>相手の攻撃ターン（リアクション）</strong>でも選択可能。</p>
       <ul>
         <li>自分の ST を max_st の <strong>+30%</strong> 回復（上限クリップ）</li>
         <li><code>is_defending = true</code> セット → 次に被弾したとき HP/ST ダメージが <strong>×0.5</strong></li>
         <li>案1・案2 ではブレイク状態 (<code>is_break</code>) を解除</li>
       </ul>
+
+      <h3>リアクションシステム（相手ターン中の防御行動）</h3>
+      <p>相手のATBが100に達して攻撃ターンが来ると、攻撃が実行される前にプレイヤー側へ<strong>防御行動の選択肢</strong>が提示される。</p>
+      <table class="spec-table">
+        <thead><tr><th>選択肢</th><th>効果</th></tr></thead>
+        <tbody>
+          <tr><td>防御系技（category: defense）</td><td>ST回復・バフなど。STコストを消費するが自分のATBターンは消費しない</td></tr>
+          <tr><td>Defend</td><td>ST +30%回復・is_defending=true。ダメージを半減できる</td></tr>
+          <tr><td>スキップ</td><td>何もせず相手の攻撃をそのまま受ける</td></tr>
+        </tbody>
+      </table>
+      <div class="callout info">リアクションはATBターンを消費しない。選択後に相手の攻撃が実行される。</div>
     </div>
 
     <!-- ===== 案1 ===== -->
@@ -580,50 +613,47 @@ hp_damage = floor(raw × mult)
 
     <!-- ===== 案3 ===== -->
     <div class="spec-block" id="spec-case3">
-      <h2>案3: STグラデーション <span class="badge badge-case3">EngineCase3</span></h2>
+      <h2>案3: ST固定+HP溢れ <span class="badge badge-case3">EngineCase3</span></h2>
 
-      <div class="callout tip">ブレイクという概念が存在しない。STが残るほど攻撃がSTシールドに吸収される。STが減るほどHPへのダメージ流入が増える。</div>
+      <div class="callout tip">ブレイクという概念が存在しない。攻撃は常にST固定ダメージを与えつつ、スキル威力がST防御を超えた分だけHPに溢れダメージを与える。STが減るほど次の攻撃でHPに溢れやすくなる。</div>
 
       <h3>ブレイクなし設計</h3>
       <ul>
         <li><code>is_break</code> フラグは使用・参照しない</li>
-        <li>STが0になっても行動に制限は生じない</li>
+        <li>ST が 0 になると<strong>行動不能</strong>（自動的に Defend 扱い）</li>
         <li>スキルコストは<strong>常にST消費のみ</strong>（HP消費は発生しない）</li>
         <li>BREAKバッジはUIに表示されない</li>
       </ul>
 
-      <h3>グラデーションダメージ計算</h3>
-      <p><code>damage_st</code> エフェクトを持つスキルは、防御側の ST 残量比に応じてダメージを ST と HP に<strong>按分</strong>する。</p>
+      <h3>ダメージ計算（damage_st エフェクト）</h3>
+      <p><code>damage_st</code> エフェクトを持つスキルは、ST 固定ダメージと HP 溢れダメージの2種類を同時に与える。</p>
       <div class="formula-box">
-<span class="comment">// _calcGradientDamage() より</span>
-raw = base_power × (atk / def) × aff × (<span class="comment">is_defending ? 0.5 : 1.0</span>)
-ST残量比 = defender.<span class="key">current_st</span> / defender.<span class="key">stats.max_st</span>
+<span class="comment">// _calcDamage() より</span>
+effPow = base_power × (<span class="comment">STAB ? 1.5 : 1.0</span>)
 
-st_damage = floor( min(current_st, raw × <span class="key">ST残量比</span>) )
-hp_damage = floor( raw × (1 - <span class="key">ST残量比</span>) )
+<span class="comment">// ST固定ダメージ（ヒット確定）</span>
+st_damage = min(current_st, <span class="key">10</span> + (<span class="comment">苦手属性 ? 10 : 0</span>))
+
+<span class="comment">// HP溢れダメージ（威力がST防御を超えた分）</span>
+pow_atk = effPow × atk
+st_def  = defender.<span class="key">current_st</span> × def
+hp_damage = max(<span class="key">0</span>, floor(pow_atk - st_def))
       </div>
 
-      <h3>ST 残量と HP 被ダメの関係</h3>
+      <h3>ST残量とHP溢れダメージの関係</h3>
       <table class="spec-table">
-        <thead><tr><th>ST残量</th><th>ST被ダメ比率</th><th>HP被ダメ比率</th><th>状況</th></tr></thead>
+        <thead><tr><th>ST残量</th><th>ST固定ダメ</th><th>HP溢れダメ（例: たいあたり）</th><th>状況</th></tr></thead>
         <tbody>
-          <tr><td>100%（満タン）</td><td class="tag-ok">100%</td><td>0%</td><td>完全シールド</td></tr>
-          <tr><td>75%</td><td>75%</td><td>25%</td><td>少しHPに流入</td></tr>
-          <tr><td>50%</td><td>50%</td><td>50%</td><td>半々</td></tr>
-          <tr><td>25%</td><td>25%</td><td>75%</td><td>大半がHP直撃</td></tr>
-          <tr><td>0%（空）</td><td>0%</td><td class="tag-ng">100%</td><td>完全HP流入</td></tr>
+          <tr><td>100（満タン）</td><td>-10</td><td class="tag-ok">0（完全シールド）</td><td>pow×atk &lt; 100×def</td></tr>
+          <tr><td>50</td><td>-10</td><td>pow×atk超過分が流入</td><td>STが半減→シールドも半減</td></tr>
+          <tr><td>10</td><td>-10</td><td class="tag-chg">大量に流入</td><td>ST薄い→ほぼHP直撃</td></tr>
+          <tr><td>0（空）</td><td>0（不能）</td><td class="tag-ng">pow×atkがそのままHP流入</td><td>行動不能・全ダメHP直撃</td></tr>
         </tbody>
       </table>
 
-      <h3>HP流入予測の UI 表示</h3>
-      <p>プレイヤーターン時、スキルボタンに <strong>「HP流入XX%」</strong> が表示される。これは攻撃前の相手 ST 残量から算出した予測値。</p>
-      <div class="formula-box">
-inflowPct = round( (1 - defender.current_st / defender.stats.max_st) × 100 ) %
-      </div>
-
       <h3>攻撃側のST消耗も重要</h3>
-      <p>攻撃するたびに自分の ST もコスト分減る。ST が減ると<strong>自分の防御力も落ちる</strong>ため、攻撃的なプレイヤーほど被ダメが増えるリスクがある。</p>
-      <div class="callout tip">案3ではDefend（ST+30%）が攻守両面で重要。防御しながらST回復することで相手のHP流入を防ぐ。</div>
+      <p>攻撃するたびに自分の ST もコスト分減る。ST が減ると <strong>st_def（current_st × def）が低下</strong> し次の被弾でHP溢れが増える。攻めれば攻めるほど自分も脆くなるトレードオフ。</p>
+      <div class="callout tip">案3ではDefend（ST+30%）が攻守両面で重要。STを回復することで自分のHP防御壁（st_def）を維持できる。</div>
     </div>
 
     <!-- ===== 3案 比較表 ===== -->
@@ -635,7 +665,7 @@ inflowPct = round( (1 - defender.current_st / defender.stats.max_st) × 100 ) %
             <th>項目</th>
             <th style="color:#93c5fd;">案1: 現行</th>
             <th style="color:#d8b4fe;">案2: ブレイク強化</th>
-            <th style="color:#6ee7b7;">案3: グラデーション</th>
+            <th style="color:#6ee7b7;">案3: ST固定+HP溢れ</th>
           </tr>
         </thead>
         <tbody>
@@ -661,7 +691,7 @@ inflowPct = round( (1 - defender.current_st / defender.stats.max_st) × 100 ) %
             <td>ST → HP の移行方式</td>
             <td>ブレイク後に全HP流入</td>
             <td>ブレイク後に全HP流入</td>
-            <td class="tag-ok">ST残量に応じて連続的に流入</td>
+            <td class="tag-ok">毎攻撃：固定ST削り＋威力超過分がHP直撃</td>
           </tr>
           <tr>
             <td>ブレイク中被ダメ倍率</td>
@@ -673,19 +703,25 @@ inflowPct = round( (1 - defender.current_st / defender.stats.max_st) × 100 ) %
             <td>STダメージの発生源</td>
             <td>固定ペナルティのみ（-10〜-30）</td>
             <td>固定ペナルティのみ（-10〜-30）</td>
-            <td>スキル威力計算で按分</td>
+            <td>固定ダメージ -10（苦手属性 -20）</td>
+          </tr>
+          <tr>
+            <td>HPダメージの発生源</td>
+            <td>ブレイク後のみ</td>
+            <td>ブレイク後のみ</td>
+            <td class="tag-ok">max(0, pow×atk − current_st×def)</td>
           </tr>
           <tr>
             <td>ゲームリズム</td>
             <td>ST削り → ブレイク → 大ダメージ</td>
             <td>ST削り → ブレイク → 強制休息 → 復帰</td>
-            <td>常に両ゲージが動く連続的な消耗戦</td>
+            <td>毎ターンST/HP両方消耗する持久戦</td>
           </tr>
           <tr>
             <td>戦略の幅</td>
             <td>ブレイク中も攻め続けるか選択可能</td>
             <td>ブレイク回避とDefendタイミングが重要</td>
-            <td>STと攻撃のトレードオフ管理</td>
+            <td>STを維持して防御壁を保つかトレードオフ</td>
           </tr>
           <tr>
             <td>連続行動ペナルティ</td>
@@ -713,7 +749,7 @@ inflowPct = round( (1 - defender.current_st / defender.stats.max_st) × 100 ) %
           <tr>
             <td><code>damage_st</code></td>
             <td>通常時: スキップ（ペナルティで処理済み）<br>ブレイク時: 威力計算で HP 実ダメ（×2〜×8倍率）</td>
-            <td>ST残量比で ST/HP に按分して両方ダメージ</td>
+            <td>ST固定ダメ: -10（苦手属性 -20）<br>HP溢れダメ: max(0, effPow×atk − current_st×def)</td>
           </tr>
           <tr>
             <td><code>damage_hp_direct</code></td>
@@ -778,7 +814,7 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
   <script type="module">
     import { Monster, Timeline } from './game.js';
     import { EngineCase1, EngineCase2, EngineCase3 } from './test-engines.js';
-    import { SKILLS } from './data.js';
+    import { SKILLS, MONSTERS_DATA, ENEMY_DATA } from './data.js';
 
     // ===== モード説明 =====
     const MODE_DESCS = {
@@ -788,44 +824,36 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
     };
 
     // ===== プリセット =====
+    function makePreset(id, overrides = {}) {
+      const src = [...MONSTERS_DATA, ...ENEMY_DATA].find(m => m.id === id);
+      return { ...src, known_skills: src.skills, ...overrides };
+    }
+
     const PRESETS = {
       speed_vs_tank: {
         label: '速攻 vs 耐久',
-        p1: { id:'p_01', name:'シャドウアサシン', main_element:'dark', sub_element:'none',
-              base_stats:{hp:120, atk:60, def:15, mag:10, spd:50, max_st:50, st_rec:10},
-              known_skills:['strike','pierce_needle'], skills:['strike','pierce_needle'] },
-        p2: { id:'e_01', name:'ゴーレム', main_element:'earth', sub_element:'none',
-              base_stats:{hp:300, atk:50, def:60, mag:5, spd:5, max_st:150, st_rec:0},
-              known_skills:['smash'], skills:['smash'] }
+        p1: makePreset('m_005'),
+        p2: makePreset('m_004')
       },
       balanced: {
         label: '均衡',
-        p1: { id:'p_02', name:'フレイムパピー', main_element:'fire', sub_element:'none',
-              base_stats:{hp:200, atk:40, def:30, mag:20, spd:25, max_st:80, st_rec:5},
-              known_skills:['strike','fireball'], skills:['strike','fireball'] },
-        p2: { id:'e_02', name:'アクアタートル', main_element:'water', sub_element:'earth',
-              base_stats:{hp:250, atk:25, def:50, mag:15, spd:10, max_st:120, st_rec:5},
-              known_skills:['strike','water_gun'], skills:['strike','water_gun'] }
+        p1: makePreset('m_001'),
+        p2: makePreset('m_002')
       },
       both_fast: {
         label: '高速同士',
-        p1: { id:'p_03', name:'サンダーバードA', main_element:'thunder', sub_element:'wind',
-              base_stats:{hp:150, atk:30, def:20, mag:45, spd:40, max_st:70, st_rec:15},
-              known_skills:['strike','smash'], skills:['strike','smash'] },
-        p2: { id:'e_03', name:'サンダーバードB', main_element:'thunder', sub_element:'wind',
-              base_stats:{hp:150, atk:30, def:20, mag:45, spd:40, max_st:70, st_rec:15},
-              known_skills:['strike','smash'], skills:['strike','smash'] }
+        p1: makePreset('m_003', { name: 'サンダーバードA' }),
+        p2: makePreset('m_003', { name: 'サンダーバードB' })
       },
       affinity: {
         label: '属性有利',
-        p1: { id:'p_04', name:'フレイムパピー', main_element:'fire', sub_element:'none',
-              base_stats:{hp:200, atk:40, def:30, mag:20, spd:25, max_st:80, st_rec:5},
-              known_skills:['strike','fireball'], skills:['strike','fireball'] },
-        p2: { id:'e_04', name:'アイスバード(弱点)', main_element:'ice', sub_element:'wind',
-              base_stats:{hp:150, atk:25, def:20, mag:25, spd:35, max_st:70, st_rec:10},
-              known_skills:['strike'], skills:['strike'] }
+        p1: makePreset('m_001'),
+        p2: makePreset('m_003', { name: 'アイスバード(弱点)', main_element: 'ice', sub_element: 'wind' })
       }
     };
+
+    // ===== 定数 =====
+    const ELEM_LABEL = { fire:'🔥火', water:'💧水', ice:'❄氷', thunder:'⚡雷', earth:'🌿土', wind:'🌀風', light:'✨光', dark:'🌑闇', none:'無' };
 
     // ===== バトル状態 =====
     let currentMode = 'case1';
@@ -835,6 +863,8 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
     let p2Monster = null;
     let loopInterval = null;
     let waitingForPlayer = false;
+    let waitingForReaction = false;
+    let reactionCallback = null;
     let battleOver = false;
 
     // 統計
@@ -855,6 +885,8 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
     const playerActionsEl = document.getElementById('player-actions');
     const skillBtnsEl = document.getElementById('skill-btns');
     const btnDefend = document.getElementById('btn-defend');
+    const btnSkipReaction = document.getElementById('btn-skip-reaction');
+    const actionPanelTitle = document.getElementById('action-panel-title');
     const endOverlay = document.getElementById('end-overlay');
     const endPanel = document.getElementById('end-panel');
     const endTitle = document.getElementById('end-title');
@@ -942,6 +974,17 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
       logEl.innerHTML = '';
       addLog(`<span class="log-info">--- バトル開始: ${p1Monster.name} vs ${p2Monster.name} ---</span>`);
 
+      // P2技リスト描画
+      const p2SkillsEl = document.getElementById('p2-skills');
+      p2SkillsEl.innerHTML = '<div style="font-size:0.72rem; color:#94a3b8; margin-bottom:4px;">技</div>' +
+        (p2Monster.skills || p2Monster.known_skills || []).map(id => {
+          const s = SKILLS.find(s => s.id === id);
+          if (!s) return '';
+          const dmgEff = (s.effects || []).find(e => e.type === 'damage_st' || e.type === 'damage_hp_direct');
+          const pow = dmgEff ? ` 威力${dmgEff.base_power}` : '';
+          return `<div style="font-size:0.75rem; color:#cbd5e1; padding:2px 0;">${s.name}${pow} [${ELEM_LABEL[s.element] || s.element}] ST-${s.cost_st}</div>`;
+        }).join('');
+
       battleArena.style.display = 'grid';
       comboArea.innerHTML = '';
       playerActionsEl.style.display = 'none';
@@ -990,61 +1033,91 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
 
       totalTurns++;
 
+      // 案3: ST0なら行動不能 → 自動Defend
+      if (currentMode === 'case3' && active.current_st <= 0) {
+        addLog(`<span class="log-actor">${active.name}</span> <span class="log-break">ST切れ！行動不能</span>`);
+        doDefend(active, player);
+        return;
+      }
+
       if (player === 1) {
         // プレイヤーターン: 一時停止してUIを表示
         stopLoop();
+        p1Monster.gauge = 100;
         waitingForPlayer = true;
+        updateUI();
         showPlayerActions();
       } else {
-        // AIターン
-        runAI(active);
+        // AIターン: リアクションパネルを表示してからAI攻撃
+        showReactionPanel(active);
       }
     }
 
-    function runAI(monster) {
-      const opponent = p1Monster;
-      let skillId = null;
+    function showReactionPanel(aiMonster) {
+      stopLoop();
+      // リアクションコールバック: AI攻撃を実行
+      reactionCallback = () => {
+        waitingForReaction = false;
+        playerActionsEl.style.display = 'none';
+        waitMsg.style.display = 'block';
+        setTimeout(() => executeAI(aiMonster), 200);
+      };
+      waitingForReaction = true;
+      showPlayerActions(true);
+    }
 
+    function finishReaction() {
+      if (reactionCallback) {
+        const cb = reactionCallback;
+        reactionCallback = null;
+        cb();
+      }
+    }
+
+    function executeAI(monster) {
       if (currentMode === 'case2' && monster.is_break) {
-        // 案2: ブレイク中は自動Defend
         doDefend(monster, 2);
         return;
       }
 
-      // ランダムにスキルを選択
       const skills = monster.skills || monster.known_skills || [];
-      if (skills.length > 0) {
-        skillId = skills[Math.floor(Math.random() * skills.length)];
-      }
+      const skillId = skills.length > 0 ? skills[Math.floor(Math.random() * skills.length)] : null;
 
       if (!skillId) {
         doDefend(monster, 2);
         return;
       }
 
-      setTimeout(() => {
-        const res = engine.executeSkill(monster, opponent, skillId);
-        if (res && res.error) {
-          doDefend(monster, 2);
-          return;
-        }
-        if (res) logResult(res, 2);
-        timeline.onActionCompleted(2);
-        updateUI();
-        checkBattleEnd();
-        if (!battleOver) startLoop();
-      }, 200);
+      const res = engine.executeSkill(monster, p1Monster, skillId);
+      if (res && res.error) {
+        doDefend(monster, 2);
+        return;
+      }
+      if (res) logResult(res, 2);
+      timeline.onActionCompleted(2);
+      p2Monster.gauge = 0;
+      updateUI();
+      checkBattleEnd();
+      if (!battleOver) startLoop();
     }
 
-    function doDefend(monster, playerNum) {
+    function doDefend(monster, playerNum, isReaction = false) {
       monster.current_st = Math.min(
         monster.stats.max_st,
         monster.current_st + monster.stats.max_st * 0.3
       );
-      if (currentMode !== 'case3') monster.is_break = false;
+      if (!isReaction) {
+        if (currentMode !== 'case3') monster.is_break = false;
+      }
       monster.is_defending = true;
       addLog(`<span class="log-actor">${monster.name}</span> <span class="log-info">がDefend（ST回復）</span>`);
+      if (isReaction) {
+        updateUI();
+        finishReaction();
+        return;
+      }
       timeline.onActionCompleted(playerNum);
+      monster.gauge = 0;
       updateUI();
       checkBattleEnd();
       if (!battleOver && playerNum === 2) startLoop();
@@ -1057,12 +1130,22 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
     }
 
     // ===== プレイヤーアクションUI =====
-    function showPlayerActions() {
+    function showPlayerActions(reactionMode = false) {
       waitMsg.style.display = 'none';
       playerActionsEl.style.display = 'block';
       skillBtnsEl.innerHTML = '';
 
-      const skills = p1Monster.skills || p1Monster.known_skills || [];
+      actionPanelTitle.textContent = reactionMode ? '⚔ 相手の攻撃！防御行動を選択' : 'あなたのターン (P1)';
+      btnSkipReaction.style.display = reactionMode ? 'block' : 'none';
+      btnSkipReaction.onclick = reactionMode ? () => finishReaction() : null;
+      btnDefend.onclick = reactionMode
+        ? () => { doDefend(p1Monster, 1, true); }
+        : () => { if (waitingForPlayer) doDefend(p1Monster, 1); };
+
+      const allSkills = p1Monster.skills || p1Monster.known_skills || [];
+      const skills = reactionMode
+        ? allSkills.filter(id => { const s = SKILLS.find(s => s.id === id); return s && s.category !== 'attack'; })
+        : allSkills;
 
       skills.forEach(skillId => {
         const skill = SKILLS.find(s => s.id === skillId);
@@ -1071,25 +1154,20 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
         const btn = document.createElement('button');
         btn.className = 'skill-btn-test';
 
-        let label = `${skill.name} (ST-${skill.cost_st})`;
+        const dmgEff = (skill.effects || []).find(e => e.type === 'damage_st' || e.type === 'damage_hp_direct');
+        const powStr = dmgEff ? ` 威力${dmgEff.base_power}` : '';
+        const elemStr = ` [${ELEM_LABEL[skill.element] || skill.element}]`;
+        let label = `${skill.name}${powStr}${elemStr} (ST-${skill.cost_st})`;
 
         // 案2: ブレイク中は攻撃技をdisabled
         if (currentMode === 'case2' && p1Monster.is_break && skill.category === 'attack') {
           btn.disabled = true;
         }
 
-        // 案3: HP流入予測%を表示
-        if (currentMode === 'case3') {
-          const stRatio = p2Monster.current_st / Math.max(1, p2Monster.stats.max_st);
-          const inflowPct = Math.round((1 - stRatio) * 100);
-          if (inflowPct > 0) {
-            label += `<span class="hp-inflow">HP流入${inflowPct}%</span>`;
-          }
-        }
-
         btn.innerHTML = label;
         btn.addEventListener('click', () => {
-          if (waitingForPlayer) executePlayerSkill(skillId);
+          if (waitingForReaction) executeReactionSkill(skillId);
+          else if (waitingForPlayer) executePlayerSkill(skillId);
         });
         skillBtnsEl.appendChild(btn);
       });
@@ -1104,10 +1182,16 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
         skillBtnsEl.appendChild(warn);
       }
 
-      btnDefend.onclick = () => {
-        if (waitingForPlayer) doDefend(p1Monster, 1);
-      };
     }
+
+    function executeReactionSkill(skillId) {
+      const res = engine.executeSkill(p1Monster, p2Monster, skillId);
+      if (res) logResult(res, 1);
+      p1Monster.is_defending = false;
+      updateUI();
+      finishReaction();
+    }
+
 
     function executePlayerSkill(skillId) {
       const res = engine.executeSkill(p1Monster, p2Monster, skillId);
@@ -1125,6 +1209,7 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
       playerActionsEl.style.display = 'none';
 
       timeline.onActionCompleted(1);
+      p1Monster.gauge = 0;
       updateUI();
       checkBattleEnd();
       if (!battleOver) {
@@ -1134,6 +1219,22 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
     }
 
     // ===== ログ =====
+    function showDamageEffect(cardId, res) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const parts = [];
+      if (res.hp_damage > 0) parts.push({ text: `HP -${res.hp_damage}`, cls: 'hp' + (res.hp_damage >= 100 ? ' big' : '') });
+      if (res.st_damage > 0) parts.push({ text: `ST -${res.st_damage}`, cls: 'st' });
+      parts.forEach((p, i) => {
+        const el = document.createElement('div');
+        el.className = `dmg-popup ${p.cls}`;
+        el.textContent = p.text;
+        el.style.top = `${10 + i * 28}px`;
+        card.appendChild(el);
+        el.addEventListener('animationend', () => el.remove());
+      });
+    }
+
     function addLog(html) {
       const div = document.createElement('div');
       div.className = 'log-entry';
@@ -1144,11 +1245,43 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
 
     function logResult(res, playerNum) {
       if (!res) return;
+      // ダメージエフェクト: 攻撃を受けた側のカードに表示
+      const defCardId = playerNum === 1 ? 'p2-card' : 'p1-card';
+      showDamageEffect(defCardId, res);
       const whoLabel = playerNum === 1 ? 'P1' : 'P2';
       let msg = `<span class="log-actor">[${whoLabel}] ${res.attacker}</span> → ${res.skill}`;
-      if (res.extra_cost > 0) msg += ` <span style="color:#f97316;">[連続+${res.extra_cost}ST]</span>`;
-      if (res.st_damage > 0) msg += ` <span class="log-dmg-st">ST-${res.st_damage}</span>`;
-      if (res.hp_damage > 0) msg += ` <span class="log-dmg-hp">HP-${res.hp_damage}</span>`;
+
+      if (currentMode === 'case3') {
+        // 攻撃側STコスト
+        if (res.cost_total != null) {
+          const costStr = res.extra_cost > 0
+            ? `${res.base_cost}<span class="log-info">+連続${res.extra_cost}</span>=${res.cost_total}`
+            : `${res.cost_total}`;
+          msg += ` <span style="color:#f97316;">[-${costStr}ST]</span>`;
+        }
+        // 防御側ダメージ（ST固定 + HP溢れ内訳）
+        if (res.calc) {
+          const c = res.calc;
+          const weakStr = res.is_weakness ? `<span style="color:#f97316;">+10苦手</span>` : ``;
+          msg += ` <span class="log-dmg-st">ST-${res.st_damage}</span>${weakStr}`;
+          if (res.hp_damage > 0) msg += ` <span class="log-dmg-hp">HP-${res.hp_damage}</span>`;
+          const stabStr = c.is_stab ? `×STAB1.5` : ``;
+          msg += ` <span class="log-info">(pow${c.base_pow}${stabStr}×atk${c.atk}=${c.pow_atk} vs ST${Math.floor(c.st_def/c.def)}×def${c.def}=${c.st_def})</span>`;
+        }
+      } else {
+        if (res.extra_cost > 0) msg += ` <span style="color:#f97316;">[連続+${res.extra_cost}ST]</span>`;
+        if (res.penalty_detail) {
+          const pd = res.penalty_detail;
+          let penStr = `ペナルティ-${pd.total}(基本10`;
+          if (pd.elemBonus) penStr += `+属性10`;
+          if (pd.overpowerBonus) penStr += `+圧倒10`;
+          penStr += `)`;
+          msg += ` <span class="log-info">${penStr}</span>`;
+        }
+        if (res.st_damage > 0) msg += ` <span class="log-dmg-st">ST-${res.st_damage}</span>`;
+        if (res.hp_damage > 0) msg += ` <span class="log-dmg-hp">HP-${res.hp_damage}</span>`;
+      }
+
       if (res.self_damage > 0) msg += ` <span class="log-dmg-hp">(自HP-${res.self_damage})</span>`;
       if (res.armor_crush) msg += ` <span style="color:#f97316;">[ArmorCrush]</span>`;
       if (res.is_break) msg += ` <span class="log-break">★BREAK!</span>`;
@@ -1172,7 +1305,15 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
         const isWin = p2Dead;
         addLog(`<span class="log-win">--- ${winner} ---</span>`);
         updateUI();
-        showEndOverlay(isWin);
+        const btn = document.createElement('button');
+        btn.textContent = '📊 結果を見る';
+        btn.style.cssText = 'margin-top:8px; padding:6px 16px; border-radius:8px; border:none; background:#3b82f6; color:#fff; font-size:0.82rem; cursor:pointer;';
+        btn.onclick = () => showEndOverlay(isWin);
+        const wrap = document.createElement('div');
+        wrap.className = 'log-entry';
+        wrap.appendChild(btn);
+        logEl.appendChild(wrap);
+        logEl.scrollTop = logEl.scrollHeight;
       }
     }
 

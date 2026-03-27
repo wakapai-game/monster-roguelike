@@ -25,24 +25,24 @@ const SKILLS = [
 
 // モンスターベースデータ（味方用）
 const MONSTERS_DATA = [
-  { id: "m_001", name: "フレイムパピー", main_element: "fire", sub_element: "none", base_stats: {hp: 200, atk: 40, def: 30, mag: 20, spd: 25, max_st: 80, st_rec: 5}, skills: ["strike", "fireball"] },
-  { id: "m_002", name: "アクアタートル", main_element: "water", sub_element: "earth", base_stats: {hp: 250, atk: 25, def: 50, mag: 15, spd: 10, max_st: 120, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
-  { id: "m_003", name: "サンダーバード", main_element: "thunder", sub_element: "wind", base_stats: {hp: 150, atk: 30, def: 20, mag: 45, spd: 40, max_st: 70, st_rec: 15}, skills: ["strike", "smash"] },
-  { id: "m_004", name: "ゴーレム", main_element: "earth", sub_element: "none", base_stats: {hp: 300, atk: 50, def: 60, mag: 5, spd: 5, max_st: 150, st_rec: 0}, skills: ["smash"] },
-  { id: "m_005", name: "シャドウアサシン", main_element: "dark", sub_element: "none", base_stats: {hp: 120, atk: 60, def: 15, mag: 10, spd: 50, max_st: 50, st_rec: 10}, skills: ["strike", "pierce_needle"] },
-  { id: "m_006", name: "ホーリーナイト", main_element: "light", sub_element: "fire", base_stats: {hp: 220, atk: 35, def: 40, mag: 30, spd: 20, max_st: 100, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] }
+  { id: "m_001", name: "フレイムパピー", main_element: "fire", sub_element: "none", base_stats: {hp: 2000, atk: 40, def: 30, mag: 20, spd: 25, max_st: 100, st_rec: 5}, skills: ["strike", "fireball"] },
+  { id: "m_002", name: "アクアタートル", main_element: "water", sub_element: "earth", base_stats: {hp: 2500, atk: 25, def: 50, mag: 15, spd: 10, max_st: 100, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
+  { id: "m_003", name: "サンダーバード", main_element: "thunder", sub_element: "wind", base_stats: {hp: 1500, atk: 30, def: 20, mag: 45, spd: 40, max_st: 100, st_rec: 15}, skills: ["strike", "smash"] },
+  { id: "m_004", name: "ゴーレム", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 50, def: 60, mag: 5, spd: 30, max_st: 100, st_rec: 0}, skills: ["smash"] },
+  { id: "m_005", name: "シャドウアサシン", main_element: "dark", sub_element: "none", base_stats: {hp: 1200, atk: 80, def: 50, mag: 10, spd: 50, max_st: 100, st_rec: 10}, skills: ["strike", "pierce_needle"] },
+  { id: "m_006", name: "ホーリーナイト", main_element: "light", sub_element: "fire", base_stats: {hp: 2200, atk: 35, def: 40, mag: 30, spd: 20, max_st: 100, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] }
 ];
 
 // 敵専用モンスターデータ（序盤向けにステータス低下・野生化）
 const ENEMY_DATA = [
-  { id: "e_001", name: "野生のパピー", main_element: "fire", sub_element: "none", base_stats: {hp: 60, atk: 20, def: 10, mag: 10, spd: 15, max_st: 30, st_rec: 5}, skills: ["strike"] },
-  { id: "e_002", name: "野生のタートル", main_element: "water", sub_element: "earth", base_stats: {hp: 100, atk: 15, def: 30, mag: 5, spd: 5, max_st: 50, st_rec: 5}, skills: ["strike", "water_gun"] },
-  { id: "e_003", name: "野生のバード", main_element: "thunder", sub_element: "wind", base_stats: {hp: 50, atk: 25, def: 10, mag: 20, spd: 30, max_st: 40, st_rec: 10}, skills: ["strike"] },
-  { id: "e_boss_01", name: "【ボス】暴走ゴーレム", main_element: "earth", sub_element: "none", base_stats: {hp: 300, atk: 40, def: 50, mag: 5, spd: 10, max_st: 150, st_rec: 0}, skills: ["smash"] }
+  { id: "e_001", name: "野生のパピー", main_element: "fire", sub_element: "none", base_stats: {hp: 600, atk: 20, def: 10, mag: 10, spd: 15, max_st: 100, st_rec: 5}, skills: ["strike"] },
+  { id: "e_002", name: "野生のタートル", main_element: "water", sub_element: "earth", base_stats: {hp: 1000, atk: 15, def: 30, mag: 5, spd: 5, max_st: 100, st_rec: 5}, skills: ["strike", "water_gun"] },
+  { id: "e_003", name: "野生のバード", main_element: "thunder", sub_element: "wind", base_stats: {hp: 500, atk: 25, def: 10, mag: 20, spd: 30, max_st: 100, st_rec: 10}, skills: ["strike"] },
+  { id: "e_boss_01", name: "【ボス】暴走ゴーレム", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 40, def: 50, mag: 5, spd: 30, max_st: 100, st_rec: 0}, skills: ["smash"] }
 ];
 
 // チュートリアル専用敵（ice属性でfireballがバツグン、ST高めでST削り体験用、st_rec:0でブレイクしやすい）
-const TUTORIAL_ENEMY = { id: "e_tutorial", name: "修行用ダミー", main_element: "ice", sub_element: "none", base_stats: {hp: 300, atk: 12, def: 45, mag: 55, spd: 8, max_st: 200, st_rec: 0}, skills: ["strike"] };
+const TUTORIAL_ENEMY = { id: "e_tutorial", name: "修行用ダミー", main_element: "ice", sub_element: "none", base_stats: {hp: 3000, atk: 12, def: 45, mag: 55, spd: 8, max_st: 100, st_rec: 0}, skills: ["strike"] };
 
 // バトル中に使用可能なアイテム（Inventoryから消費）
 const BATTLE_ITEMS_DATA = [

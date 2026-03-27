@@ -1,16 +1,12 @@
 // test-engines.js
-// 各案のバトルエンジン（完全独立実装）
-// game.js の BattleEngine を継承しない。案ごとに変更が閉じている。
+// 各案のバトルエンジン（BattleEngineBase を継承し差分のみ実装）
 
 import { AFFINITY, SKILLS, BATTLE_ITEMS_DATA } from './data.js';
 
 // ============================================================
-// 案1: 設計意図通り（STはペナルティのみ最大-30）
-//   - 全攻撃に固定ペナルティ（-10〜-30 ST）
-//   - damage_st エフェクトはブレイク中のみHPダメージに使用
-//   - 自分のSTが0になるとブレイク（技コストがHPから消費）
+// 基底クラス: 3案共通のユーティリティとエフェクト処理
 // ============================================================
-export class EngineCase1 {
+class BattleEngineBase {
   getSkill(id) {
     return SKILLS.find(s => s.id === id) ?? BATTLE_ITEMS_DATA.find(i => i.id === id) ?? null;
   }
@@ -19,6 +15,67 @@ export class EngineCase1 {
     return AFFINITY[atk]?.[def] ?? 1.0;
   }
 
+  /** 属性相性計算: mm * ms, 両方弱点なら 4.0 キャップ */
+  calcAffinity(s_elem, defender) {
+    const mm = this.getAffinityMultiplier(s_elem, defender.main_element);
+    const ms = this.getAffinityMultiplier(s_elem, defender.sub_element);
+    let aff = mm * ms;
+    if (mm > 1 && ms > 1) aff = 4.0;
+    return aff;
+  }
+
+  /** STAB判定 */
+  isStab(s_elem, attacker) {
+    return s_elem !== 'none' && (attacker.main_element === s_elem || attacker.sub_element === s_elem);
+  }
+
+  /** STAB判定付き実効威力 */
+  calcEffPow(base_pow, s_elem, attacker) {
+    return this.isStab(s_elem, attacker) ? base_pow * 1.5 : base_pow;
+  }
+
+  /** スキルコスト計算 (baseCost + 連続攻撃extraCost) */
+  calcSkillCost(skill, attacker) {
+    const baseCost = Math.max(10, skill.cost_st || 0);
+    const extraCost = skill.category === 'attack'
+      ? Math.max(0, ((attacker.consecutive_count || 1) - 1) * 5) : 0;
+    return { baseCost, extraCost, cost: baseCost + extraCost };
+  }
+
+  /** 共通エフェクト処理。処理したら true を返す */
+  applyCommonEffect(eff, attacker, defender, result) {
+    if (eff.type === 'damage_hp_direct') {
+      let d = Math.floor((eff.base_power || 0)
+        * (defender.is_defending ? 0.5 : 1)
+        * (defender.is_break ? 2.0 : 1));
+      defender.current_hp -= d;
+      result.hp_damage += d;
+      return true;
+    }
+    if (eff.type === 'delay_gauge') {
+      defender.gauge = Math.max(0, defender.gauge - (eff.value || 0));
+      return true;
+    }
+    if (eff.type === 'recover_st_direct') {
+      attacker.current_st = Math.min(attacker.stats.max_st, attacker.current_st + (eff.value || 0));
+      if (attacker.current_st > 0) attacker.is_break = false;
+      return true;
+    }
+    if (eff.type === 'recover_hp') {
+      defender.current_hp = Math.min(defender.stats.hp, defender.current_hp + (eff.value || 0));
+      return true;
+    }
+    return false;
+  }
+}
+
+// ============================================================
+// 案1: 設計意図通り（STはペナルティのみ最大-30）
+//   - 全攻撃に固定ペナルティ（-10〜-30 ST）
+//   - damage_st エフェクトはブレイク中のみHPダメージに使用
+//   - 自分のSTが0になるとブレイク（技コストがHPから消費）
+// ============================================================
+export class EngineCase1 extends BattleEngineBase {
   executeSkill(attacker, defender, skill_id) {
     const skill = this.getSkill(skill_id);
     if (!skill) return { error: 'Skill not found' };
@@ -29,10 +86,7 @@ export class EngineCase1 {
     };
 
     // 1. 攻撃側 ST コスト（ブレイク中は HP から消費）
-    const baseCost = Math.max(10, skill.cost_st || 0);
-    const extraCost = skill.category === 'attack'
-      ? Math.max(0, ((attacker.consecutive_count || 1) - 1) * 5) : 0;
-    const cost = baseCost + extraCost;
+    const { extraCost, cost } = this.calcSkillCost(skill, attacker);
     result.extra_cost = extraCost;
     if (attacker.is_break) {
       attacker.current_hp -= cost;
@@ -45,13 +99,12 @@ export class EngineCase1 {
     // 2. ペナルティ（STダメージの唯一の発生源、最大 -30）
     if (attacker.id !== defender.id && (skill.category === 'attack' || skill.category === 'trap')) {
       const s_elem = skill.element || 'none';
-      const mm = this.getAffinityMultiplier(s_elem, defender.main_element);
-      const ms = this.getAffinityMultiplier(s_elem, defender.sub_element);
-      let aff = mm * ms;
-      if (mm > 1 && ms > 1) aff = 4.0;
+      const aff = this.calcAffinity(s_elem, defender);
 
       let penalty = 10;
-      if (aff > 1.0) penalty += 10; // 属性有利
+      let elemBonus = 0;
+      let overpowerBonus = 0;
+      if (aff > 1.0) { penalty += 10; elemBonus = 10; } // 属性有利
 
       // 圧倒判定
       const dmgEff = skill.effects?.find(e => e.type === 'damage_st' || e.type === 'damage_hp_direct');
@@ -59,10 +112,11 @@ export class EngineCase1 {
         const s_type = skill.type || 'physical';
         const atkStat = attacker.stats[s_type === 'physical' ? 'atk' : 'mag'] || 10;
         const defStat = defender.stats[s_type === 'physical' ? 'def' : 'mag'] || 10;
-        const is_stab = attacker.main_element === s_elem || attacker.sub_element === s_elem;
-        const effPow = (is_stab ? (dmgEff.base_power || 0) * 1.5 : (dmgEff.base_power || 0));
-        if (effPow * atkStat > defStat * defender.current_st) penalty += 10;
+        const effPow = this.calcEffPow(dmgEff.base_power || 0, s_elem, attacker);
+        if (effPow * atkStat > defStat * defender.current_st) { penalty += 10; overpowerBonus = 10; }
       }
+
+      result.penalty_detail = { base: 10, elemBonus, overpowerBonus, total: penalty };
 
       if (defender.is_break) {
         defender.current_hp -= penalty;
@@ -87,19 +141,8 @@ export class EngineCase1 {
           defender.current_hp -= hp_dmg;
           result.hp_damage += hp_dmg;
         }
-      } else if (eff.type === 'damage_hp_direct') {
-        let d = Math.floor((eff.base_power || 0)
-          * (defender.is_defending ? 0.5 : 1)
-          * (defender.is_break ? 2.0 : 1));
-        defender.current_hp -= d;
-        result.hp_damage += d;
-      } else if (eff.type === 'delay_gauge') {
-        defender.gauge = Math.max(0, defender.gauge - (eff.value || 0));
-      } else if (eff.type === 'recover_st_direct') {
-        attacker.current_st = Math.min(attacker.stats.max_st, attacker.current_st + (eff.value || 0));
-        if (attacker.current_st > 0) attacker.is_break = false;
-      } else if (eff.type === 'recover_hp') {
-        defender.current_hp = Math.min(defender.stats.hp, defender.current_hp + (eff.value || 0));
+      } else {
+        this.applyCommonEffect(eff, attacker, defender, result);
       }
     }
 
@@ -114,12 +157,8 @@ export class EngineCase1 {
     const s_elem = skill.element || 'none';
     const atk = attacker.stats[s_type === 'physical' ? 'atk' : 'mag'] || 10;
     const def = defender.stats[s_type === 'physical' ? 'def' : 'mag'] || 10;
-    const mm = this.getAffinityMultiplier(s_elem, defender.main_element);
-    const ms = this.getAffinityMultiplier(s_elem, defender.sub_element);
-    let aff = mm * ms;
-    if (mm > 1 && ms > 1) aff = 4.0;
-    const is_stab = attacker.main_element === s_elem || attacker.sub_element === s_elem;
-    const effPow = is_stab ? (eff.base_power || 0) * 1.5 : (eff.base_power || 0);
+    const aff = this.calcAffinity(s_elem, defender);
+    const effPow = this.calcEffPow(eff.base_power || 0, s_elem, attacker);
     const raw = effPow * (atk / Math.max(1, def)) * aff * (defender.is_defending ? 0.5 : 1);
     const mult = aff === 4.0 ? 8.0 : aff > 1.0 ? aff * 2.0 : 2.0;
     return Math.floor(raw * mult);
@@ -128,18 +167,10 @@ export class EngineCase1 {
 
 // ============================================================
 // 案2: ブレイク中は攻撃技使用禁止
-//   - 案1の全ロジックを独自に持つ（案1から継承しない）
+//   - 案1の全ロジックを継承
 //   - 違いは executeSkill の先頭でブレイク中攻撃をブロックするだけ
 // ============================================================
-export class EngineCase2 {
-  getSkill(id) {
-    return SKILLS.find(s => s.id === id) ?? BATTLE_ITEMS_DATA.find(i => i.id === id) ?? null;
-  }
-
-  getAffinityMultiplier(atk, def) {
-    return AFFINITY[atk]?.[def] ?? 1.0;
-  }
-
+export class EngineCase2 extends BattleEngineBase {
   executeSkill(attacker, defender, skill_id) {
     const skill = this.getSkill(skill_id);
     if (!skill) return { error: 'Skill not found' };
@@ -155,10 +186,7 @@ export class EngineCase2 {
     };
 
     // 1. 攻撃側 ST コスト
-    const baseCost = Math.max(10, skill.cost_st || 0);
-    const extraCost = skill.category === 'attack'
-      ? Math.max(0, ((attacker.consecutive_count || 1) - 1) * 5) : 0;
-    const cost = baseCost + extraCost;
+    const { extraCost, cost } = this.calcSkillCost(skill, attacker);
     result.extra_cost = extraCost;
     if (attacker.is_break) {
       attacker.current_hp -= cost;
@@ -171,23 +199,23 @@ export class EngineCase2 {
     // 2. ペナルティ（最大 -30 ST）
     if (attacker.id !== defender.id && (skill.category === 'attack' || skill.category === 'trap')) {
       const s_elem = skill.element || 'none';
-      const mm = this.getAffinityMultiplier(s_elem, defender.main_element);
-      const ms = this.getAffinityMultiplier(s_elem, defender.sub_element);
-      let aff = mm * ms;
-      if (mm > 1 && ms > 1) aff = 4.0;
+      const aff = this.calcAffinity(s_elem, defender);
 
       let penalty = 10;
-      if (aff > 1.0) penalty += 10;
+      let elemBonus = 0;
+      let overpowerBonus = 0;
+      if (aff > 1.0) { penalty += 10; elemBonus = 10; }
 
       const dmgEff = skill.effects?.find(e => e.type === 'damage_st' || e.type === 'damage_hp_direct');
       if (dmgEff) {
         const s_type = skill.type || 'physical';
         const atkStat = attacker.stats[s_type === 'physical' ? 'atk' : 'mag'] || 10;
         const defStat = defender.stats[s_type === 'physical' ? 'def' : 'mag'] || 10;
-        const is_stab = attacker.main_element === s_elem || attacker.sub_element === s_elem;
-        const effPow = is_stab ? (dmgEff.base_power || 0) * 1.5 : (dmgEff.base_power || 0);
-        if (effPow * atkStat > defStat * defender.current_st) penalty += 10;
+        const effPow = this.calcEffPow(dmgEff.base_power || 0, s_elem, attacker);
+        if (effPow * atkStat > defStat * defender.current_st) { penalty += 10; overpowerBonus = 10; }
       }
+
+      result.penalty_detail = { base: 10, elemBonus, overpowerBonus, total: penalty };
 
       if (defender.is_break) {
         defender.current_hp -= penalty;
@@ -211,19 +239,8 @@ export class EngineCase2 {
           defender.current_hp -= hp_dmg;
           result.hp_damage += hp_dmg;
         }
-      } else if (eff.type === 'damage_hp_direct') {
-        let d = Math.floor((eff.base_power || 0)
-          * (defender.is_defending ? 0.5 : 1)
-          * (defender.is_break ? 2.0 : 1));
-        defender.current_hp -= d;
-        result.hp_damage += d;
-      } else if (eff.type === 'delay_gauge') {
-        defender.gauge = Math.max(0, defender.gauge - (eff.value || 0));
-      } else if (eff.type === 'recover_st_direct') {
-        attacker.current_st = Math.min(attacker.stats.max_st, attacker.current_st + (eff.value || 0));
-        if (attacker.current_st > 0) attacker.is_break = false;
-      } else if (eff.type === 'recover_hp') {
-        defender.current_hp = Math.min(defender.stats.hp, defender.current_hp + (eff.value || 0));
+      } else {
+        this.applyCommonEffect(eff, attacker, defender, result);
       }
     }
 
@@ -237,12 +254,8 @@ export class EngineCase2 {
     const s_elem = skill.element || 'none';
     const atk = attacker.stats[s_type === 'physical' ? 'atk' : 'mag'] || 10;
     const def = defender.stats[s_type === 'physical' ? 'def' : 'mag'] || 10;
-    const mm = this.getAffinityMultiplier(s_elem, defender.main_element);
-    const ms = this.getAffinityMultiplier(s_elem, defender.sub_element);
-    let aff = mm * ms;
-    if (mm > 1 && ms > 1) aff = 4.0;
-    const is_stab = attacker.main_element === s_elem || attacker.sub_element === s_elem;
-    const effPow = is_stab ? (eff.base_power || 0) * 1.5 : (eff.base_power || 0);
+    const aff = this.calcAffinity(s_elem, defender);
+    const effPow = this.calcEffPow(eff.base_power || 0, s_elem, attacker);
     const raw = effPow * (atk / Math.max(1, def)) * aff * (defender.is_defending ? 0.5 : 1);
     const mult = aff === 4.0 ? 8.0 : aff > 1.0 ? aff * 2.0 : 2.0;
     return Math.floor(raw * mult);
@@ -257,15 +270,7 @@ export class EngineCase2 {
 //   - HP_dmg = raw × (1 - ST_ratio)
 //   - ST_dmg = raw × ST_ratio
 // ============================================================
-export class EngineCase3 {
-  getSkill(id) {
-    return SKILLS.find(s => s.id === id) ?? BATTLE_ITEMS_DATA.find(i => i.id === id) ?? null;
-  }
-
-  getAffinityMultiplier(atk, def) {
-    return AFFINITY[atk]?.[def] ?? 1.0;
-  }
-
+export class EngineCase3 extends BattleEngineBase {
   executeSkill(attacker, defender, skill_id) {
     const skill = this.getSkill(skill_id);
     if (!skill) return { error: 'Skill not found' };
@@ -276,19 +281,20 @@ export class EngineCase3 {
     };
 
     // 1. 攻撃側 ST コスト（ブレイクなし・HP 消費なし）
-    const baseCost = Math.max(10, skill.cost_st || 0);
-    const extraCost = skill.category === 'attack'
-      ? Math.max(0, ((attacker.consecutive_count || 1) - 1) * 5) : 0;
-    const cost = baseCost + extraCost;
+    const { baseCost, extraCost, cost } = this.calcSkillCost(skill, attacker);
     result.extra_cost = extraCost;
+    result.base_cost = baseCost;
+    result.cost_total = cost;
     attacker.current_st = Math.max(0, attacker.current_st - cost);
 
-    // 2. スキルエフェクト（damage_st は ST と HP に分配）
+    // 2. スキルエフェクト（damage_st は ST固定 + HP溢れダメージ）
     for (const eff of (skill.effects || [])) {
       if (eff.type === 'damage_st') {
-        const { st_damage, hp_damage } = this._calcGradientDamage(attacker, defender, skill, eff);
+        const { st_damage, hp_damage, is_weakness, calc } = this._calcDamage(attacker, defender, skill, eff);
         defender.current_st = Math.max(0, defender.current_st - st_damage);
         defender.current_hp = Math.max(0, defender.current_hp - hp_damage);
+        result.is_weakness = is_weakness;
+        result.calc = calc;
         result.st_damage += st_damage;
         result.hp_damage += hp_damage;
       } else if (eff.type === 'damage_hp_direct') {
@@ -307,23 +313,27 @@ export class EngineCase3 {
     return result;
   }
 
-  // raw ダメージを ST 残量比で ST と HP に分配する
-  _calcGradientDamage(attacker, defender, skill, eff) {
+  // ST固定ダメージ + HP溢れダメージ計算
+  // ST_dmg = 10（ヒット固定）+ 10（苦手属性なら追加）
+  // HP_dmg = max(0, effPow*atk - current_st*def)
+  _calcDamage(attacker, defender, skill, eff) {
     const s_type = skill.type || 'physical';
     const s_elem = skill.element || 'none';
     const atk = attacker.stats[s_type === 'physical' ? 'atk' : 'mag'] || 10;
     const def = defender.stats[s_type === 'physical' ? 'def' : 'mag'] || 10;
-    const mm = this.getAffinityMultiplier(s_elem, defender.main_element);
-    const ms = this.getAffinityMultiplier(s_elem, defender.sub_element);
-    let aff = mm * ms;
-    if (mm > 1 && ms > 1) aff = 4.0;
-    const is_stab = attacker.main_element === s_elem || attacker.sub_element === s_elem;
-    const effPow = is_stab ? (eff.base_power || 0) * 1.5 : (eff.base_power || 0);
-    const raw = effPow * (atk / Math.max(1, def)) * aff * (defender.is_defending ? 0.5 : 1);
-    const stRatio = defender.current_st / Math.max(1, defender.stats.max_st);
+    const aff = this.calcAffinity(s_elem, defender);
+    const base_pow = eff.base_power || 0;
+    const effPow = this.calcEffPow(base_pow, s_elem, attacker);
+    const is_weakness = aff > 1.0;
+    const st_damage = Math.min(defender.current_st, 10 + (is_weakness ? 10 : 0));
+    const pow_atk = effPow * atk;
+    const st_def = defender.current_st * def;
+    const hp_damage = Math.max(0, Math.floor(pow_atk - st_def));
     return {
-      st_damage: Math.floor(Math.min(defender.current_st, raw * stRatio)),
-      hp_damage: Math.floor(raw * (1 - stRatio))
+      st_damage,
+      hp_damage,
+      is_weakness,
+      calc: { base_pow, is_stab: this.isStab(s_elem, attacker), atk, def, aff, effPow, pow_atk, st_def }
     };
   }
 }
