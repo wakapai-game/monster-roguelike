@@ -4,29 +4,44 @@ import { mapNodesContainer, mapLinesContainer, rosterGrid, screenMap, screenSele
 
 export function generateRewards() {
     const rBoxes = document.getElementById('reward-boxes');
+    const btnCollect = document.getElementById('btn-collect-reward');
     rBoxes.innerHTML = '';
+    btnCollect.disabled = true;
 
     const pools = [
-       { type: 'skill', data: SKILLS },
-       { type: 'battleItem', data: BATTLE_ITEMS_DATA },
-       { type: 'food', data: FOOD_DATA }
+       { type: 'skill',      data: SKILLS,            label: '技' },
+       { type: 'battleItem', data: BATTLE_ITEMS_DATA,  label: 'バトルアイテム' },
+       { type: 'food',       data: FOOD_DATA,          label: 'えさ' }
     ];
 
-    // Give 2 random items
-    for(let i=0; i<2; i++) {
+    // 3候補をランダム生成（未選択はインベントリに追加しない）
+    for (let i = 0; i < 3; i++) {
         const pool = pools[Math.floor(Math.random() * pools.length)];
         const item = pool.data[Math.floor(Math.random() * pool.data.length)];
 
-        if (pool.type === 'skill') appState.globalInventory.skills.push(item.id);
-        if (pool.type === 'battleItem') appState.globalInventory.battleItems.push(item.id);
-        if (pool.type === 'food') appState.globalInventory.mapItems.push(item.id);
-
         const box = document.createElement('div');
-        box.className = 'reward-box';
-        let typeLabel = pool.type === 'skill' ? '技 (Skill)' : pool.type === 'battleItem' ? 'バトル用 (Battle)' : 'えさ (Food)';
-        box.innerHTML = `<h4>${item.name}</h4><p>${typeLabel}</p>`;
+        box.className = 'reward-box reward-box-selectable';
+        box.innerHTML = `<div class="reward-box-type">${pool.label}</div><h4>${item.name}</h4>`;
+        box.onclick = () => {
+            // 選択済みを解除してこのboxを選択
+            rBoxes.querySelectorAll('.reward-box-selectable').forEach(b => b.classList.remove('selected'));
+            box.classList.add('selected');
+            btnCollect.disabled = false;
+
+            // 選択されたアイテムをインベントリに反映（以前の選択分をクリアして再登録）
+            appState.globalInventory._pendingReward = { type: pool.type, id: item.id };
+        };
         rBoxes.appendChild(box);
     }
+}
+
+export function collectPendingReward() {
+    const pending = appState.globalInventory._pendingReward;
+    if (!pending) return;
+    if (pending.type === 'skill')      appState.globalInventory.skills.push(pending.id);
+    if (pending.type === 'battleItem') appState.globalInventory.battleItems.push(pending.id);
+    if (pending.type === 'food')       appState.globalInventory.mapItems.push(pending.id);
+    delete appState.globalInventory._pendingReward;
 }
 
 export function handleNodeClick(node, onBattleStart) {

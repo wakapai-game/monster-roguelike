@@ -1,13 +1,23 @@
+import { MONSTERS_DATA, SKILLS } from '../data.js';
+
 // ---- HELP System ----
+
+const FLOAT_BTNS = ['btn-help-global', 'btn-affinity-global', 'btn-monsters-global'];
 
 export function openHelp() {
   document.getElementById('screen-help').classList.remove('hide');
-  document.getElementById('btn-help-global').style.display = 'none';
+  FLOAT_BTNS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+}
+
+export function openHelpTab(tabName) {
+  openHelp();
+  const tabBtn = document.querySelector(`[data-help-tab="${tabName}"]`);
+  if (tabBtn) tabBtn.click();
 }
 
 export function closeHelp() {
   document.getElementById('screen-help').classList.add('hide');
-  document.getElementById('btn-help-global').style.display = '';
+  FLOAT_BTNS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
 }
 
 export function initHelp() {
@@ -18,6 +28,7 @@ export function initHelp() {
   document.getElementById('help-content-skills').innerHTML   = buildSkillsContent();
   document.getElementById('help-content-training').innerHTML = buildTrainingContent();
   document.getElementById('help-content-map').innerHTML      = buildMapContent();
+  document.getElementById('help-content-monsters').innerHTML = buildMonstersContent();
 
   // 閉じるボタン
   document.getElementById('btn-close-help').onclick = closeHelp;
@@ -88,52 +99,52 @@ function buildBattleContent() {
 }
 
 // ============================
-// タブ2: ST / ブレイク
+// タブ2: ST / ダメージ
 // ============================
 function buildSTContent() {
   return `
 <div class="help-section">
   <h3 class="help-h3">💛 ST（スタミナ）とは</h3>
-  <p class="help-p">ST はモンスターの <b>スタミナ兼装甲</b> です。ST が残っている間は、ほとんどのダメージが HP ではなく ST に吸収されます。</p>
-  <p class="help-p">自分のモンスターの ST は画面左の黄色バーで確認できます。<b>敵の ST は表示されません</b>。攻撃を続けて ST を削っていきましょう。</p>
+  <p class="help-p">ST はモンスターの <b>スタミナ兼防御壁</b> です。ST が高いほどスキルの威力が HP に届きにくくなります。</p>
+  <p class="help-p">自分のモンスターの ST は画面左の黄色バーで確認できます。<b>敵の ST は表示されません</b>。攻撃を続けて ST を削り、HP へのダメージを通しましょう。</p>
 </div>
 
 <div class="help-section">
-  <h3 class="help-h3">🔴 ブレイクとは</h3>
-  <p class="help-p">ST が 0 になると <b>ブレイク</b> 状態になります。ブレイク中はモンスターのカードが <b>赤く点滅</b> します。</p>
+  <h3 class="help-h3">💥 HP溢れダメージの仕組み</h3>
+  <p class="help-p">毎回の攻撃で必ず <b>ST 固定ダメージ（10〜20）</b> を与えつつ、スキル威力が ST 防御を超えた分だけ HP にダメージが「溢れ」ます。</p>
+  <div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:8px 12px; font-family:monospace; font-size:0.82rem; margin:8px 0;">
+    ST ダメージ = 10（苦手属性なら +10）<br>
+    HP ダメージ = max(0, スキル威力 × ATK − 現在ST × DEF)
+  </div>
   <ul class="help-list">
-    <li>ブレイク中の敵への攻撃は <b>HPに直接ダメージ × 2倍</b></li>
-    <li>相性「バツグン」のスキルならさらに <b>× 2〜8倍</b>（ダブル弱点で最大 ×8）</li>
-    <li>ブレイク中は敵も ST コストを使う技が HP 消耗に変わる</li>
-    <li>敵の ST が回復し始めると自動的にブレイク解除される</li>
+    <li>敵の <b>ST が高い</b> うちは HP へのダメージがほとんど入らない</li>
+    <li>敵の <b>ST が低くなる</b> ほど HP へのダメージが増えていく</li>
+    <li>敵の <b>ST が 0</b> になると防御力がなくなり全ダメージが HP に入る</li>
   </ul>
 </div>
 
 <div class="help-section">
-  <h3 class="help-h3">🔥 自分のブレイク（スタミナ切れ）</h3>
-  <p class="help-p">自分のモンスターの ST が 0 になっても同じくブレイク状態（カード赤点滅）になります。</p>
+  <h3 class="help-h3">🛡 身を守る（Defend）の効果</h3>
+  <p class="help-p">防御フェーズで「身を守る」を選ぶと、その攻撃の HP への溢れダメージを <b>半減</b> できます。</p>
   <ul class="help-list">
-    <li>ブレイク中に ST コストのある技を使うと、<b>ST の代わりに HP を消費</b>（ボタンに「★HP自傷」と表示）</li>
-    <li>ST コストの最小値は <b>10</b>。HP が 10 以上なければ使用不可</li>
-    <li><b>対処法①</b>：控えのモンスターに交代する</li>
-    <li><b>対処法②</b>：アイテム「スタミナドリンク」で ST を 50 回復 → ブレイク解除</li>
-    <li><b>対処法③</b>：防御スキル「深呼吸」で ST を 40 直接回復 → ブレイク解除</li>
+    <li>敵がバツグン属性で攻撃してくるときに特に有効</li>
+    <li>防御スキル「深呼吸」で ST を 40 直接回復 → 次のターンの防御力を回復</li>
   </ul>
 </div>
 
 <div class="help-section">
   <h3 class="help-h3">♻️ 控えのST自動回復</h3>
-  <p class="help-p">バトル中、控えに下がっているモンスターは <b>1行動ごとに最大STの5%</b> を自動回復します。ブレイク中のモンスターを控えに下げて回復させるのも有効な戦略です。</p>
+  <p class="help-p">バトル中、控えに下がっているモンスターは <b>1行動ごとに最大STの5%</b> を自動回復します。ST が減ったモンスターを控えに下げてSTを回復させましょう。</p>
 </div>
 
 <div class="help-section">
   <h3 class="help-h3">📊 ダメージ計算の概要</h3>
   <ul class="help-list">
-    <li>STダメージ = <b>スキル威力 × (ATK or MAG ÷ 相手DEF or MAG) × 属性相性</b></li>
-    <li>物理スキル → 攻撃側 ATK ÷ 防御側 DEF で計算</li>
-    <li>魔法スキル → 攻撃側 MAG ÷ 防御側 MAG で計算</li>
-    <li>同属性スキル使用（一致ボーナス）→ スキル威力 ×1.5</li>
-    <li>ブレイク中HPダメージ → STダメージ計算値 × ブレイク倍率（×2〜8）</li>
+    <li>物理スキル → 攻撃側 <b>ATK</b> × スキル威力 vs 防御側 <b>DEF</b> × 現在ST で計算</li>
+    <li>魔法スキル → 攻撃側 <b>MAG</b> × スキル威力 vs 防御側 <b>MAG</b> × 現在ST で計算</li>
+    <li>同属性スキル使用（一致ボーナス）→ スキル威力 <b>×1.5</b></li>
+    <li>バツグン属性 → ST ダメージ +10 かつ HP 溢れダメージ増加</li>
+    <li>身を守る → HP 溢れダメージ <b>×0.5</b></li>
   </ul>
 </div>
 `;
@@ -423,6 +434,47 @@ function buildMapContent() {
       <div class="help-glossary-def">${g.def}</div>
     </div>`).join('')}
   </div>
+</div>
+`;
+}
+
+// ============================
+// タブ7: モンスター図鑑
+// ============================
+function buildMonstersContent() {
+  const ELEM_SHORT = { fire:'炎', water:'水', ice:'氷', thunder:'雷', earth:'地', wind:'風', light:'光', dark:'闇', none:'無' };
+  const STAT_LABELS = [['hp','HP'],['max_st','ST'],['atk','ATK'],['def','DEF'],['mag','MAG'],['spd','SPD']];
+
+  const cards = MONSTERS_DATA.map(m => {
+    const elemBadges = [
+      `<span class="elem-badge elem-${m.main_element}">${ELEM_SHORT[m.main_element] ?? m.main_element}</span>`,
+      m.sub_element && m.sub_element !== 'none'
+        ? `<span class="elem-badge elem-${m.sub_element}" style="opacity:0.7;">${ELEM_SHORT[m.sub_element] ?? m.sub_element}</span>`
+        : ''
+    ].join('');
+
+    const statsHtml = STAT_LABELS.map(([key, label]) =>
+      `<div>${label} <span>${m.base_stats[key] ?? '—'}</span></div>`
+    ).join('');
+
+    const skillNames = (m.skills || []).map(id => {
+      const s = SKILLS.find(sk => sk.id === id);
+      return s ? s.name : id;
+    }).join('、') || '—';
+
+    return `
+<div class="monster-dex-card">
+  <div class="monster-dex-name">${m.name}${elemBadges}</div>
+  <div class="monster-dex-stats">${statsHtml}</div>
+  <div class="monster-dex-skills">技: ${skillNames}</div>
+</div>`;
+  }).join('');
+
+  return `
+<div class="help-section">
+  <h3 class="help-h3">📖 モンスター一覧（ベースステータス）</h3>
+  <p class="help-p" style="font-size:0.78rem; color:#64748b;">※ えさや大きさ・賢さパラメータによって最終ステータスは変動します。</p>
+  <div class="monster-dex-grid">${cards}</div>
 </div>
 `;
 }

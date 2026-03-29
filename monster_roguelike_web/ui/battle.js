@@ -29,11 +29,34 @@ export function toast(htmlStr) {
   }, 3000);
 }
 
-export function triggerDamageAnimation(side, isBreak) {
+export function triggerDamageAnimation(side) {
     const card = document.getElementById(`${side}-active-card`);
     card.style.animation = 'none';
     card.offsetHeight;
     card.style.animation = 'shake 0.4s ease';
+}
+
+function showDamagePopup(side, hpDmg, stDmg, info = {}) {
+  const card = document.getElementById(`${side}-active-card`);
+  if (!card) return;
+  const spawn = (html, cls, offsetPct) => {
+    const el = document.createElement('div');
+    el.className = `dmg-popup ${cls}`;
+    el.innerHTML = html;
+    el.style.top = `${offsetPct}%`;
+    card.appendChild(el);
+    setTimeout(() => el.remove(), 900);
+  };
+  const { aff = 1, is_stab = false } = info;
+  const affBadge = aff >= 4.0 ? `<span class="dmg-badge dmg-badge-weakness">バツグン ×${aff}</span>`
+                 : aff >= 3.0 ? `<span class="dmg-badge dmg-badge-weakness">バツグン ×${aff}</span>`
+                 : aff > 1.0  ? `<span class="dmg-badge dmg-badge-weakness">バツグン ×${aff}</span>`
+                 : aff < 1.0  ? `<span class="dmg-badge dmg-badge-resist">いまいち ×${aff}</span>`
+                 : '';
+  const stabBadge = is_stab ? `<span class="dmg-badge dmg-badge-stab">STAB</span>` : '';
+  const overflowBadge = `<span class="dmg-badge dmg-badge-overflow">溢れ</span>`;
+  if (hpDmg > 0) spawn(`-${hpDmg} HP${overflowBadge}`, 'dmg-popup-hp', 30);
+  if (stDmg > 0) spawn(`-${stDmg} ST${affBadge}${stabBadge}`, 'dmg-popup-st', 50);
 }
 
 // 行動順シミュレーション
@@ -104,8 +127,24 @@ export function updateUI(onlyGauges = false) {
           setBar(document.getElementById('p1-st-fill'), activeMonster.current_st, activeMonster.stats.max_st);
       }
 
+      // バフ/デバフバッジ表示
+      const buffContainerId = `${side}-buff-badges`;
+      let buffEl = document.getElementById(buffContainerId);
+      if (!buffEl) {
+        buffEl = document.createElement('div');
+        buffEl.id = buffContainerId;
+        buffEl.style.cssText = 'display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; min-height:14px;';
+        document.getElementById(`${side}-active-card`).appendChild(buffEl);
+      }
+      const STAT_LABEL = { atk:'ATK', def:'DEF', mag:'MAG', spd:'SPD' };
+      buffEl.innerHTML = Object.entries(activeMonster.buffs || {}).map(([stat, b]) => {
+        const isUp = b.mult >= 1;
+        const col = isUp ? '#6ee7b7' : '#fca5a5';
+        const arrow = isUp ? '▲' : '▼';
+        return `<span style="font-size:0.65rem; background:rgba(0,0,0,0.4); border:1px solid ${col}; color:${col}; border-radius:3px; padding:1px 4px;">${arrow}${STAT_LABEL[stat]||stat} ×${b.mult} (${b.turns}T)</span>`;
+      }).join('');
+
       const cardEl = document.getElementById(`${side}-active-card`);
-      cardEl.classList.toggle('is-broken', activeMonster.is_break);
   };
 
   if (appState.timeline.p1_active) setCard('p1', appState.timeline.p1_active);
@@ -224,17 +263,12 @@ export function showAttackPhase(monster) {
     const btn = document.createElement('button');
     btn.className = 'btn skill-btn';
     let stCostTxt = skillData.cost_st > 0 ? ` [ST:${skillData.cost_st}]` : '';
-    let isBrokeWarn = (monster.is_break && skillData.cost_st > 0) ? ' <span style="color:#ef4444;">★HP自傷</span>' : '';
-    
     let affinityBadge = '';
     if (skillData.category === "attack" || skillData.category === "trap") {
         const defender = appState.timeline.p2_active;
         if (defender) {
             const s_elem = skillData.element || "none";
-            const multi_main = appState.engine.getAffinityMultiplier(s_elem, defender.main_element);
-            const multi_sub = appState.engine.getAffinityMultiplier(s_elem, defender.sub_element);
-            let affinity_mult = multi_main * multi_sub;
-            if (multi_main > 1.0 && multi_sub > 1.0) affinity_mult = 4.0;
+            const affinity_mult = appState.engine.calcAffinity(s_elem, defender);
 
             if (affinity_mult > 1.0) {
                 affinityBadge = ' <span style="color:#ef4444; font-size:0.7rem; border:1px solid #ef4444; padding:0 3px; border-radius:3px; margin-left:5px;">バツグン</span>';
@@ -244,7 +278,8 @@ export function showAttackPhase(monster) {
         }
     }
     
-    btn.innerHTML = `${skillData.name}${affinityBadge}${stCostTxt}${isBrokeWarn}`;
+    btn.innerHTML = `${skillData.name}${affinityBadge}${stCostTxt}`;
+    if (skillData.description) btn.dataset.tooltip = skillData.description;
     btn.onclick = () => {
         actionMenu.classList.add('hide');
         executeAction(1, monster, appState.timeline.p2_active, skillId);
@@ -258,11 +293,9 @@ export function showAttackPhase(monster) {
   if (isTutorialActive()) {
     if (!hasShownStep('attack-phase')) {
       showTutorialStep('attack-phase', null);
-    } else if (monster.is_break && !hasShownStep('player-break')) {
-      showTutorialStep('player-break', null);
     } else if (hasShownStep('st-chip') && !hasShownStep('swap')) {
       showTutorialStep('swap', null);
-    } else if (hasShownStep('break') && !hasShownStep('affinity')) {
+    } else if (hasShownStep('swap') && !hasShownStep('affinity')) {
       showTutorialStep('affinity', null);
     }
   }
@@ -274,10 +307,7 @@ export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
   let affinityBadge = '';
   if (enemySkillData.category === "attack" || enemySkillData.category === "trap") {
       const s_elem = enemySkillData.element || "none";
-      const multi_main = appState.engine.getAffinityMultiplier(s_elem, playerTarget.main_element);
-      const multi_sub = appState.engine.getAffinityMultiplier(s_elem, playerTarget.sub_element);
-      let affinity_mult = multi_main * multi_sub;
-      if (multi_main > 1.0 && multi_sub > 1.0) affinity_mult = 4.0;
+      const affinity_mult = appState.engine.calcAffinity(s_elem, playerTarget);
 
       if (affinity_mult > 1.0) {
           affinityBadge = ' <span style="color:#ef4444; font-weight:bold; font-size:0.9rem;">[バツグン]</span>';
@@ -309,8 +339,8 @@ export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
     const btn = document.createElement('button');
     btn.className = 'btn skill-btn';
     let stCostTxt = skillData.cost_st > 0 ? ` [ST:${skillData.cost_st}]` : '';
-    let isBrokeWarn = (playerTarget.is_break && skillData.cost_st > 0) ? ' <span style="color:#ef4444;">★HP自傷</span>' : '';
-    btn.innerHTML = `${skillData.name}${stCostTxt}${isBrokeWarn}`;
+    btn.innerHTML = `${skillData.name}${stCostTxt}`;
+    if (skillData.description) btn.dataset.tooltip = skillData.description;
     btn.onclick = () => resolveDefensePhase(playerTarget, skillId, enemyAttacker, enemySkillId, false);
     skillButtons.appendChild(btn);
   });
@@ -319,6 +349,7 @@ export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
       skillButtons.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem; grid-column:span 2; text-align:center;">防御系の技がセットされていません。</span>';
   }
 
+  btnDefendAction.dataset.tooltip = "HPへの溢れダメージを半減する。STを消費しない。";
   btnDefendAction.onclick = () => resolveDefensePhase(playerTarget, "default_defend", enemyAttacker, enemySkillId, false);
 
   const uniqueItems = [...new Set(appState.globalInventory.battleItems)];
@@ -331,6 +362,7 @@ export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
           const btn = document.createElement('button');
           btn.className = 'btn skill-btn';
           btn.innerHTML = `${itemData.name} <span style="font-size:0.7em; color:#ef4444;">x${count}</span>`;
+          if (itemData.description) btn.dataset.tooltip = itemData.description;
           btn.onclick = () => {
               const idx = appState.globalInventory.battleItems.indexOf(itemId);
               if (idx > -1) appState.globalInventory.battleItems.splice(idx, 1);
@@ -412,7 +444,8 @@ export function resolveDefensePhase(defender, reactId, attacker, attackSkillId, 
         defender.is_defending = true;
     } else if (isItem) {
         toast(`🎒 アイテムを使用した！`);
-        let target = BATTLE_ITEMS_DATA.find(i => i.id === reactId).effect.type.includes('recover') ? defender : appState.timeline.p2_active;
+        const reactItemData = BATTLE_ITEMS_DATA.find(i => i.id === reactId);
+        let target = reactItemData?.effect?.type?.includes('recover') ? defender : appState.timeline.p2_active;
         appState.engine.executeSkill(defender, target, reactId);
     } else {
         toast(`🛡 <b>${defender.name}</b> の <b>${appState.engine.getSkill(reactId).name}</b>!`);
@@ -436,12 +469,23 @@ export function executeAction(playerNum, attacker, defender, skillId) {
   if (result.st_damage > 0) msg += ` <span class="st-dmg">(${result.st_damage} ST DMG)</span>`;
   if (result.hp_damage > 0) msg += ` <span class="dmg">(${result.hp_damage} HP DMG)</span>`;
 
-  if (result.armor_crush) msg += ` <span style="color:#eab308; font-weight:bold;">[ARMOR CRUSH]</span>`;
-  if (result.is_break && result.st_damage > 0) msg += ` <span style="color:#ef4444; font-weight:bold;">★BROKEN!</span>`;
+  if (result.is_weakness) msg += ` <span style="color:#ef4444; font-weight:bold;">★バツグン！</span>`;
   if (result.self_damage > 0) msg += ` <br><span style="color:#f97316;">${attacker.name}は疲労で ${result.self_damage} DMGを受けた！</span>`;
+  if (result.buffs_applied) {
+    const STAT_LABEL = { atk:'ATK', def:'DEF', mag:'MAG', spd:'SPD' };
+    result.buffs_applied.forEach(b => {
+      const who = b.who === 'self' ? attacker.name : defender.name;
+      const stat = STAT_LABEL[b.stat] || b.stat;
+      const dir = b.mult >= 1 ? `<span style="color:#6ee7b7;">▲${stat}UP</span>` : `<span style="color:#fca5a5;">▼${stat}DOWN</span>`;
+      msg += ` <br>${who} ${dir}`;
+    });
+  }
 
   toast(msg);
-  triggerDamageAnimation(targetSide, result.is_break);
+  triggerDamageAnimation(targetSide);
+  const dmgInfo = { aff: result.calc?.aff ?? 1, is_stab: result.calc?.is_stab ?? false };
+  showDamagePopup(targetSide, result.hp_damage, result.st_damage, dmgInfo);
+  if (result.self_damage > 0) showDamagePopup(playerNum === 1 ? 'p1' : 'p2', result.self_damage, 0);
 
   // Check Death
   if (defender.current_hp <= 0) {
@@ -462,24 +506,9 @@ export function executeAction(playerNum, attacker, defender, skillId) {
   appState.timeline.onActionCompleted(playerNum);
   updateUI();
 
-  // チュートリアル: ST削り説明（プレイヤー攻撃でSTダメージを与えたがブレイクしていない場合）
-  if (isTutorialActive() && !hasShownStep('st-chip') && playerNum === 1 && result.st_damage > 0 && !result.is_break) {
+  // チュートリアル: ST削り説明（プレイヤー攻撃でSTダメージを与えた場合）
+  if (isTutorialActive() && !hasShownStep('st-chip') && playerNum === 1 && result.st_damage > 0) {
     showTutorialStep('st-chip', null);
-  }
-
-  // チュートリアル: BREAKステップ（フル版はoverlay表示までloopを遅延）
-  if (isTutorialActive() && !hasShownStep('break') && result.is_break) {
-    if (isTutorialFullMode()) {
-      setTimeout(() => {
-        showTutorialStep('break', () => resumeLoop());
-      }, 600);
-    } else {
-      setTimeout(() => {
-        showTutorialStep('break', null);
-        resumeLoop();
-      }, 1200);
-    }
-    return;
   }
 
   setTimeout(() => { resumeLoop(); }, 1200);

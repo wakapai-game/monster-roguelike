@@ -1,12 +1,13 @@
-// test-engines.js
-// 各案のバトルエンジン（BattleEngineBase を継承し差分のみ実装）
+// battle-engines.js（旧: test-engines.js）
+// 全バトルエンジン実装の唯一の場所。
+// 本番エンジンの切替は game.js の切替ラインを1行変えるだけ。
 
 import { AFFINITY, SKILLS, BATTLE_ITEMS_DATA } from './data.js';
 
 // ============================================================
-// 基底クラス: 3案共通のユーティリティとエフェクト処理
+// 基底クラス: 全案共通のユーティリティとエフェクト処理
 // ============================================================
-class BattleEngineBase {
+export class BattleEngineBase {
   getSkill(id) {
     return SKILLS.find(s => s.id === id) ?? BATTLE_ITEMS_DATA.find(i => i.id === id) ?? null;
   }
@@ -63,6 +64,15 @@ class BattleEngineBase {
     }
     if (eff.type === 'recover_hp') {
       defender.current_hp = Math.min(defender.stats.hp, defender.current_hp + (eff.value || 0));
+      return true;
+    }
+    if (eff.type === 'buff_stat') {
+      // target: 'self'=attacker, 'enemy'=defender
+      const target = eff.target === 'enemy' ? defender : attacker;
+      if (!target.buffs) target.buffs = {};
+      target.buffs[eff.stat] = { mult: eff.mult, turns: eff.turns };
+      if (!result.buffs_applied) result.buffs_applied = [];
+      result.buffs_applied.push({ who: eff.target, stat: eff.stat, mult: eff.mult });
       return true;
     }
     return false;
@@ -307,6 +317,8 @@ export class EngineCase3 extends BattleEngineBase {
         attacker.current_st = Math.min(attacker.stats.max_st, attacker.current_st + (eff.value || 0));
       } else if (eff.type === 'recover_hp') {
         defender.current_hp = Math.min(defender.stats.hp, defender.current_hp + (eff.value || 0));
+      } else {
+        this.applyCommonEffect(eff, attacker, defender, result);
       }
     }
 
@@ -319,8 +331,10 @@ export class EngineCase3 extends BattleEngineBase {
   _calcDamage(attacker, defender, skill, eff) {
     const s_type = skill.type || 'physical';
     const s_elem = skill.element || 'none';
-    const atk = attacker.stats[s_type === 'physical' ? 'atk' : 'mag'] || 10;
-    const def = defender.stats[s_type === 'physical' ? 'def' : 'mag'] || 10;
+    const statKey = s_type === 'physical' ? 'atk' : 'mag';
+    const defKey  = s_type === 'physical' ? 'def' : 'mag';
+    const atk = (attacker.stats[statKey] || 10) * (attacker.buffs?.[statKey]?.mult ?? 1);
+    const def = (defender.stats[defKey]   || 10) * (defender.buffs?.[defKey]?.mult ?? 1);
     const aff = this.calcAffinity(s_elem, defender);
     const base_pow = eff.base_power || 0;
     const effPow = this.calcEffPow(base_pow, s_elem, attacker);
@@ -329,6 +343,117 @@ export class EngineCase3 extends BattleEngineBase {
     const pow_atk = effPow * atk;
     const st_def = defender.current_st * def;
     const hp_damage = Math.max(0, Math.floor(pow_atk - st_def));
+    return {
+      st_damage,
+      hp_damage,
+      is_weakness,
+      calc: { base_pow, is_stab: this.isStab(s_elem, attacker), atk, def, aff, effPow, pow_atk, st_def }
+    };
+  }
+}
+
+// ============================================================
+// 案4: 案3改良版
+//   - ST削りを威力連動に（固定10 → effPow/3、範囲5〜25）
+//   - ST=0時もHPコスト消費で攻撃継続可能（逆転の芽）
+//   - 連続行動ペナルティ倍増（+5/回 → +10/回）
+//   - STAB: 1.5 → 1.3、ダブル弱点上限: 4.0 → 3.0
+//   - Defend時のHP溢れダメージも半減
+// ============================================================
+export class EngineCase4 extends EngineCase3 {
+  // STAB倍率を抑制
+  calcEffPow(base_pow, s_elem, attacker) {
+    return this.isStab(s_elem, attacker) ? base_pow * 1.3 : base_pow;
+  }
+
+  // ダブル弱点上限を緩和
+  calcAffinity(s_elem, defender) {
+    const mm = this.getAffinityMultiplier(s_elem, defender.main_element);
+    const ms = this.getAffinityMultiplier(s_elem, defender.sub_element);
+    let aff = mm * ms;
+    if (mm > 1 && ms > 1) aff = 3.0;
+    return aff;
+  }
+
+  // 連続行動ペナルティ倍増
+  calcSkillCost(skill, attacker) {
+    const baseCost = Math.max(10, skill.cost_st || 0);
+    const extraCost = skill.category === 'attack'
+      ? Math.max(0, ((attacker.consecutive_count || 1) - 1) * 10) : 0;
+    return { baseCost, extraCost, cost: baseCost + extraCost };
+  }
+
+  executeSkill(attacker, defender, skill_id) {
+    const skill = this.getSkill(skill_id);
+    if (!skill) return { error: 'Skill not found' };
+
+    const result = {
+      attacker: attacker.name, defender: defender.name, skill: skill.name,
+      st_damage: 0, hp_damage: 0, is_break: false, self_damage: 0
+    };
+
+    const { baseCost, extraCost, cost } = this.calcSkillCost(skill, attacker);
+    result.extra_cost = extraCost;
+    result.base_cost = baseCost;
+    result.cost_total = cost;
+
+    // ST=0時はHPからコスト消費（逆転可能）
+    if (attacker.current_st === 0 && skill.category === 'attack') {
+      attacker.current_hp = Math.max(0, attacker.current_hp - cost);
+      result.self_damage = cost;
+    } else {
+      attacker.current_st = Math.max(0, attacker.current_st - cost);
+    }
+
+    for (const eff of (skill.effects || [])) {
+      if (eff.type === 'damage_st') {
+        const { st_damage, hp_damage, is_weakness, calc } = this._calcDamage(attacker, defender, skill, eff);
+        defender.current_st = Math.max(0, defender.current_st - st_damage);
+        defender.current_hp = Math.max(0, defender.current_hp - hp_damage);
+        result.is_weakness = is_weakness;
+        result.calc = calc;
+        result.st_damage += st_damage;
+        result.hp_damage += hp_damage;
+      } else if (eff.type === 'damage_hp_direct') {
+        let d = Math.floor((eff.base_power || 0) * (defender.is_defending ? 0.5 : 1));
+        defender.current_hp = Math.max(0, defender.current_hp - d);
+        result.hp_damage += d;
+      } else if (eff.type === 'delay_gauge') {
+        defender.gauge = Math.max(0, defender.gauge - (eff.value || 0));
+      } else if (eff.type === 'recover_st_direct') {
+        attacker.current_st = Math.min(attacker.stats.max_st, attacker.current_st + (eff.value || 0));
+      } else if (eff.type === 'recover_hp') {
+        defender.current_hp = Math.min(defender.stats.hp, defender.current_hp + (eff.value || 0));
+      } else {
+        this.applyCommonEffect(eff, attacker, defender, result);
+      }
+    }
+
+    return result;
+  }
+
+  // ST削りを威力連動に + Defend時HP溢れダメ半減
+  _calcDamage(attacker, defender, skill, eff) {
+    const s_type = skill.type || 'physical';
+    const s_elem = skill.element || 'none';
+    const statKey = s_type === 'physical' ? 'atk' : 'mag';
+    const defKey  = s_type === 'physical' ? 'def' : 'mag';
+    const atk = (attacker.stats[statKey] || 10) * (attacker.buffs?.[statKey]?.mult ?? 1);
+    const def = (defender.stats[defKey]   || 10) * (defender.buffs?.[defKey]?.mult ?? 1);
+    const aff = this.calcAffinity(s_elem, defender);
+    const base_pow = eff.base_power || 0;
+    const effPow = this.calcEffPow(base_pow, s_elem, attacker);
+    const is_weakness = aff > 1.0;
+
+    // ST削り: effPow/3 + 弱点ボーナス10、範囲5〜25
+    const st_raw = Math.floor(effPow / 3) + (is_weakness ? 10 : 0);
+    const st_damage = Math.min(defender.current_st, Math.max(5, Math.min(25, st_raw)));
+
+    const pow_atk = effPow * atk;
+    const st_def = defender.current_st * def;
+    const overflow = Math.max(0, pow_atk - st_def);
+    const hp_damage = Math.floor(overflow * (defender.is_defending ? 0.5 : 1));
+
     return {
       st_damage,
       hp_damage,

@@ -63,6 +63,11 @@
     .dmg-popup.hp  { color: #ef4444; text-shadow: 0 0 6px #ef444488; }
     .dmg-popup.st  { color: #eab308; text-shadow: 0 0 6px #eab30888; }
     .dmg-popup.big { font-size: 1.7rem; }
+    .dmg-badge { display:inline-block; font-size:0.6rem; font-weight:700; padding:1px 5px; border-radius:4px; margin-left:5px; vertical-align:middle; line-height:1.4; }
+    .dmg-badge-weakness { background:rgba(239,68,68,0.85); color:#fff; }
+    .dmg-badge-resist   { background:rgba(100,116,139,0.75); color:#cbd5e1; }
+    .dmg-badge-stab     { background:rgba(59,130,246,0.8); color:#fff; }
+    .dmg-badge-overflow { background:rgba(249,115,22,0.8); color:#fff; }
     @keyframes dmg-float {
       0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
       100% { opacity: 0; transform: translateX(-50%) translateY(-60px); }
@@ -293,6 +298,15 @@
       padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
     }
     .back-link:hover { color: #94a3b8; }
+
+    /* チュートリアルボタン */
+    .tutorial-btn-test {
+      padding: 10px 18px; border-radius: 10px;
+      border: 1px solid rgba(251,191,36,0.45);
+      background: rgba(251,191,36,0.12); color: #fde68a;
+      font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s;
+    }
+    .tutorial-btn-test:hover { background: rgba(251,191,36,0.28); border-color: #fbbf24; }
   </style>
 </head>
 <body>
@@ -311,6 +325,7 @@
       <button class="test-tab-btn active" data-mode="case1">案1: 現行</button>
       <button class="test-tab-btn" data-mode="case2">案2: ブレイク強化</button>
       <button class="test-tab-btn" data-mode="case3">案3: ST固定+HP溢れ</button>
+      <button class="test-tab-btn" data-mode="case4">案4: 改良版（現在の本番候補）</button>
       <button class="test-tab-btn" data-mode="spec" style="border-color:rgba(251,191,36,0.4); color:#fde68a;">📋 仕様解説</button>
     </div>
     <div id="mode-desc"></div>
@@ -326,6 +341,7 @@
       </select>
       <div class="start-row" style="margin:0;">
         <button id="btn-start-test" class="start-btn-test">BATTLE START</button>
+        <button id="btn-tutorial-test" class="tutorial-btn-test">🎓 チュートリアルで開始</button>
       </div>
     </div>
 
@@ -411,6 +427,7 @@
       <a href="#spec-case1">案1: 現行</a>
       <a href="#spec-case2">案2: ブレイク強化</a>
       <a href="#spec-case3">案3: ST固定+HP溢れ</a>
+      <a href="#spec-case4">案4: 改良版</a>
       <a href="#spec-compare">3案 比較表</a>
       <a href="#spec-effects">スキルエフェクト一覧</a>
     </nav>
@@ -782,6 +799,7 @@ hp_damage = max(<span class="key">0</span>, floor(pow_atk - st_def))
 cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">// 最低コスト 10</span>
 <span class="comment">// 案1・案2: ブレイク中は cost が HP から消費</span>
 <span class="comment">// 案3: 常に ST から消費（HPには影響しない）</span>
+<span class="comment">// 案4: ST=0 時のみ HP から消費（逆転可能）</span>
       </div>
 
       <h3>スキルカテゴリ</h3>
@@ -796,8 +814,90 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
       </table>
     </div>
 
+    <!-- ===== 案4 ===== -->
+    <div class="spec-block" id="spec-case4">
+      <h2>案4: 改良版（現在の本番候補） <span class="badge badge-case3">EngineCase4</span></h2>
+
+      <div class="callout tip">案3をベースに「ST削り威力連動・ST=0時HP消費継続・連続行動ペナルティ倍増・属性倍率調整」の4点を改良。スマホ短時間プレイを想定した1〜2分バトルを目標とする。</div>
+
+      <h3>案3からの変更点</h3>
+      <table class="spec-table">
+        <thead><tr><th>項目</th><th>案3</th><th>案4</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>ST削り量</strong></td>
+            <td>固定 10（弱点 +10）</td>
+            <td>effPow/3 + 弱点?10 （範囲 5〜25）</td>
+          </tr>
+          <tr>
+            <td><strong>ST=0 時の行動</strong></td>
+            <td>行動不能（auto-Defend）</td>
+            <td>HP からコスト消費で攻撃継続可能</td>
+          </tr>
+          <tr>
+            <td><strong>連続行動コスト増加</strong></td>
+            <td>+5 ST/回</td>
+            <td>+10 ST/回</td>
+          </tr>
+          <tr>
+            <td><strong>STAB 倍率</strong></td>
+            <td>×1.5</td>
+            <td>×1.3</td>
+          </tr>
+          <tr>
+            <td><strong>ダブル弱点上限</strong></td>
+            <td>×4.0</td>
+            <td>×3.0</td>
+          </tr>
+          <tr>
+            <td><strong>Defend 時 HP 溢れダメ</strong></td>
+            <td>軽減なし</td>
+            <td>×0.5 軽減</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>ダメージ計算式</h3>
+      <div class="formula-box">
+<span class="comment">// ST ダメージ（威力連動）</span>
+st_raw = floor(effPow / <span class="val">3</span>) + (is_weakness ? <span class="val">10</span> : <span class="val">0</span>)
+st_dmg = clamp(st_raw, <span class="val">5</span>, <span class="val">25</span>)
+
+<span class="comment">// HP 溢れダメージ</span>
+overflow = max(<span class="val">0</span>, effPow × atk − current_st × def)
+hp_dmg = floor(overflow × (is_defending ? <span class="val">0.5</span> : <span class="val">1.0</span>))
+
+<span class="comment">// ST=0 時のみ HP からコスト消費</span>
+if (current_st == <span class="val">0</span> &amp;&amp; category == 'attack') hp -= cost
+      </div>
+
+      <h3>本番への切替方法</h3>
+      <div class="callout warning">
+        <code>game.js</code> 1行目の切替ラインを変更するだけ：<br>
+        <code>export { EngineCase3 as BattleEngine } from './test-engines.js';</code><br>
+        → <code>export { EngineCase4 as BattleEngine } from './test-engines.js';</code>
+      </div>
+    </div>
+
   </div>
   </main>
+
+  <!-- チュートリアルオーバーレイ -->
+  <div id="tutorial-overlay" class="tutorial-overlay hide">
+    <div class="tutorial-overlay-panel glass-panel">
+      <div class="tutorial-overlay-step-badge">TUTORIAL</div>
+      <h3 id="tutorial-overlay-title"></h3>
+      <p id="tutorial-overlay-body"></p>
+      <button id="btn-tutorial-ok" class="btn primary-btn" style="width:100%; margin-top:8px;">OK、わかった！</button>
+    </div>
+  </div>
+
+  <!-- スポットライトピース＋ラベル -->
+  <div id="tutorial-spotlight-top"    class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-bottom" class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-left"   class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-right"  class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-label"  class="tutorial-spotlight-label hide">👆 タップして説明を見る</div>
 
   <!-- 終了オーバーレイ -->
   <div id="end-overlay">
@@ -813,14 +913,15 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
 
   <script type="module">
     import { Monster, Timeline } from './game.js';
-    import { EngineCase1, EngineCase2, EngineCase3 } from './test-engines.js';
+    import { EngineCase1, EngineCase2, EngineCase3, EngineCase4 } from './test-engines.js';
     import { SKILLS, MONSTERS_DATA, ENEMY_DATA } from './data.js';
 
     // ===== モード説明 =====
     const MODE_DESCS = {
       case1: '【現行】STが0でブレイク。ブレイク中は被ダメ×2・技コストがHPから消費。攻撃は継続可能。',
       case2: '【ブレイク強化】STが0でブレイク。ブレイク中は攻撃技が使用不可。DefendでSTを回復してから再攻撃。',
-      case3: '【グラデーション】ブレイクなし。STが残るほどHPへのダメージが減少。攻撃するほど自分のSTも消耗し防御が落ちる。'
+      case3: '【グラデーション】ブレイクなし。STが残るほどHPへのダメージが減少。攻撃するほど自分のSTも消耗し防御が落ちる。',
+      case4: '【案4】ダブル弱点上限3.0に変更。その他ルールは案3に準ずる。'
     };
 
     // ===== プリセット =====
@@ -854,6 +955,106 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
 
     // ===== 定数 =====
     const ELEM_LABEL = { fire:'🔥火', water:'💧水', ice:'❄氷', thunder:'⚡雷', earth:'🌿土', wind:'🌀風', light:'✨光', dark:'🌑闇', none:'無' };
+
+    // ===== チュートリアル状態 =====
+    let tutorialMode = false;
+    let tutorialShownSteps = new Set();
+    let tutorialCase = 'case1';
+
+    const TEST_TUTORIAL_STEPS = {
+      case1: {
+        intro:    { title: '案1: ブレイクシステム', highlight: null,
+          full: '案1のバトルシステムです。\n\n攻撃するたびにSTが削れます。STが0になると「BREAK」状態に。\nBREAK中は被ダメ×2、技コストがHPから消費されます。\n案1ではBREAK中も攻撃を継続できるのが特徴です！\n\n早速スキルを選んで攻撃してみましょう。' },
+        attack:   { title: 'スキルを選ぼう', highlight: 'skill-btns',
+          full: '攻撃スキルを選んで敵のSTを削りましょう。\n\nST消費(コスト)が大きいほど威力が高く、STを多く削れます。\n属性バツグンのスキルを優先して使いましょう！' },
+        'st-chip':{ title: 'STを削ってBREAKを狙え', highlight: 'p2-card',
+          full: '敵のSTゲージを見てください。攻撃するたびに削れています！\n\nSTが0になるとBREAK状態になり、次の攻撃がHPに大ダメージを与えられます。\nBREAKが発生したら全力で追い打ちしましょう！' },
+      },
+      case2: {
+        intro:    { title: '案2: ブレイク強化システム', highlight: null,
+          full: '案2はBREAKルールを強化しました。\n\nBREAK中は攻撃技が使用不可になります（案1との違い！）。\nDefendでSTを回復してから再度攻撃しましょう。\n\n行動の駆け引きが案1より重要になります！' },
+        attack:   { title: 'スキルを選ぼう', highlight: 'skill-btns',
+          full: '攻撃スキルを選んで敵のSTを削りましょう。\n\n敵をBREAKさせた後は攻撃技がロックされます。\nBREAK中にDefendされる前に素早く仕留めましょう！' },
+        'st-chip':{ title: 'STを削ってBREAKを狙え', highlight: 'p2-card',
+          full: '敵のSTゲージを見てください。攻撃するたびに削れています！\n\nSTが0になると「BREAK」状態に。BREAK中は敵の攻撃技が使用不可になります。\n案2では相手のBREAK中が大チャンスです！' },
+      },
+      case3: {
+        intro:    { title: '案3: ST固定ダメージ＋HP溢れ', highlight: null,
+          full: '案3（現在の本番システム）です。\n\n攻撃するたびに敵のSTが固定値削れます。\nSTが低いほど攻撃ダメージがHPに「溢れ」やすくなります。\n\nBREAKはなく、STを削り続けることで継続的にHPを削れます！' },
+        attack:   { title: 'スキルを選ぼう', highlight: 'skill-btns',
+          full: 'スキルを選んで攻撃しましょう。\n\n「バツグン」属性のスキルはST削りとHP溢れダメージが両方アップ！\n\nまずはスキルをクリックして攻撃してみましょう。' },
+        'st-chip':{ title: 'STを削り続けよう', highlight: 'p2-card',
+          full: '敵のSTが削れているのを確認しましょう。\n\nSTが低くなるほどHPへの溢れダメージが増えます。\nSTを0に近づけるほど毎回大ダメージを与えられます！' },
+        defense:  { title: '防御フェーズ', highlight: 'player-actions',
+          full: '敵の攻撃が来ます！\n\nDefendでSTを回復しつつダメージを受けるか、リアクションスキルで対応するか選んでください。\n\nSTが高い状態をキープするほどHPへのダメージを抑えられます！' },
+      },
+      case4: {
+        intro:    { title: '案4: 改良版バトルシステム', highlight: null,
+          full: '案4は案3の改良版です。\n\n• ST削り威力が技の強さに連動（最大25）\n• ST=0になると技コストをHPで支払う\n• 連続行動3回以上でST削り効率が半減\n• STAB（自属性一致）: 威力×1.3\n\n戦略の幅がさらに広がります！' },
+        attack:   { title: 'スキルを選ぼう', highlight: 'skill-btns',
+          full: '強い技ほどSTを多く削れます（威力÷3、最大25）。\n\n「バツグン」はST削りに+10のボーナス。\n自属性一致（STAB）は威力×1.3！\n\n連続行動3回以上するとST削り効率が半減するので注意。' },
+        'st-chip':{ title: '敵のST/HPに注目', highlight: 'p2-card',
+          full: 'STが削れるほどHPへの溢れダメージが増えます。\n\n敵のSTが0になると技コストをHPで支払うので、さらに追い詰められます！\n\n案4では連続行動ペナルティもあるため、行動順の管理も重要です。' },
+        defense:  { title: '防御フェーズ', highlight: 'player-actions',
+          full: '敵の攻撃が来ます！\n\nDefendでSTを回復（+30%）してダメージを軽減するか、リアクションスキルで対応するか選んでください。\n\n案4ではSTを高く保つことが防御にも繋がります！' },
+      },
+    };
+
+    // ---- スポットライト関数 ----
+    function _tutShowSpotlight(targetEl, onClickCb) {
+      const pad = 8, r = targetEl.getBoundingClientRect(), W = window.innerWidth, H = window.innerHeight;
+      [['tutorial-spotlight-top',    0,           0,          W,              r.top-pad],
+       ['tutorial-spotlight-bottom', r.bottom+pad,0,          W,              H-(r.bottom+pad)],
+       ['tutorial-spotlight-left',   r.top-pad,   0,          r.left-pad,     r.height+2*pad],
+       ['tutorial-spotlight-right',  r.top-pad,   r.right+pad,W-(r.right+pad),r.height+2*pad],
+      ].forEach(([id,top,left,w,h]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.top=`${top}px`; el.style.left=`${left}px`;
+        el.style.width=`${Math.max(0,w)}px`; el.style.height=`${Math.max(0,h)}px`;
+        el.classList.remove('hide');
+      });
+      const label = document.getElementById('tutorial-spotlight-label');
+      if (label) { label.style.top=`${Math.min(r.bottom+14,H-50)}px`; label.style.left=`${r.left+r.width/2}px`; label.classList.remove('hide'); }
+      targetEl.classList.add('tutorial-highlight');
+      document.getElementById('tutorial-click-catcher')?.remove();
+      const catcher = document.createElement('div');
+      catcher.id = 'tutorial-click-catcher';
+      catcher.style.cssText = `position:fixed;top:${r.top-pad}px;left:${r.left-pad}px;width:${r.width+2*pad}px;height:${r.height+2*pad}px;z-index:10001;cursor:pointer;border-radius:8px;`;
+      catcher.addEventListener('click', onClickCb, { once: true });
+      document.body.appendChild(catcher);
+    }
+
+    function _tutRemoveSpotlight(targetEl) {
+      ['tutorial-spotlight-top','tutorial-spotlight-bottom','tutorial-spotlight-left','tutorial-spotlight-right','tutorial-spotlight-label']
+        .forEach(id => document.getElementById(id)?.classList.add('hide'));
+      document.getElementById('tutorial-click-catcher')?.remove();
+      if (targetEl) targetEl.classList.remove('tutorial-highlight');
+    }
+
+    function _tutShowModal(data, callback) {
+      const overlay = document.getElementById('tutorial-overlay');
+      document.getElementById('tutorial-overlay-title').textContent = data.title;
+      document.getElementById('tutorial-overlay-body').textContent = data.full;
+      overlay.classList.remove('hide');
+      document.getElementById('btn-tutorial-ok').onclick = () => {
+        overlay.classList.add('hide');
+        if (callback) callback();
+      };
+    }
+
+    function showTutorialStepInTest(stepId, callback) {
+      if (!tutorialMode || tutorialShownSteps.has(stepId)) { if (callback) callback(); return; }
+      tutorialShownSteps.add(stepId);
+      const data = TEST_TUTORIAL_STEPS[tutorialCase]?.[stepId];
+      if (!data) { if (callback) callback(); return; }
+      const targetEl = data.highlight ? document.getElementById(data.highlight) : null;
+      if (targetEl) {
+        _tutShowSpotlight(targetEl, () => { _tutRemoveSpotlight(targetEl); _tutShowModal(data, callback); });
+      } else {
+        _tutShowModal(data, callback);
+      }
+    }
 
     // ===== バトル状態 =====
     let currentMode = 'case1';
@@ -927,9 +1128,29 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
     });
 
     // ===== バトル開始 =====
-    btnStart.addEventListener('click', startBattle);
+    btnStart.addEventListener('click', () => {
+      tutorialMode = false;
+      tutorialShownSteps = new Set();
+      startBattle();
+    });
+
+    document.getElementById('btn-tutorial-test').addEventListener('click', () => {
+      tutorialMode = true;
+      tutorialShownSteps = new Set();
+      tutorialCase = currentMode;
+      tutorialShownSteps.add('intro');
+      const introData = TEST_TUTORIAL_STEPS[currentMode]?.intro;
+      if (introData) {
+        _tutShowModal(introData, () => startBattle());
+      } else {
+        startBattle();
+      }
+    });
+
     btnRetry.addEventListener('click', () => {
       endOverlay.classList.remove('show');
+      tutorialMode = false;
+      tutorialShownSteps = new Set();
       startBattle();
     });
 
@@ -953,8 +1174,8 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
       p1Monster.consecutive_count = 1;
       p2Monster.consecutive_count = 1;
 
-      // 案3ではis_breakを使わない
-      if (currentMode === 'case3') {
+      // 案3/4ではis_breakを使わない
+      if (currentMode === 'case3' || currentMode === 'case4') {
         p1Monster.is_break = false;
         p2Monster.is_break = false;
       }
@@ -964,6 +1185,8 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
         engine = new EngineCase2();
       } else if (currentMode === 'case3') {
         engine = new EngineCase3();
+      } else if (currentMode === 'case4') {
+        engine = new EngineCase4();
       } else {
         engine = new EngineCase1();
       }
@@ -1182,6 +1405,12 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
         skillBtnsEl.appendChild(warn);
       }
 
+      // チュートリアルフック
+      if (!reactionMode) {
+        showTutorialStepInTest('attack', null);
+      } else {
+        showTutorialStepInTest('defense', null);
+      }
     }
 
     function executeReactionSkill(skillId) {
@@ -1214,7 +1443,8 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
       checkBattleEnd();
       if (!battleOver) {
         waitMsg.style.display = 'block';
-        startLoop();
+        // チュートリアル: 初回攻撃後にst-chipステップを表示してからループ再開
+        showTutorialStepInTest('st-chip', () => startLoop());
       }
     }
 
@@ -1222,13 +1452,21 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
     function showDamageEffect(cardId, res) {
       const card = document.getElementById(cardId);
       if (!card) return;
+      const aff = res.calc?.aff ?? (res.penalty_detail?.elemBonus > 0 ? 2.0 : 1);
+      const is_stab = res.calc?.is_stab ?? false;
+      const affBadge = aff >= 3.0 ? `<span class="dmg-badge dmg-badge-weakness">バツグン ×${aff}</span>`
+                     : aff > 1.0  ? `<span class="dmg-badge dmg-badge-weakness">バツグン ×${aff}</span>`
+                     : aff < 1.0  ? `<span class="dmg-badge dmg-badge-resist">いまいち ×${aff}</span>`
+                     : '';
+      const stabBadge = is_stab ? `<span class="dmg-badge dmg-badge-stab">STAB</span>` : '';
+      const overflowBadge = `<span class="dmg-badge dmg-badge-overflow">溢れ</span>`;
       const parts = [];
-      if (res.hp_damage > 0) parts.push({ text: `HP -${res.hp_damage}`, cls: 'hp' + (res.hp_damage >= 100 ? ' big' : '') });
-      if (res.st_damage > 0) parts.push({ text: `ST -${res.st_damage}`, cls: 'st' });
+      if (res.hp_damage > 0) parts.push({ html: `HP -${res.hp_damage}${overflowBadge}`, cls: 'hp' + (res.hp_damage >= 100 ? ' big' : '') });
+      if (res.st_damage > 0) parts.push({ html: `ST -${res.st_damage}${affBadge}${stabBadge}`, cls: 'st' });
       parts.forEach((p, i) => {
         const el = document.createElement('div');
         el.className = `dmg-popup ${p.cls}`;
-        el.textContent = p.text;
+        el.innerHTML = p.html;
         el.style.top = `${10 + i * 28}px`;
         card.appendChild(el);
         el.addEventListener('animationend', () => el.remove());
@@ -1367,8 +1605,8 @@ cost = max(<span class="val">10</span>, skill.cost_st)  <span class="comment">//
       document.getElementById(`${prefix}-mag`).textContent = m.stats.mag;
 
       const breakBadge = document.getElementById(`${prefix}-break-badge`);
-      // 案3ではbrakeバッジ非表示
-      if (currentMode !== 'case3' && m.is_break) {
+      // 案3/4ではBREAKバッジ非表示
+      if (currentMode !== 'case3' && currentMode !== 'case4' && m.is_break) {
         breakBadge.style.display = 'inline-block';
       } else {
         breakBadge.style.display = 'none';

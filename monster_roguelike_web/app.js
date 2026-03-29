@@ -13,15 +13,20 @@ import {
 } from './ui/dom.js';
 import { initTutorial, showTutorialStep } from './ui/tutorial.js';
 import { openInventory, openParty } from './ui/inventory.js';
-import { renderMap, generateRewards } from './ui/map-render.js';
+import { renderMap, generateRewards, collectPendingReward } from './ui/map-render.js';
 import { toast, updateUI, resumeLoop } from './ui/battle.js';
 import { openEncyclopedia } from './ui/encyclopedia.js';
 import { saveGame, loadGame, deleteSave } from './persistence.js';
-import { openHelp, initHelp } from './ui/help.js';
+import { openHelp, openHelpTab, initHelp } from './ui/help.js';
 
 // ---- Help System ----
 initHelp();
-document.getElementById('btn-help-global').onclick = openHelp;
+const _btnHelp = document.getElementById('btn-help-global');
+if (_btnHelp) _btnHelp.onclick = openHelp;
+const _btnAffinity = document.getElementById('btn-affinity-global');
+if (_btnAffinity) _btnAffinity.onclick = () => openHelpTab('affinity');
+const _btnMonsters = document.getElementById('btn-monsters-global');
+if (_btnMonsters) _btnMonsters.onclick = () => openHelpTab('monsters');
 
 // ---- Save / Load ----
 
@@ -275,6 +280,7 @@ document.addEventListener('battle-end', (e) => {
 });
 
 btnCollectReward.onclick = () => {
+  collectPendingReward();
   if (appState.tutorialReward) {
     appState.tutorialReward = false;
     appState.tutorialMode = null;

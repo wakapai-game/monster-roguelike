@@ -13,24 +13,30 @@ const AFFINITY = {
 
 // 技リスト
 const SKILLS = [
-  { id: "strike", name: "たいあたり", category: "attack", type: "physical", element: "none", cost_st: 10, effects: [{ type: "damage_st", base_power: 50 }] },
-  { id: "fireball", name: "ファイアボール", category: "attack", type: "magic", element: "fire", cost_st: 15, effects: [{ type: "damage_st", base_power: 80 }] },
-  { id: "water_gun", name: "みずでっぽう", category: "attack", type: "magic", element: "water", cost_st: 15, effects: [{ type: "damage_st", base_power: 80 }] },
-  { id: "smash", name: "フルスイング", category: "attack", type: "physical", element: "none", cost_st: 20, effects: [{ type: "damage_st", base_power: 120 }, { type: "delay_gauge", value: 20 }] },
-  { id: "pierce_needle", name: "どくばり（貫通）", category: "attack", type: "pierce", element: "none", cost_st: 30, effects: [{ type: "damage_hp_direct", base_power: 20 }] },
-  { id: "fire_trap", name: "じらい（罠）", category: "trap", type: "trap", element: "fire", cost_st: 25, effects: [{ type: "add_status", status: "trap_fire" }] },
-  { id: "def_shield", name: "シールド張", category: "defense", type: "buff", element: "none", cost_st: 15, effects: [{ type: "add_status", status: "buff_def_50" }] },
-  { id: "def_heal_st", name: "深呼吸", category: "defense", type: "heal", element: "none", cost_st: 10, effects: [{ type: "recover_st_direct", value: 40 }] }
+  { id: "strike", name: "たいあたり", description: "物理攻撃。敵のSTを削る基本技。", category: "attack", type: "physical", element: "none", cost_st: 10, effects: [{ type: "damage_st", base_power: 50 }] },
+  { id: "fireball", name: "ファイアボール", description: "炎属性の魔法。弱点の敵にはSTもHPへの溢れも大ダメージ。", category: "attack", type: "magic", element: "fire", cost_st: 15, effects: [{ type: "damage_st", base_power: 80 }] },
+  { id: "water_gun", name: "みずでっぽう", description: "水属性の魔法。弱点の敵にはSTもHPへの溢れも大ダメージ。", category: "attack", type: "magic", element: "water", cost_st: 15, effects: [{ type: "damage_st", base_power: 80 }] },
+  { id: "smash", name: "フルスイング", description: "強力な物理攻撃。STを大きく削るが、次の行動が遅れる。", category: "attack", type: "physical", element: "none", cost_st: 20, effects: [{ type: "damage_st", base_power: 120 }, { type: "delay_gauge", value: 20 }] },
+  { id: "pierce_needle", name: "どくばり（貫通）", description: "STを無視して敵HPに直接20ダメージを与える貫通攻撃。", category: "attack", type: "pierce", element: "none", cost_st: 30, effects: [{ type: "damage_hp_direct", base_power: 20 }] },
+  { id: "fire_trap", name: "じらい（罠）", description: "炎の罠を仕掛ける。敵の次の攻撃時に発動する。", category: "trap", type: "trap", element: "fire", cost_st: 25, effects: [{ type: "add_status", status: "trap_fire" }] },
+  { id: "def_shield", name: "シールド張", description: "DEFを高めるバフを自身に付与する防御技。", category: "defense", type: "buff", element: "none", cost_st: 15, effects: [{ type: "add_status", status: "buff_def_50" }] },
+  { id: "def_heal_st", name: "深呼吸", description: "自分のSTを40回復。ST切れを防ぎHPへの溢れを抑える。", category: "defense", type: "heal", element: "none", cost_st: 10, effects: [{ type: "recover_st_direct", value: 40 }] },
+  // バフ技（自分強化）
+  { id: "power_up", name: "気合い", description: "自分のATKを1.5倍に強化（2ターン）。攻撃前に使うと効果的。", category: "support", type: "buff", element: "none", cost_st: 15, effects: [{ type: "buff_stat", stat: "atk", mult: 1.5, target: "self", turns: 2 }] },
+  { id: "guard_up", name: "硬化", description: "自分のDEFを1.5倍に強化（2ターン）。被ダメージを抑えられる。", category: "support", type: "buff", element: "none", cost_st: 15, effects: [{ type: "buff_stat", stat: "def", mult: 1.5, target: "self", turns: 2 }] },
+  // デバフ技（敵弱体化）
+  { id: "weaken", name: "弱体化", description: "敵のDEFを0.6倍に低下（2ターン）。攻撃ダメージが増える。", category: "attack", type: "magic", element: "none", cost_st: 15, effects: [{ type: "buff_stat", stat: "def", mult: 0.6, target: "enemy", turns: 2 }] },
+  { id: "slow", name: "スロウ", description: "敵の行動ゲージを50削り、ATKを0.7倍に低下（2ターン）。", category: "attack", type: "magic", element: "none", cost_st: 20, effects: [{ type: "delay_gauge", value: 50 }, { type: "buff_stat", stat: "atk", mult: 0.7, target: "enemy", turns: 2 }] }
 ];
 
 // モンスターベースデータ（味方用）
 const MONSTERS_DATA = [
-  { id: "m_001", name: "フレイムパピー", main_element: "fire", sub_element: "none", base_stats: {hp: 2000, atk: 40, def: 30, mag: 20, spd: 25, max_st: 100, st_rec: 5}, skills: ["strike", "fireball"] },
-  { id: "m_002", name: "アクアタートル", main_element: "water", sub_element: "earth", base_stats: {hp: 2500, atk: 25, def: 50, mag: 15, spd: 10, max_st: 100, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
-  { id: "m_003", name: "サンダーバード", main_element: "thunder", sub_element: "wind", base_stats: {hp: 1500, atk: 30, def: 20, mag: 45, spd: 40, max_st: 100, st_rec: 15}, skills: ["strike", "smash"] },
-  { id: "m_004", name: "ゴーレム", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 50, def: 60, mag: 5, spd: 30, max_st: 100, st_rec: 0}, skills: ["smash"] },
-  { id: "m_005", name: "シャドウアサシン", main_element: "dark", sub_element: "none", base_stats: {hp: 1200, atk: 80, def: 50, mag: 10, spd: 50, max_st: 100, st_rec: 10}, skills: ["strike", "pierce_needle"] },
-  { id: "m_006", name: "ホーリーナイト", main_element: "light", sub_element: "fire", base_stats: {hp: 2200, atk: 35, def: 40, mag: 30, spd: 20, max_st: 100, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] }
+  { id: "m_001", name: "フレイムパピー", main_element: "fire", sub_element: "none", base_stats: {hp: 2000, atk: 40, def: 35, mag: 20, spd: 25, max_st: 150, st_rec: 5}, skills: ["strike", "fireball"] },
+  { id: "m_002", name: "アクアタートル", main_element: "water", sub_element: "earth", base_stats: {hp: 2500, atk: 35, def: 100, mag: 15, spd: 16, max_st: 150, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
+  { id: "m_003", name: "サンダーバード", main_element: "thunder", sub_element: "wind", base_stats: {hp: 1500, atk: 30, def: 35, mag: 45, spd: 40, max_st: 150, st_rec: 15}, skills: ["strike", "smash"] },
+  { id: "m_004", name: "ゴーレム", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 50, def: 60, mag: 5, spd: 30, max_st: 150, st_rec: 0}, skills: ["smash"] },
+  { id: "m_005", name: "シャドウアサシン", main_element: "dark", sub_element: "none", base_stats: {hp: 1200, atk: 80, def: 50, mag: 10, spd: 50, max_st: 150, st_rec: 10}, skills: ["strike", "pierce_needle"] },
+  { id: "m_006", name: "ホーリーナイト", main_element: "light", sub_element: "fire", base_stats: {hp: 2200, atk: 40, def: 45, mag: 30, spd: 20, max_st: 150, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] }
 ];
 
 // 敵専用モンスターデータ（序盤向けにステータス低下・野生化）

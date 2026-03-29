@@ -146,6 +146,12 @@
     <section id="screen-map" class="screen hide glass-panel map-screen" style="position:relative;">
       <h2>SPIRE MAP</h2>
       <p class="map-desc">ノードを選択して進んでください。</p>
+      <div class="map-legend">
+        <span>⚔️ バトル</span>
+        <span>💀 強敵</span>
+        <span>👑 ボス</span>
+        <span>⛺ 休憩</span>
+      </div>
       <div style="position:absolute; top:20px; right:20px; display:flex; gap:10px;">
         <button id="btn-map-party" class="btn skill-btn active-tab" style="font-size:0.9rem; padding:6px 12px;">PARTY</button>
         <button id="btn-map-inventory" class="btn skill-btn" style="font-size:0.9rem; padding:6px 12px;">INVENTORY</button>
@@ -207,6 +213,7 @@
           <button class="btn help-tab-btn inactive-tab" data-help-tab="skills">技・アイテム</button>
           <button class="btn help-tab-btn inactive-tab" data-help-tab="training">育成・強化</button>
           <button class="btn help-tab-btn inactive-tab" data-help-tab="map">マップ・用語</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="monsters">モンスター図鑑</button>
         </div>
         <div class="help-body">
           <div id="help-content-battle"   class="help-tab-content"></div>
@@ -215,6 +222,7 @@
           <div id="help-content-skills"   class="help-tab-content hide"></div>
           <div id="help-content-training" class="help-tab-content hide"></div>
           <div id="help-content-map"      class="help-tab-content hide"></div>
+          <div id="help-content-monsters" class="help-tab-content hide"></div>
         </div>
       </div>
     </div>
@@ -222,10 +230,10 @@
     <!-- 画面: リザルト報酬 -->
     <section id="screen-reward" class="screen hide glass-panel full-center">
       <h2>BATTLE REWARDS</h2>
-      <p>戦利品を獲得しました！</p>
+      <p id="reward-subtitle">3つから1つを選んで獲得しよう</p>
       <div id="reward-boxes" style="display:flex; gap:15px; margin:30px 0; flex-wrap:wrap; justify-content:center;">
       </div>
-      <button id="btn-collect-reward" class="btn primary-btn">回収して進む</button>
+      <button id="btn-collect-reward" class="btn primary-btn" disabled>進む</button>
     </section>
 
     <!-- 画面2: 選抜画面 -->
@@ -326,7 +334,16 @@
     </section>
   </main>
 
+  <button id="btn-monsters-global" class="help-float-btn monsters-float-btn" title="モンスター図鑑">図鑑</button>
+  <button id="btn-affinity-global" class="help-float-btn affinity-float-btn" title="属性相性早見表">属性</button>
   <button id="btn-help-global" class="help-float-btn" title="ゲームシステムを確認">?</button>
+
+  <!-- チュートリアルスポットライト（4枚の暗転ピース＋ラベル） -->
+  <div id="tutorial-spotlight-top"    class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-bottom" class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-left"   class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-right"  class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-label"  class="tutorial-spotlight-label hide">👆 タップして説明を見る</div>
 
   <!-- ES Modules -->
   <script type="module" src="app.js"></script>
