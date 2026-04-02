@@ -1358,6 +1358,41 @@ header h1 {
   background: rgba(192, 132, 252, 0.92);
 }
 
+/* ---- アンケートリンク ---- */
+.survey-global-link {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8001;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: #f8fafc;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.survey-global-link:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: rgba(203, 213, 225, 0.8);
+  transform: translateX(-50%) scale(1.05);
+}
+@media (max-width: 600px) {
+  .survey-global-link {
+    bottom: 10px;
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+}
+
 /* ---- モンスター図鑑 ---- */
 .monster-dex-grid {
   display: grid;
