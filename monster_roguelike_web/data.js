@@ -31,20 +31,20 @@ const SKILLS = [
 
 // モンスターベースデータ（味方用）
 const MONSTERS_DATA = [
-  { id: "m_001", name: "フレイムパピー", main_element: "fire", sub_element: "none", base_stats: {hp: 2000, atk: 40, def: 35, mag: 20, spd: 25, max_st: 150, st_rec: 5}, skills: ["strike", "fireball"] },
-  { id: "m_002", name: "アクアタートル", main_element: "water", sub_element: "earth", base_stats: {hp: 2500, atk: 35, def: 100, mag: 15, spd: 16, max_st: 150, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
-  { id: "m_003", name: "サンダーバード", main_element: "thunder", sub_element: "wind", base_stats: {hp: 1500, atk: 30, def: 35, mag: 45, spd: 40, max_st: 150, st_rec: 15}, skills: ["strike", "smash"] },
-  { id: "m_004", name: "ゴーレム", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 50, def: 60, mag: 5, spd: 30, max_st: 150, st_rec: 0}, skills: ["smash"] },
-  { id: "m_005", name: "シャドウアサシン", main_element: "dark", sub_element: "none", base_stats: {hp: 1200, atk: 80, def: 50, mag: 10, spd: 50, max_st: 150, st_rec: 10}, skills: ["strike", "pierce_needle"] },
-  { id: "m_006", name: "ホーリーナイト", main_element: "light", sub_element: "fire", base_stats: {hp: 2200, atk: 40, def: 45, mag: 30, spd: 20, max_st: 150, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] }
+  { id: "m_001", name: "ランタン", main_element: "fire", sub_element: "none", base_stats: {hp: 2000, atk: 40, def: 35, mag: 20, spd: 25, max_st: 150, st_rec: 5}, skills: ["strike", "fireball"] },
+  { id: "m_002", name: "マッド", main_element: "water", sub_element: "earth", base_stats: {hp: 2500, atk: 35, def: 100, mag: 15, spd: 16, max_st: 150, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
+  { id: "m_003", name: "サニー", main_element: "thunder", sub_element: "wind", base_stats: {hp: 1500, atk: 30, def: 35, mag: 45, spd: 40, max_st: 150, st_rec: 15}, skills: ["strike", "smash"] },
+  { id: "m_004", name: "タロ", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 50, def: 60, mag: 5, spd: 30, max_st: 150, st_rec: 0}, skills: ["smash"] },
+  { id: "m_005", name: "ミスト", main_element: "dark", sub_element: "none", base_stats: {hp: 1200, atk: 80, def: 50, mag: 10, spd: 50, max_st: 150, st_rec: 10}, skills: ["strike", "pierce_needle"] },
+  { id: "m_006", name: "あかり", main_element: "light", sub_element: "fire", base_stats: {hp: 2200, atk: 40, def: 45, mag: 30, spd: 20, max_st: 150, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] }
 ];
 
 // 敵専用モンスターデータ（序盤向けにステータス低下・野生化）
 const ENEMY_DATA = [
-  { id: "e_001", name: "野生のパピー", main_element: "fire", sub_element: "none", base_stats: {hp: 600, atk: 20, def: 10, mag: 10, spd: 15, max_st: 100, st_rec: 5}, skills: ["strike"] },
-  { id: "e_002", name: "野生のタートル", main_element: "water", sub_element: "earth", base_stats: {hp: 1000, atk: 15, def: 30, mag: 5, spd: 5, max_st: 100, st_rec: 5}, skills: ["strike", "water_gun"] },
-  { id: "e_003", name: "野生のバード", main_element: "thunder", sub_element: "wind", base_stats: {hp: 500, atk: 25, def: 10, mag: 20, spd: 30, max_st: 100, st_rec: 10}, skills: ["strike"] },
-  { id: "e_boss_01", name: "【ボス】暴走ゴーレム", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 40, def: 50, mag: 5, spd: 30, max_st: 100, st_rec: 0}, skills: ["smash"] }
+  { id: "e_001", name: "のらランタン", main_element: "fire", sub_element: "none", base_stats: {hp: 600, atk: 20, def: 10, mag: 10, spd: 15, max_st: 100, st_rec: 5}, skills: ["strike"] },
+  { id: "e_002", name: "のらマッド", main_element: "water", sub_element: "earth", base_stats: {hp: 1000, atk: 15, def: 30, mag: 5, spd: 5, max_st: 100, st_rec: 5}, skills: ["strike", "water_gun"] },
+  { id: "e_003", name: "のらサニー", main_element: "thunder", sub_element: "wind", base_stats: {hp: 500, atk: 25, def: 10, mag: 20, spd: 30, max_st: 100, st_rec: 10}, skills: ["strike"] },
+  { id: "e_boss_01", name: "【ボス】はぐれタロ", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 40, def: 50, mag: 5, spd: 30, max_st: 100, st_rec: 0}, skills: ["smash"] }
 ];
 
 // チュートリアル専用敵（ice属性でfireballがバツグン、ST高めでST削り体験用、st_rec:0でブレイクしやすい）

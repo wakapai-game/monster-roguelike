@@ -32,13 +32,13 @@ if (_btnMonsters) _btnMonsters.onclick = () => openHelpTab('monsters');
 
 document.getElementById('save-btn').onclick = () => {
   saveGame(appState);
-  alert('セーブしました！');
+  alert('コルク：「記録した。問題ない。」');
 };
 
 document.getElementById('delete-save-btn').onclick = () => {
-  if (confirm('セーブデータを削除しますか？')) {
+  if (confirm('コルク：「記録を消すぞ。本当にいいか？　俺はいいが。」')) {
     deleteSave();
-    alert('セーブデータを削除しました。');
+    alert('コルク：「消した。問題ない。問題があっても問題ない。」');
   }
 };
 
@@ -154,7 +154,7 @@ btnMapParty.onclick = () => openParty(screenMap);
 // ---- Stage Selection ----
 function startStage(stageNum, floors) {
   if (appState.unlockedStages < stageNum) {
-    alert('このステージはまだ解放されていません！');
+    alert('コルク：「まだ早い。前のステージを終わらせてこい。順番は守れ。」');
     return;
   }
   appState.currentStage = stageNum;
@@ -223,7 +223,8 @@ function confirmBattleSetup() {
   });
 
   appState.timeline = new Timeline(appState.p1Team, appState.p2Team);
-  toast(`<span class="log-system">【${currentNode.type.toUpperCase()} ENCOUNTER】 BATTLE START!</span>`);
+  const encounterLabel = { battle: '遭遇', elite: '強敵', boss: 'ボス', rest: '休憩' }[currentNode.type] ?? currentNode.type;
+  toast(`<span class="log-system">【${encounterLabel}】塔が動き出した。</span>`);
   updateUI();
   resumeLoop();
 }
@@ -245,7 +246,7 @@ function startTutorialBattle() {
   appState.p2Team = [new Monster(enemyData)];
 
   appState.timeline = new Timeline(appState.p1Team, appState.p2Team);
-  toast(`<span class="log-system">【チュートリアルバトル】修行用ダミーと戦ってシステムを学ぼう！</span>`);
+  toast(`<span class="log-system">コルク：「ダミーが相手だ。負けても問題ない。勝っても特に何もないが。」</span>`);
   updateUI();
   resumeLoop();
 }
@@ -351,7 +352,7 @@ eggs.forEach(egg => {
       const type = egg.dataset.type;
       generatedRoster = generateRosterFromEgg(type);
       const names = generatedRoster.map(m => m.name).join(', ');
-      eggText.innerHTML = `孵化した！<br><span style="color:#fbbf24;">${names}</span> が仲間になった！`;
+      eggText.innerHTML = `孵化した。<br><span style="color:#fbbf24;">${names}</span> があなたを選んだ。<br><span style="color:#94a3b8; font-size:0.85rem;">コルク：「問題ない。」</span>`;
       eggText.classList.remove('hide');
       btnEggProceed.classList.remove('hide');
       egg.classList.remove('hatching');
