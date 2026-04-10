@@ -50,13 +50,30 @@
 
     <!-- 画面0.5: ストーリー画面 -->
     <section id="screen-story" class="screen full-center hide glass-panel">
-      <div class="story-content" id="story-text">
-        <p>地上に戻って、もう100年になる。</p>
-        <p>空の広さにはだいぶ慣れた。でも塔だけは、まだ慣れない。</p>
-        <p style="margin-top:1.2em; color:#fbbf24;">コルク：「頂上まで行って帰ってきた者は、まだいない。」</p>
-        <p style="color:#fbbf24;">コルク：「問題ない。問題があっても問題ない。」</p>
+      <div class="story-wrapper">
+        <div id="story-page-1" class="story-content">
+          <p>なぜ文明が滅びたのか、誰も知らない。</p>
+          <p>大気が汚染され、人間は地下へ逃げた。</p>
+          <p>1000年を、地の底で生き延びた。</p>
+        </div>
+        <div id="story-page-2" class="story-content hide">
+          <p>大気が回復し、地上に戻ってから100年になる。</p>
+          <p>だが地上には、カラクリが巣くっていた。</p>
+          <p>機械のような生き物だ。人間を見ると、問答無用で襲いかかってくる。</p>
+          <p>地上にはもう一種類の生き物もいた。モンスターだ。育てれば、仲間になる。</p>
+        </div>
+        <div id="story-page-3" class="story-content hide">
+          <p>ギルドを取り仕切るのはコルクだ。無愛想だが、頼りになる。</p>
+          <p style="color:#fbbf24;">コルク：「新顔か。ビーステイカーとして登録しに来たか？」</p>
+          <p style="color:#94a3b8;">ビーステイカー：「はい。地上を開拓しに来ました。」</p>
+          <p style="color:#fbbf24;">コルク：「ひとりじゃカラクリには勝てない。モンスターを育てて、共に戦うしかない。それがここで生きる方法だ。」</p>
+          <p style="color:#fbbf24;">コルク：「問題ない。問題があっても問題ない。」</p>
+        </div>
       </div>
-      <button id="btn-skip-story" class="btn skill-btn mt-2">NEXT >></button>
+      <div class="story-btn-area">
+        <button id="btn-skip-story" class="btn skill-btn" disabled>NEXT >></button>
+        <button id="btn-skip-all-story" class="btn" style="font-size:0.8rem; color:#475569; background:none; border:none;">スキップ</button>
+      </div>
     </section>
 
     <!-- 画面0.6: 名前入力画面 -->
@@ -70,7 +87,7 @@
     <!-- 画面0.6.5: モンスター受け渡しイベント画面 -->
     <section id="screen-starter-event" class="screen full-center hide glass-panel">
       <h2>出発のまえに</h2>
-      <p style="color: #94a3b8; margin-bottom: 20px;" id="starter-event-msg">コルク：「卵を3つやる。孵化するかは相性次第だ。しない場合は……まあ、問題ない。」</p>
+      <p style="color: #94a3b8; margin-bottom: 20px;" id="starter-event-msg">コルク：「モンスターを3体やる。仲間にしろ。問題ない。」</p>
       <div id="starter-event-grid" class="monster-grid" style="margin-bottom: 30px; justify-content: center;"></div>
       <button id="btn-starter-event-proceed" class="btn primary-btn pulse-glow">拠点へ進む</button>
     </section>
@@ -112,7 +129,7 @@
     <!-- 画面0.8: ハブ（ステージ選択）画面 -->
     <section id="screen-hub" class="screen full-center hide glass-panel" style="width: 800px; max-width: 90vw; align-self: center;">
       <h2>ギルド拠点</h2>
-      <p style="color: #94a3b8; margin-bottom: 20px;">コルク：「準備ができたら塔に行け。準備ができてなくても行け。どうせ慣れる。」</p>
+      <p style="color: #94a3b8; margin-bottom: 20px;">コルク：「準備ができたら出発しろ。準備ができてなくても行け。どうせ慣れる。」</p>
       
       <div style="display:flex; justify-content:center; gap:20px; margin-bottom:30px;">
         <button id="btn-hub-party" class="btn skill-btn active-tab" style="font-size:1.1rem; padding:10px 20px;">PARTY</button>
@@ -135,7 +152,7 @@
         </div>
         <div id="btn-stage-3" class="stage-card locked">
            <h3 style="color:#94a3b8; margin-bottom:10px;">Stage 3</h3>
-           <p style="font-size:1.1rem; font-weight:bold;">試練の塔</p>
+           <p style="font-size:1.1rem; font-weight:bold;">果ての荒野</p>
            <p style="font-size:0.8rem; color:#64748b; margin-top:5px;">階層: 7F</p>
            <div class="lock-icon">🔒</div>
         </div>
@@ -144,7 +161,7 @@
 
     <!-- 画面1: マップ画面 -->
     <section id="screen-map" class="screen hide glass-panel map-screen" style="position:relative;">
-      <h2>塔の内部マップ</h2>
+      <h2>探索マップ</h2>
       <p class="map-desc">道を選べ。戻れない。</p>
       <div class="map-legend">
         <span>⚔️ バトル</span>
@@ -241,7 +258,7 @@
       <h2>出撃する3体を選べ</h2>
       <p>コルク：「誰を連れていくかだけ、自分で決めろ。あとは知らん。」</p>
       <div id="roster-grid" class="monster-grid"></div>
-      <button id="btn-start-battle" class="btn primary-btn" disabled>塔へ入る</button>
+      <button id="btn-start-battle" class="btn primary-btn" disabled>出発する</button>
     </section>
 
     <!-- チュートリアルオーバーレイ（フル版） -->

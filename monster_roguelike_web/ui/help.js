@@ -393,7 +393,7 @@ function buildMapContent() {
   <div class="help-cards">
     <div class="help-card"><div class="help-card-title">Stage 1：始まりの草原</div><div>フロア数：3F　難易度：初級<br>敵数：1〜2体（ボス4体）</div></div>
     <div class="help-card"><div class="help-card-title">Stage 2：迷いの森</div><div>フロア数：5F　難易度：中級<br>Stage 1クリアで解放</div></div>
-    <div class="help-card"><div class="help-card-title">Stage 3：試練の塔</div><div>フロア数：7F　難易度：上級<br>Stage 2クリアで解放</div></div>
+    <div class="help-card"><div class="help-card-title">Stage 3：果ての荒野</div><div>フロア数：7F　難易度：上級<br>Stage 2クリアで解放</div></div>
   </div>
 </div>
 

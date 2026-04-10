@@ -83,11 +83,46 @@ document.getElementById('delete-save-btn').onclick = () => {
 
 // ---- App Flow ----
 
-document.getElementById('btn-begin').onclick = () => switchScreen(screenStart, screenStory);
 document.getElementById('btn-encyclopedia').onclick = () => openEncyclopedia();
 
+let storyPage = 1;
 
-document.getElementById('btn-skip-story').onclick = () => switchScreen(screenStory, screenName);
+function showStoryPage(pageNum) {
+  const btn = document.getElementById('btn-skip-story');
+  btn.disabled = true;
+  btn.classList.remove('pulse-glow');
+  const lines = document.getElementById(`story-page-${pageNum}`).querySelectorAll('p');
+  const totalMs = (0.5 + (lines.length - 1) * 1.5 + 1.0) * 1000;
+  setTimeout(() => { btn.disabled = false; btn.classList.add('pulse-glow'); }, totalMs);
+}
+
+document.getElementById('btn-begin').onclick = () => {
+  switchScreen(screenStart, screenStory);
+  showStoryPage(1);
+};
+
+document.getElementById('btn-skip-all-story').onclick = () => {
+  storyPage = 1;
+  switchScreen(screenStory, screenName);
+};
+
+document.getElementById('btn-skip-story').onclick = () => {
+  if (storyPage < 3) {
+    document.getElementById(`story-page-${storyPage}`).classList.add('hide');
+    storyPage++;
+    const nextPage = document.getElementById(`story-page-${storyPage}`);
+    nextPage.classList.remove('hide');
+    nextPage.querySelectorAll('p').forEach(p => {
+      p.style.animation = 'none';
+      p.offsetHeight;
+      p.style.animation = '';
+    });
+    showStoryPage(storyPage);
+  } else {
+    storyPage = 1;
+    switchScreen(screenStory, screenName);
+  }
+};
 
 btnSubmitName.onclick = () => {
   appState.playerName = inputPlayerName.value.trim() || 'ハンター';
@@ -224,7 +259,7 @@ function confirmBattleSetup() {
 
   appState.timeline = new Timeline(appState.p1Team, appState.p2Team);
   const encounterLabel = { battle: '遭遇', elite: '強敵', boss: 'ボス', rest: '休憩' }[currentNode.type] ?? currentNode.type;
-  toast(`<span class="log-system">【${encounterLabel}】塔が動き出した。</span>`);
+  toast(`<span class="log-system">【${encounterLabel}】地上が動き出した。</span>`);
   updateUI();
   resumeLoop();
 }

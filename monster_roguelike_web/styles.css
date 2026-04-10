@@ -581,12 +581,37 @@ header h1 {
   100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
 }
 
+.story-wrapper {
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  width: 100%;
+  max-width: 600px;
+}
+
 .story-content {
   font-size: 1.2rem;
   line-height: 2;
-  margin-bottom: 30px;
-  max-width: 600px;
-  text-align: left;
+  width: 100%;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.story-btn-area {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#screen-story {
+  position: relative;
 }
 .story-content p {
   opacity: 0;
@@ -596,6 +621,7 @@ header h1 {
 .story-content p:nth-child(2) { animation-delay: 2.0s; }
 .story-content p:nth-child(3) { animation-delay: 3.5s; }
 .story-content p:nth-child(4) { animation-delay: 5.0s; }
+.story-content p:nth-child(5) { animation-delay: 6.5s; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
@@ -1205,6 +1231,10 @@ header h1 {
   width: 100%;
   max-width: 420px;
   margin-top: 8px;
+}
+
+.tutorial-select-buttons .btn {
+  width: 100%;
 }
 
 .tutorial-overlay {
