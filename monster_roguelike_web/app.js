@@ -26,7 +26,7 @@ if (_btnHelp) _btnHelp.onclick = openHelp;
 const _btnAffinity = document.getElementById('btn-affinity-global');
 if (_btnAffinity) _btnAffinity.onclick = () => openHelpTab('affinity');
 const _btnMonsters = document.getElementById('btn-monsters-global');
-if (_btnMonsters) _btnMonsters.onclick = () => openHelpTab('monsters');
+if (_btnMonsters) _btnMonsters.onclick = () => openEncyclopedia();
 
 // ---- Save / Load ----
 
@@ -83,7 +83,6 @@ document.getElementById('delete-save-btn').onclick = () => {
 
 // ---- App Flow ----
 
-document.getElementById('btn-encyclopedia').onclick = () => openEncyclopedia();
 
 let storyPage = 1;
 
@@ -238,21 +237,28 @@ function confirmBattleSetup() {
 
   const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
   if (!currentNode) { console.warn('Node not found:', appState.currentNodeId); return; }
-  const shuffled = [...ENEMY_DATA].sort(() => 0.5 - Math.random());
+  const isBoss = currentNode.type === 'boss';
+  const normalPool = ENEMY_DATA.filter(e => e.id !== 'e_boss_01');
+  const shuffled = [...normalPool].sort(() => 0.5 - Math.random());
 
   let p2Count = 1;
   const floor = currentNode.floor || 1;
   if (floor >= 2) p2Count = 2;
   if (floor >= 4) p2Count = 3;
   if (currentNode.type === 'elite') p2Count += 1;
-  if (currentNode.type === 'boss') p2Count = 4;
+  if (isBoss) p2Count = 4;
 
-  appState.p2Team = shuffled.slice(0, p2Count).map(data => {
+  // ボスノードは弱い敵を先に出し、ダイカラを最後に固定
+  const pool = isBoss
+    ? [...shuffled.slice(0, p2Count - 1), ENEMY_DATA.find(e => e.id === 'e_boss_01')]
+    : shuffled.slice(0, p2Count);
+
+  appState.p2Team = pool.map(data => {
     const m = new Monster(JSON.parse(JSON.stringify(data)));
     const scale = 1.0 + (floor * 0.1);
     m.stats.hp = Math.floor(m.stats.hp * scale);
     m.stats.atk = Math.floor(m.stats.atk * scale);
-    if (currentNode.type === 'boss') m.stats.hp *= 2;
+    if (isBoss) m.stats.hp *= 2;
     m.current_hp = m.stats.hp;
     return m;
   });
@@ -404,10 +410,21 @@ function generateRosterFromEgg(type) {
     'green': ['wind', 'thunder', 'none']
   };
   const biases = biasMap[type];
-  let pool = MONSTERS_DATA;
+
+  // 手持ちに既にいるモンスターの base ID を除外
+  const ownedBaseIds = new Set(
+    MONSTERS_DATA
+      .filter(m => (appState.globalRoster || []).some(r => r.id.startsWith(m.id)))
+      .map(m => m.id)
+  );
+  const unownedPool = MONSTERS_DATA.filter(m => !ownedBaseIds.has(m.id));
+  // 全種類所持済みの場合はフルプールにフォールバック
+  const basePool = unownedPool.length > 0 ? unownedPool : MONSTERS_DATA;
+
+  let pool = basePool;
   if (Math.random() < 0.5) {
-    pool = MONSTERS_DATA.filter(m => biases.includes(m.main_element));
-    if (pool.length === 0) pool = MONSTERS_DATA;
+    const biasedPool = basePool.filter(m => biases.includes(m.main_element));
+    if (biasedPool.length > 0) pool = biasedPool;
   }
   const picked = pool[Math.floor(Math.random() * pool.length)];
   const monsterData = JSON.parse(JSON.stringify(picked));

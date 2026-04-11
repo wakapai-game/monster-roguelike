@@ -108,9 +108,24 @@ export function renderTimelineQueue() {
 
 export function updateUI(onlyGauges = false) {
   const setBar = (el, current, max) => {
+    if (!el) return;
     const pct = Math.max(0, Math.min(100, (current / max) * 100));
     el.style.width = `${pct}%`;
   };
+
+  // ループ内の高頻度呼び出し: バーのみ更新してDOMの再構築をスキップ
+  if (onlyGauges) {
+    const p1 = appState.timeline.p1_active;
+    const p2 = appState.timeline.p2_active;
+    if (p1) {
+      setBar(document.getElementById('p1-hp-fill'), p1.current_hp, p1.stats.hp);
+      setBar(document.getElementById('p1-st-fill'), p1.current_st, p1.stats.max_st);
+    }
+    if (p2) {
+      setBar(document.getElementById('p2-hp-fill'), p2.current_hp, p2.stats.hp);
+    }
+    return;
+  }
 
   const setCard = (side, activeMonster) => {
       document.getElementById(`${side}-name`).innerText = activeMonster.name;
@@ -145,16 +160,104 @@ export function updateUI(onlyGauges = false) {
       }).join('');
 
       const cardEl = document.getElementById(`${side}-active-card`);
+      if (side === 'p1') {
+        cardEl.style.cursor = 'pointer';
+        cardEl.onclick = () => showMonsterDetail(appState.timeline.p1_active);
+      }
   };
 
   if (appState.timeline.p1_active) setCard('p1', appState.timeline.p1_active);
   if (appState.timeline.p2_active) setCard('p2', appState.timeline.p2_active);
 
   renderEnemyRoster();
+  renderP1Reserves();
 
   if(!appState.timeline.p1_active || !appState.timeline.p2_active || actionMenu.classList.contains('hide')) {
       renderTimelineQueue();
   }
+}
+
+function renderP1Reserves() {
+  const container = document.getElementById('p1-reserves');
+  if (!container || !appState.p1Team) return;
+
+  container.innerHTML = '';
+  appState.p1Team.forEach(m => {
+    if (m.id === appState.timeline?.p1_active?.id) return;
+
+    const isDead = m.current_hp <= 0;
+    const hpPct = Math.max(0, Math.round((m.current_hp / m.stats.hp) * 100));
+
+    const div = document.createElement('div');
+    div.className = 'p1-reserve-card' + (isDead ? ' p1-reserve-dead' : '');
+    div.innerHTML = `
+      <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+        <span style="font-size:0.75rem; font-weight:bold;">${m.name}</span>
+        <span class="elem-badge elem-${m.main_element}" style="font-size:0.55rem; padding:1px 3px;">${m.main_element.toUpperCase()}</span>
+      </div>
+      <div style="height:3px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:3px;">
+        <div style="width:${hpPct}%; height:100%; background:${isDead ? '#475569' : hpPct < 30 ? '#ef4444' : '#10b981'}; border-radius:2px; transition:width 0.3s;"></div>
+      </div>
+    `;
+    div.onclick = () => showMonsterDetail(m);
+    container.appendChild(div);
+  });
+}
+
+function showMonsterDetail(monster) {
+  const wasRunning = !!appState.loopInterval;
+  if (wasRunning) {
+    clearInterval(appState.loopInterval);
+    appState.loopInterval = null;
+  }
+
+  document.getElementById('md-name').textContent = monster.name;
+  const elemEl = document.getElementById('md-elem');
+  elemEl.textContent = monster.main_element.toUpperCase();
+  elemEl.className = `elem-badge elem-${monster.main_element}`;
+
+  const s = monster.stats;
+  document.getElementById('md-stats').innerHTML = `
+    <div class="md-stats-grid">
+      <span class="md-label">HP</span><span>${monster.current_hp} / ${s.hp}</span>
+      <span class="md-label">ST</span><span>${monster.current_st} / ${s.max_st}</span>
+      <span class="md-label">ATK</span><span>${s.atk}</span>
+      <span class="md-label">DEF</span><span>${s.def}</span>
+      <span class="md-label">MAG</span><span>${s.mag}</span>
+      <span class="md-label">SPD</span><span>${s.spd}</span>
+    </div>
+  `;
+
+  const skillsHtml = (monster.skills || []).map(skillId => {
+    const sk = appState.engine.getSkill(skillId);
+    if (!sk) return '';
+    const elemBadge = sk.element !== 'none'
+      ? `<span class="elem-badge elem-${sk.element}" style="font-size:0.6rem; padding:1px 4px;">${sk.element.toUpperCase()}</span>`
+      : '';
+    return `<div class="md-skill-card">
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <span style="font-weight:bold;">${sk.name}</span>
+        ${elemBadge}
+        <span style="font-size:0.75rem; color:#94a3b8;">ST:${sk.cost_st}</span>
+      </div>
+      ${sk.description ? `<p style="font-size:0.8rem; color:#94a3b8; margin:4px 0 0;">${sk.description}</p>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('md-skills').innerHTML = `
+    <p style="font-size:0.8rem; color:#94a3b8; margin:0 0 8px;">セット中の技</p>
+    <div style="display:flex; flex-direction:column; gap:6px;">
+      ${skillsHtml || '<p style="color:#94a3b8; font-size:0.85rem; margin:0;">技なし</p>'}
+    </div>
+  `;
+
+  const overlay = document.getElementById('monster-detail-overlay');
+  overlay.classList.remove('hide');
+
+  document.getElementById('btn-md-close').onclick = () => {
+    overlay.classList.add('hide');
+    if (wasRunning) resumeLoop();
+  };
 }
 
 function renderEnemyRoster() {

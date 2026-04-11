@@ -16,6 +16,7 @@ const SKILLS = [
   { id: "strike", name: "たいあたり", description: "物理攻撃。敵のSTを削る基本技。", category: "attack", type: "physical", element: "none", cost_st: 10, effects: [{ type: "damage_st", base_power: 50 }] },
   { id: "fireball", name: "ファイアボール", description: "炎属性の魔法。弱点の敵にはSTもHPへの溢れも大ダメージ。", category: "attack", type: "magic", element: "fire", cost_st: 15, effects: [{ type: "damage_st", base_power: 80 }] },
   { id: "water_gun", name: "みずでっぽう", description: "水属性の魔法。弱点の敵にはSTもHPへの溢れも大ダメージ。", category: "attack", type: "magic", element: "water", cost_st: 15, effects: [{ type: "damage_st", base_power: 80 }] },
+  { id: "thunder_bolt", name: "サンダーボルト", description: "雷属性の魔法。弱点の敵にはSTもHPへの溢れも大ダメージ。", category: "attack", type: "magic", element: "thunder", cost_st: 15, effects: [{ type: "damage_st", base_power: 80 }] },
   { id: "smash", name: "フルスイング", description: "強力な物理攻撃。STを大きく削るが、次の行動が遅れる。", category: "attack", type: "physical", element: "none", cost_st: 20, effects: [{ type: "damage_st", base_power: 120 }, { type: "delay_gauge", value: 20 }] },
   { id: "pierce_needle", name: "どくばり（貫通）", description: "STを無視して敵HPに直接20ダメージを与える貫通攻撃。", category: "attack", type: "pierce", element: "none", cost_st: 30, effects: [{ type: "damage_hp_direct", base_power: 20 }] },
   { id: "fire_trap", name: "じらい（罠）", description: "炎の罠を仕掛ける。敵の次の攻撃時に発動する。", category: "trap", type: "trap", element: "fire", cost_st: 25, effects: [{ type: "add_status", status: "trap_fire" }] },
@@ -31,9 +32,9 @@ const SKILLS = [
 
 // モンスターベースデータ（味方用）
 const MONSTERS_DATA = [
-  { id: "m_001", name: "ランタン", main_element: "fire", sub_element: "none", base_stats: {hp: 2000, atk: 40, def: 35, mag: 20, spd: 25, max_st: 150, st_rec: 5}, skills: ["strike", "fireball"] },
-  { id: "m_002", name: "マッド", main_element: "water", sub_element: "earth", base_stats: {hp: 2500, atk: 35, def: 100, mag: 15, spd: 16, max_st: 150, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
-  { id: "m_003", name: "サニー", main_element: "thunder", sub_element: "wind", base_stats: {hp: 1500, atk: 30, def: 35, mag: 45, spd: 40, max_st: 150, st_rec: 15}, skills: ["strike", "smash"] },
+  { id: "m_001", name: "ランタン", main_element: "fire", sub_element: "none", base_stats: {hp: 2000, atk: 40, def: 35, mag: 20, spd: 30, max_st: 150, st_rec: 5}, skills: ["strike", "fireball"] },
+  { id: "m_002", name: "マッド", main_element: "water", sub_element: "earth", base_stats: {hp: 2500, atk: 35, def: 100, mag: 15, spd: 26, max_st: 150, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
+  { id: "m_003", name: "サニー", main_element: "thunder", sub_element: "wind", base_stats: {hp: 1500, atk: 30, def: 35, mag: 45, spd: 40, max_st: 150, st_rec: 15}, skills: ["strike", "thunder_bolt"] },
   { id: "m_004", name: "タロ", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 50, def: 60, mag: 5, spd: 30, max_st: 150, st_rec: 0}, skills: ["smash"] },
   { id: "m_005", name: "ミスト", main_element: "dark", sub_element: "none", base_stats: {hp: 1200, atk: 80, def: 50, mag: 10, spd: 50, max_st: 150, st_rec: 10}, skills: ["strike", "pierce_needle"] },
   { id: "m_006", name: "あかり", main_element: "light", sub_element: "fire", base_stats: {hp: 2200, atk: 40, def: 45, mag: 30, spd: 20, max_st: 150, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] }
@@ -41,10 +42,10 @@ const MONSTERS_DATA = [
 
 // 敵専用モンスターデータ（序盤向けにステータス低下・野生化）
 const ENEMY_DATA = [
-  { id: "e_001", name: "のらランタン", main_element: "fire", sub_element: "none", base_stats: {hp: 600, atk: 20, def: 10, mag: 10, spd: 15, max_st: 100, st_rec: 5}, skills: ["strike"] },
-  { id: "e_002", name: "のらマッド", main_element: "water", sub_element: "earth", base_stats: {hp: 1000, atk: 15, def: 30, mag: 5, spd: 5, max_st: 100, st_rec: 5}, skills: ["strike", "water_gun"] },
-  { id: "e_003", name: "のらサニー", main_element: "thunder", sub_element: "wind", base_stats: {hp: 500, atk: 25, def: 10, mag: 20, spd: 30, max_st: 100, st_rec: 10}, skills: ["strike"] },
-  { id: "e_boss_01", name: "【ボス】はぐれタロ", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 40, def: 50, mag: 5, spd: 30, max_st: 100, st_rec: 0}, skills: ["smash"] }
+  { id: "e_001", name: "ヒカラ", main_element: "fire", sub_element: "none", base_stats: {hp: 700, atk: 25, def: 15, mag: 10, spd: 20, max_st: 100, st_rec: 3}, skills: ["strike", "fireball"] },
+  { id: "e_002", name: "ドロカラ", main_element: "water", sub_element: "earth", base_stats: {hp: 1200, atk: 18, def: 45, mag: 5, spd: 8, max_st: 100, st_rec: 5}, skills: ["strike", "water_gun"] },
+  { id: "e_003", name: "ライカラ", main_element: "thunder", sub_element: "wind", base_stats: {hp: 480, atk: 28, def: 8, mag: 22, spd: 35, max_st: 100, st_rec: 8}, skills: ["strike", "thunder_bolt"] },
+  { id: "e_boss_01", name: "ダイカラ", main_element: "earth", sub_element: "none", base_stats: {hp: 3500, atk: 45, def: 55, mag: 5, spd: 25, max_st: 120, st_rec: 0}, skills: ["smash"] }
 ];
 
 // チュートリアル専用敵（ice属性でfireballがバツグン、ST高めでST削り体験用、st_rec:0でブレイクしやすい）

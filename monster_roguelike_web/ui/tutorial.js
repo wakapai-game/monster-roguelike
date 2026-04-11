@@ -28,7 +28,7 @@ const STEPS_CASE3 = {
   },
   'defense-phase': {
     title: '防御フェーズ',
-    full: 'コルク：「敵が来るぞ。選択肢がある。\n\n🛡 身を守る → HPへの溢れダメージを半減\n🔮 スキルタブ → 防御スキルでST回復など\n💊 アイテムタブ → 回復アイテムを使う\n🔄 控えと入れ替える → モンスターを交代\n\nどれを選んでもいい。間違えても問題ない。死んだら問題あるが。」',
+    full: 'コルク：「敵が来るぞ。選択肢がある。\n\n🛡 身を守る → HPへの溢れダメージを半減\n🔮 スキルタブ → 防御スキルでST回復など\n💊 アイテムタブ → 回復アイテムを使う\n🔄 モンスター交代 → モンスターを交代\n\nどれを選んでもいい。間違えても問題ない。死んだら問題あるが。」',
     simple: '💡 「身を守る」でHP溢れダメージ半減。スキル・アイテム・交代も選べます！',
     highlight: 'action-menu'
   },
@@ -40,8 +40,8 @@ const STEPS_CASE3 = {
   },
   'swap': {
     title: '控えと交代する',
-    full: 'コルク：「「控えと入れ替える」で交代できる。\n\nSTが減ったやつを下げて、元気なやつと代われ。控えに回ったモンスターはSTが少し自動回復する。\n\n攻撃でも防御でも交代できる。使いこなせ。」',
-    simple: '💡 「控えと入れ替える」でいつでも交代！控えのモンスターはSTが自動回復します。',
+    full: 'コルク：「「モンスター交代」で交代できる。\n\nSTが減ったやつを下げて、元気なやつと代われ。控えに回ったモンスターはSTが少し自動回復する。\n\n攻撃でも防御でも交代できる。使いこなせ。」',
+    simple: '💡 「モンスター交代」でいつでも交代！控えのモンスターはSTが自動回復します。',
     highlight: 'swap-wrapper'
   },
   'affinity': {
@@ -139,8 +139,10 @@ function _showFullOverlay(data, callback) {
 
   // 30秒タイムアウト: OKボタンが押されなくてもゲームが凍らないようにする
   const timeoutId = setTimeout(() => {
+    const overlay = document.getElementById('tutorial-overlay');
+    if (overlay?._enableTimer) clearTimeout(overlay._enableTimer);
     _removeSpotlight(targetEl);
-    document.getElementById('tutorial-overlay')?.classList.add('hide');
+    overlay?.classList.add('hide');
     safeCallback();
   }, 30000);
 
@@ -209,8 +211,11 @@ function _showSpotlight(targetEl, onClickCallback) {
   catcher.style.cssText = `position:fixed;top:${r.top-pad}px;left:${r.left-pad}px;` +
     `width:${r.width+2*pad}px;height:${r.height+2*pad}px;` +
     `z-index:10001;cursor:pointer;border-radius:8px;`;
-  catcher.addEventListener('click', onClickCallback, { once: true });
   document.body.appendChild(catcher);
+  // 直前のタップ/クリックが引き継がれないよう1フレーム遅延してリスナーを登録
+  requestAnimationFrame(() => {
+    catcher.addEventListener('click', onClickCallback, { once: true });
+  });
 }
 
 function _removeSpotlight(targetEl) {
@@ -229,10 +234,20 @@ function _showModal(data, callback) {
   document.getElementById('tutorial-overlay-body').textContent = data.full;
   overlay.classList.remove('hide');
 
-  document.getElementById('btn-tutorial-ok').onclick = () => {
-    overlay.classList.add('hide');
-    if (callback) callback();
-  };
+  const okBtn = document.getElementById('btn-tutorial-ok');
+  // ghost click 防止: スポットライトのタップ直後に合成クリックがOKボタンに当たらないよう
+  // 350ms間はクリックを無視する
+  okBtn.disabled = true;
+  okBtn.onclick = null;
+  const enableTimer = setTimeout(() => {
+    okBtn.disabled = false;
+    okBtn.onclick = () => {
+      clearTimeout(overlay._enableTimer);
+      overlay.classList.add('hide');
+      if (callback) callback();
+    };
+  }, 350);
+  overlay._enableTimer = enableTimer;
 }
 
 function _showSimpleHint(data) {

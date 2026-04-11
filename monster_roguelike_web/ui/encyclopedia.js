@@ -1,4 +1,4 @@
-import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA } from '../data.js';
+import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA, TUTORIAL_ENEMY } from '../data.js';
 
 const overlay = document.getElementById('screen-encyclopedia');
 const content = document.getElementById('enc-content');
@@ -26,6 +26,8 @@ function renderTab(tab) {
 
   if (tab === 'monsters') {
     renderMonsters();
+  } else if (tab === 'enemies') {
+    renderEnemies();
   } else if (tab === 'skills') {
     renderSkills();
   } else if (tab === 'items') {
@@ -35,45 +37,42 @@ function renderTab(tab) {
   }
 }
 
+function _monsterCard(m) {
+  const card = document.createElement('div');
+  card.className = 'enc-card';
+  const subBadge = m.sub_element !== 'none'
+    ? `<span class="elem-badge elem-${m.sub_element}">${m.sub_element.toUpperCase()}</span>`
+    : '';
+  const skillNames = m.skills.map(sid => {
+    const s = SKILLS.find(sk => sk.id === sid);
+    return s ? s.name : sid;
+  }).join(' / ');
+  card.innerHTML = `
+    <div class="enc-card-header">
+      <span class="elem-badge elem-${m.main_element}">${m.main_element.toUpperCase()}</span>
+      ${subBadge}
+      <strong>${m.name}</strong>
+    </div>
+    <div class="enc-stats">
+      <span>HP: ${m.base_stats.hp}</span>
+      <span>ST: ${m.base_stats.max_st}</span>
+      <span>ATK: ${m.base_stats.atk}</span>
+      <span>DEF: ${m.base_stats.def}</span>
+      <span>MAG: ${m.base_stats.mag}</span>
+      <span>SPD: ${m.base_stats.spd}</span>
+    </div>
+    <div class="enc-skills">技: ${skillNames}</div>
+  `;
+  return card;
+}
+
 function renderMonsters() {
-  const section = (label, list) => {
-    const heading = document.createElement('p');
-    heading.style.cssText = 'color:#94a3b8; font-size:0.8rem; font-weight:bold; margin:10px 0 6px;';
-    heading.textContent = label;
-    content.appendChild(heading);
+  MONSTERS_DATA.forEach(m => content.appendChild(_monsterCard(m)));
+}
 
-    list.forEach(m => {
-      const card = document.createElement('div');
-      card.className = 'enc-card';
-      const subBadge = m.sub_element !== 'none'
-        ? `<span class="elem-badge elem-${m.sub_element}">${m.sub_element.toUpperCase()}</span>`
-        : '';
-      const skillNames = m.skills.map(sid => {
-        const s = SKILLS.find(sk => sk.id === sid);
-        return s ? s.name : sid;
-      }).join(' / ');
-      card.innerHTML = `
-        <div class="enc-card-header">
-          <span class="elem-badge elem-${m.main_element}">${m.main_element.toUpperCase()}</span>
-          ${subBadge}
-          <strong>${m.name}</strong>
-        </div>
-        <div class="enc-stats">
-          <span>HP: ${m.base_stats.hp}</span>
-          <span>ST: ${m.base_stats.max_st}</span>
-          <span>ATK: ${m.base_stats.atk}</span>
-          <span>DEF: ${m.base_stats.def}</span>
-          <span>MAG: ${m.base_stats.mag}</span>
-          <span>SPD: ${m.base_stats.spd}</span>
-        </div>
-        <div class="enc-skills">技: ${skillNames}</div>
-      `;
-      content.appendChild(card);
-    });
-  };
-
-  section('味方モンスター', MONSTERS_DATA);
-  section('敵モンスター', ENEMY_DATA);
+function renderEnemies() {
+  const allEnemies = [...ENEMY_DATA, TUTORIAL_ENEMY];
+  allEnemies.forEach(m => content.appendChild(_monsterCard(m)));
 }
 
 function renderSkills() {

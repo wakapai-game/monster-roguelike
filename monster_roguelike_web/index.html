@@ -25,7 +25,6 @@
       </div>
       <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:8px;">
         <button id="btn-begin" class="btn primary-btn pulse-glow start-btn">START GAME</button>
-        <button id="btn-encyclopedia" class="btn skill-btn start-btn">図鑑を見る</button>
         <a href="test-battle.html" style="font-size:0.8rem; color:#475569; margin-top:8px; text-decoration:none;">⚙ バトルシステムテスト</a>
       </div>
     </section>
@@ -39,6 +38,7 @@
         </div>
         <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
           <button class="btn skill-btn active-tab" data-enc-tab="monsters">モンスター</button>
+          <button class="btn skill-btn inactive-tab" data-enc-tab="enemies">カラクリ</button>
           <button class="btn skill-btn inactive-tab" data-enc-tab="skills">技</button>
           <button class="btn skill-btn inactive-tab" data-enc-tab="items">アイテム</button>
           <button class="btn skill-btn inactive-tab" data-enc-tab="food">えさ</button>
@@ -61,6 +61,7 @@
           <p>だが地上には、カラクリが巣くっていた。</p>
           <p>機械のような生き物だ。人間を見ると、問答無用で襲いかかってくる。</p>
           <p>地上にはもう一種類の生き物もいた。モンスターだ。育てれば、仲間になる。</p>
+          <p>モンスターを育て、カラクリと戦いながら地上を開拓する者を、ビーステイカーと呼ぶ。</p>
         </div>
         <div id="story-page-3" class="story-content hide">
           <p>ギルドを取り仕切るのはコルクだ。無愛想だが、頼りになる。</p>
@@ -230,7 +231,6 @@
           <button class="btn help-tab-btn inactive-tab" data-help-tab="skills">技・アイテム</button>
           <button class="btn help-tab-btn inactive-tab" data-help-tab="training">育成・強化</button>
           <button class="btn help-tab-btn inactive-tab" data-help-tab="map">マップ・用語</button>
-          <button class="btn help-tab-btn inactive-tab" data-help-tab="monsters">モンスター図鑑</button>
         </div>
         <div class="help-body">
           <div id="help-content-battle"   class="help-tab-content"></div>
@@ -239,7 +239,6 @@
           <div id="help-content-skills"   class="help-tab-content hide"></div>
           <div id="help-content-training" class="help-tab-content hide"></div>
           <div id="help-content-map"      class="help-tab-content hide"></div>
-          <div id="help-content-monsters" class="help-tab-content hide"></div>
         </div>
       </div>
     </div>
@@ -268,6 +267,21 @@
         <h3 id="tutorial-overlay-title"></h3>
         <p id="tutorial-overlay-body"></p>
         <button id="btn-tutorial-ok" class="btn primary-btn" style="width:100%; margin-top:8px;">OK、わかった！</button>
+      </div>
+    </div>
+
+    <!-- モンスター詳細モーダル（バトル中） -->
+    <div id="monster-detail-overlay" class="monster-detail-overlay hide">
+      <div class="monster-detail-panel glass-panel">
+        <div class="monster-detail-header">
+          <div>
+            <h3 id="md-name" style="margin:0 0 6px;"></h3>
+            <span id="md-elem" class="elem-badge"></span>
+          </div>
+          <button id="btn-md-close" class="btn skill-btn">✕ 閉じる</button>
+        </div>
+        <div id="md-stats"></div>
+        <div id="md-skills"></div>
       </div>
     </div>
 
@@ -342,7 +356,7 @@
           </div>
 
           <div id="swap-wrapper" style="margin-top:10px;">
-            <button id="btn-swap-action" class="btn" style="width:100%; padding: 10px; background: #475569; color: white; border: none; font-weight: bold; cursor: pointer;">🔄 控えと入れ替える (Swap)</button>
+            <button id="btn-swap-action" class="btn" style="width:100%; padding: 10px; background: #475569; color: white; border: none; font-weight: bold; cursor: pointer;">🔄 モンスター交代</button>
             <div id="swap-select-panel" class="hide swap-select-panel"></div>
           </div>
         </div>

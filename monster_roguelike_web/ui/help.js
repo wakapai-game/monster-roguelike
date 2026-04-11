@@ -28,7 +28,6 @@ export function initHelp() {
   document.getElementById('help-content-skills').innerHTML   = buildSkillsContent();
   document.getElementById('help-content-training').innerHTML = buildTrainingContent();
   document.getElementById('help-content-map').innerHTML      = buildMapContent();
-  document.getElementById('help-content-monsters').innerHTML = buildMonstersContent();
 
   // 閉じるボタン
   document.getElementById('btn-close-help').onclick = closeHelp;
