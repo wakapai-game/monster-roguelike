@@ -23,6 +23,7 @@ class RNG {
   }
   int(a, b) { return a + Math.floor(this.next() * (b - a + 1)); }
   bool(p = 0.5) { return this.next() < p; }
+  pick(arr) { return arr[this.int(0, arr.length - 1)]; }
 }
 
 function strHash(str) {
@@ -62,8 +63,11 @@ function fillRect(buf, x, y, w, h, color, W, H) {
     }
 }
 
+function setPixel(buf, x, y, color, W, H) {
+  if (x >= 0 && x < W && y >= 0 && y < H) buf[y][x] = color;
+}
+
 function addOutline(buf, outlineColor, W, H) {
-  // 外周ピクセルを outline に変更
   const copy = buf.map(r => [...r]);
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
@@ -92,6 +96,9 @@ function bufToCanvas(buf, ctx, W, H) {
 
 // ─── ジュウマ（有機的・生物的） ──────────────────────────────
 
+// 体型タイプ：IDのハッシュで決定
+const BODY_TYPES = ['standard', 'stout', 'serpentine', 'avian', 'quadruped'];
+
 function drawOrganic(ctx, element, seed, sizeParam = 0) {
   const W = 32, H = 32;
   const pal = ELEMENT_PALETTES[element] || ELEMENT_PALETTES.none;
@@ -101,78 +108,251 @@ function drawOrganic(ctx, element, seed, sizeParam = 0) {
   // サイズ補正（SS〜LL: -10〜+10 → scale 0.85〜1.15）
   const sc = 1 + sizeParam * 0.015;
 
-  // 頭
-  const headCX = 16;
-  const headCY = Math.round(10 * sc);
-  const headRX = Math.round((4 + rng.int(0, 2)) * sc);
-  const headRY = Math.round((4 + rng.int(0, 2)) * sc);
-  fillEllipse(buf, headCX, headCY, headRX, headRY, 'HEAD', W, H);
+  // 体型を決定
+  const bodyType = BODY_TYPES[rng.int(0, BODY_TYPES.length - 1)];
 
-  // 胴体
-  const bodyCX = 16;
-  const bodyCY = Math.round((headCY + headRY + 4) * sc);
-  const bodyRX = Math.round((4 + rng.int(0, 3)) * sc);
-  const bodyRY = Math.round((4 + rng.int(0, 2)) * sc);
-  fillEllipse(buf, bodyCX, bodyCY, bodyRX, bodyRY, 'BODY', W, H);
+  let headCX, headCY, headRX, headRY;
+  let bodyCX, bodyCY, bodyRX, bodyRY;
+  let legY, legLX, legRX, legH;
 
-  // 耳・角（ランダム）
-  if (rng.bool(0.7)) {
-    const earStyle = rng.int(0, 2);
-    if (earStyle === 0) {
-      // 尖った角
-      const hornH = rng.int(2, 4);
-      const hornX = headCX - Math.round(headRX * 0.5);
-      for (let i = 0; i < hornH; i++) {
-        const py = headCY - headRY - i;
-        if (py >= 0) { buf[py][hornX] = 'HEAD'; buf[py][W - 1 - hornX] = 'HEAD'; }
-      }
-    } else if (earStyle === 1) {
-      // 丸い耳
-      const earCY = headCY - headRY;
-      const earX = headCX - headRX + 1;
-      fillEllipse(buf, earX, earCY, 2, 2, 'HEAD', W, H);
-      fillEllipse(buf, W - earX, earCY, 2, 2, 'HEAD', W, H);
-    } else {
-      // 大きい耳
-      const earCY = headCY - Math.round(headRY * 0.5);
-      const earX = headCX - headRX - 1;
-      fillEllipse(buf, earX, earCY, 1, 3, 'HEAD', W, H);
-      fillEllipse(buf, W - earX, earCY, 1, 3, 'HEAD', W, H);
+  switch (bodyType) {
+    case 'stout': {
+      // ずんぐりした体型：大きな胴体、小さな頭
+      headCX = 16;
+      headCY = Math.round(9 * sc);
+      headRX = Math.round((3 + rng.int(0, 1)) * sc);
+      headRY = Math.round((3 + rng.int(0, 1)) * sc);
+      fillEllipse(buf, headCX, headCY, headRX, headRY, 'HEAD', W, H);
+
+      bodyCX = 16;
+      bodyCY = Math.round((headCY + headRY + 5) * sc);
+      bodyRX = Math.round((6 + rng.int(0, 2)) * sc);
+      bodyRY = Math.round((5 + rng.int(0, 2)) * sc);
+      fillEllipse(buf, bodyCX, bodyCY, bodyRX, bodyRY, 'BODY', W, H);
+      break;
+    }
+    case 'serpentine': {
+      // 蛇のような体型：小さめの頭、縦長の胴体
+      headCX = 16;
+      headCY = Math.round(8 * sc);
+      headRX = Math.round((3 + rng.int(0, 1)) * sc);
+      headRY = Math.round((3 + rng.int(0, 1)) * sc);
+      fillEllipse(buf, headCX, headCY, headRX, headRY, 'HEAD', W, H);
+
+      bodyCX = 16;
+      bodyCY = Math.round((headCY + headRY + 6) * sc);
+      bodyRX = Math.round((3 + rng.int(0, 1)) * sc);
+      bodyRY = Math.round((6 + rng.int(0, 2)) * sc);
+      fillEllipse(buf, bodyCX, bodyCY, bodyRX, bodyRY, 'BODY', W, H);
+      // うねり：中間楕円
+      const midCY = Math.round((headCY + bodyCY) / 2);
+      fillEllipse(buf, bodyCX + rng.int(-1, 1), midCY, bodyRX + 1, 2, 'BODY', W, H);
+      break;
+    }
+    case 'avian': {
+      // 鳥のような体型：丸い頭、小さな胴体
+      headCX = 16;
+      headCY = Math.round(10 * sc);
+      headRX = Math.round((5 + rng.int(0, 1)) * sc);
+      headRY = Math.round((4 + rng.int(0, 1)) * sc);
+      fillEllipse(buf, headCX, headCY, headRX, headRY, 'HEAD', W, H);
+
+      bodyCX = 16;
+      bodyCY = Math.round((headCY + headRY + 3) * sc);
+      bodyRX = Math.round((3 + rng.int(0, 1)) * sc);
+      bodyRY = Math.round((3 + rng.int(0, 1)) * sc);
+      fillEllipse(buf, bodyCX, bodyCY, bodyRX, bodyRY, 'BODY', W, H);
+      break;
+    }
+    case 'quadruped': {
+      // 四足歩行型：横長の胴体
+      headCX = Math.round(10 * sc);
+      headCY = Math.round(10 * sc);
+      headRX = Math.round((3 + rng.int(0, 1)) * sc);
+      headRY = Math.round((3 + rng.int(0, 1)) * sc);
+      fillEllipse(buf, headCX, headCY, headRX, headRY, 'HEAD', W, H);
+
+      bodyCX = Math.round(18 * sc);
+      bodyCY = Math.round((headCY + 2) * sc);
+      bodyRX = Math.round((6 + rng.int(0, 2)) * sc);
+      bodyRY = Math.round((3 + rng.int(0, 1)) * sc);
+      fillEllipse(buf, bodyCX, bodyCY, bodyRX, bodyRY, 'BODY', W, H);
+      // 首をつなぐ
+      const neckY = headCY + Math.round(headRY * 0.5);
+      fillEllipse(buf, Math.round((headCX + bodyCX) / 2), neckY, 2, 2, 'BODY', W, H);
+      break;
+    }
+    default: {
+      // standard：既存の体型
+      headCX = 16;
+      headCY = Math.round(10 * sc);
+      headRX = Math.round((4 + rng.int(0, 2)) * sc);
+      headRY = Math.round((4 + rng.int(0, 2)) * sc);
+      fillEllipse(buf, headCX, headCY, headRX, headRY, 'HEAD', W, H);
+
+      bodyCX = 16;
+      bodyCY = Math.round((headCY + headRY + 4) * sc);
+      bodyRX = Math.round((4 + rng.int(0, 3)) * sc);
+      bodyRY = Math.round((4 + rng.int(0, 2)) * sc);
+      fillEllipse(buf, bodyCX, bodyCY, bodyRX, bodyRY, 'BODY', W, H);
+      break;
     }
   }
 
-  // 尻尾（ランダム）
-  if (rng.bool(0.5)) {
+  // ── パーツ追加（属性とIDに基づくバリエーション） ──
+
+  // 角・耳
+  const partSeed = rng.int(0, 99);
+  if (partSeed < 20) {
+    // 尖った角（2本）
+    const hornH = rng.int(2, 5);
+    const hornX = headCX - Math.round(headRX * 0.5);
+    for (let i = 0; i < hornH; i++) {
+      const py = headCY - headRY - i;
+      setPixel(buf, hornX, py, 'HEAD', W, H);
+      setPixel(buf, W - 1 - hornX, py, 'HEAD', W, H);
+    }
+  } else if (partSeed < 35) {
+    // 一本角（中央）
+    const hornH = rng.int(3, 5);
+    for (let i = 0; i < hornH; i++) {
+      const py = headCY - headRY - i;
+      setPixel(buf, headCX, py, 'HEAD', W, H);
+    }
+  } else if (partSeed < 50) {
+    // 丸い耳
+    const earCY = headCY - headRY;
+    const earX = headCX - headRX + 1;
+    fillEllipse(buf, earX, earCY, 2, 2, 'HEAD', W, H);
+    fillEllipse(buf, W - earX, earCY, 2, 2, 'HEAD', W, H);
+  } else if (partSeed < 65) {
+    // 大きい耳（うさぎ風）
+    const earCY = headCY - Math.round(headRY * 0.5);
+    const earX = headCX - headRX - 1;
+    fillEllipse(buf, earX, earCY, 1, 4, 'HEAD', W, H);
+    fillEllipse(buf, W - earX, earCY, 1, 4, 'HEAD', W, H);
+  } else if (partSeed < 75) {
+    // とげとげクレスト（トサカ）
+    for (let i = 0; i < 3; i++) {
+      const py = headCY - headRY - rng.int(1, 3);
+      const px = headCX - 1 + i;
+      setPixel(buf, px, py, 'HEAD', W, H);
+    }
+  }
+  // 25%は何もなし（プレーンな頭）
+
+  // 翼（avian は必ず、他は低確率）
+  const hasWings = bodyType === 'avian' || rng.bool(0.15);
+  if (hasWings) {
+    const wingY = bodyCY - Math.round(bodyRY * 0.3);
+    const wingSize = rng.int(2, 4);
+    // 左翼
+    for (let i = 0; i < wingSize; i++) {
+      setPixel(buf, bodyCX - bodyRX - 1 - i, wingY - i, 'BODY', W, H);
+      setPixel(buf, bodyCX - bodyRX - 1 - i, wingY - i + 1, 'BODY', W, H);
+    }
+    // 右翼
+    for (let i = 0; i < wingSize; i++) {
+      setPixel(buf, bodyCX + bodyRX + 1 + i, wingY - i, 'BODY', W, H);
+      setPixel(buf, bodyCX + bodyRX + 1 + i, wingY - i + 1, 'BODY', W, H);
+    }
+  }
+
+  // 尻尾（serpentine は特殊な長い尻尾、quadrupedも必ず尻尾）
+  if (bodyType === 'serpentine') {
+    const tailBaseY = bodyCY + bodyRY;
+    const tailX = bodyCX + rng.int(-1, 1);
+    for (let i = 0; i < rng.int(3, 5); i++) {
+      setPixel(buf, tailX + (i % 2 === 0 ? 0 : 1), tailBaseY + i, 'BODY', W, H);
+    }
+  } else if (bodyType === 'quadruped') {
+    const tailY = bodyCY - rng.int(0, 1);
+    const tailBaseX = bodyCX + bodyRX;
+    for (let i = 0; i < rng.int(2, 4); i++) {
+      setPixel(buf, tailBaseX + i, tailY - i, 'BODY', W, H);
+    }
+  } else if (rng.bool(0.5)) {
     const tailY = bodyCY + rng.int(-2, 1);
     const tailX = bodyCX + bodyRX;
-    buf[tailY][Math.min(W-1, tailX)] = 'BODY';
-    buf[tailY][Math.min(W-1, tailX + 1)] = 'BODY';
-    if (tailY + 1 < H) buf[tailY + 1][Math.min(W-1, tailX + 1)] = 'BODY';
+    setPixel(buf, Math.min(W-1, tailX), tailY, 'BODY', W, H);
+    setPixel(buf, Math.min(W-1, tailX + 1), tailY, 'BODY', W, H);
+    if (rng.bool(0.5)) {
+      setPixel(buf, Math.min(W-1, tailX + 2), tailY - 1, 'BODY', W, H);
+    }
+    if (tailY + 1 < H) setPixel(buf, Math.min(W-1, tailX + 1), tailY + 1, 'BODY', W, H);
+  }
+
+  // 模様（背中のドット）
+  if (rng.bool(0.4)) {
+    const spotCount = rng.int(2, 4);
+    for (let i = 0; i < spotCount; i++) {
+      const sx = bodyCX + rng.int(-bodyRX + 2, bodyRX - 2);
+      const sy = bodyCY + rng.int(-bodyRY + 1, bodyRY - 1);
+      if (buf[sy] && buf[sy][sx] === 'BODY') {
+        buf[sy][sx] = 'SPOT';
+      }
+    }
   }
 
   // 足
-  const legY = bodyCY + bodyRY;
-  const legLX = bodyCX - Math.round(bodyRX * 0.6);
-  const legRX = bodyCX + Math.round(bodyRX * 0.6);
-  const legH = rng.int(2, 4);
-  for (let i = 0; i < legH; i++) {
-    if (legY + i < H) {
-      buf[legY + i][legLX] = 'BODY';
-      buf[legY + i][legRX] = 'BODY';
+  if (bodyType === 'quadruped') {
+    // 四足：前足2本 + 後足2本
+    legH = rng.int(3, 4);
+    const frontLegX = headCX;
+    const backLegX1 = bodyCX + Math.round(bodyRX * 0.4);
+    const backLegX2 = bodyCX - Math.round(bodyRX * 0.4);
+    legY = bodyCY + bodyRY;
+    for (let i = 0; i < legH; i++) {
+      setPixel(buf, frontLegX, legY + i, 'BODY', W, H);
+      setPixel(buf, backLegX1, legY + i, 'BODY', W, H);
+      setPixel(buf, backLegX2, legY + i, 'BODY', W, H);
+      setPixel(buf, headCX - 1, legY + i, 'BODY', W, H);
+    }
+  } else if (bodyType === 'serpentine') {
+    // 蛇型は足なし（尻尾で代替）
+    legY = bodyCY + bodyRY;
+    legH = 0;
+  } else {
+    // 二足歩行
+    legY = bodyCY + bodyRY;
+    legLX = bodyCX - Math.round(bodyRX * 0.6);
+    legRX = bodyCX + Math.round(bodyRX * 0.6);
+    legH = rng.int(2, 4);
+    for (let i = 0; i < legH; i++) {
+      if (legY + i < H) {
+        setPixel(buf, legLX, legY + i, 'BODY', W, H);
+        setPixel(buf, legRX, legY + i, 'BODY', W, H);
+      }
+    }
+    // 足先
+    if (legY + legH - 1 < H) {
+      setPixel(buf, legLX - 1, legY + legH - 1, 'BODY', W, H);
+      setPixel(buf, legRX + 1, legY + legH - 1, 'BODY', W, H);
     }
   }
-  // 足先
-  if (legY + legH < H) {
-    buf[legY + legH - 1][legLX - 1] = 'BODY';
-    buf[legY + legH - 1][legRX + 1] = 'BODY';
+
+  // くちばし（avian のみ）
+  if (bodyType === 'avian') {
+    const beakY = headCY + Math.round(headRY * 0.3);
+    const beakX = headCX + headRX;
+    setPixel(buf, beakX + 1, beakY, 'BEAK', W, H);
+    setPixel(buf, beakX + 2, beakY, 'BEAK', W, H);
   }
 
-  // シェーディング（y位置で明暗）
+  // ── シェーディング ──
   const topY = headCY - headRY;
-  const botY = Math.min(H - 1, legY + legH);
+  const botY = Math.min(H - 1, legY + Math.max(legH, 0));
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       if (!buf[y][x] || buf[y][x] === 'outline') continue;
+      if (buf[y][x] === 'BEAK') {
+        buf[y][x] = '#e8a020'; // くちばし色
+        continue;
+      }
+      if (buf[y][x] === 'SPOT') {
+        buf[y][x] = pal.glow; // 模様はグロー色
+        continue;
+      }
       const t = (y - topY) / Math.max(1, botY - topY);
       buf[y][x] = t < 0.25 ? pal.light : t < 0.65 ? pal.mid : pal.dark;
     }
@@ -188,6 +368,15 @@ function drawOrganic(ctx, element, seed, sizeParam = 0) {
   if (eyeX >= 0 && eyeRX < W && buf[eyeY] && buf[eyeY][eyeX] && buf[eyeY][eyeX] !== pal.outline) {
     buf[eyeY][eyeX] = pal.glow;
     buf[eyeY][eyeRX] = pal.glow;
+    // 瞳孔（大きめの目を持つ体型）
+    if (bodyType === 'avian' || bodyType === 'stout') {
+      const pupilX = eyeX + 1;
+      const pupilRX = eyeRX - 1;
+      if (buf[eyeY] && buf[eyeY][pupilX] && buf[eyeY][pupilX] !== pal.outline) {
+        buf[eyeY][pupilX] = pal.outline;
+        buf[eyeY][pupilRX] = pal.outline;
+      }
+    }
   }
 
   // 光源ハイライト（頭の左上に1〜2ピクセル）
@@ -211,6 +400,7 @@ function drawMechanical(ctx, element, seed) {
   const METAL_D = '#334155';
   const METAL_M = '#475569';
   const METAL_L = '#64748b';
+  const RIVET   = '#94a3b8';
 
   // ─ 頭部ボックス
   const headW = rng.int(8, 11);
@@ -221,6 +411,13 @@ function drawMechanical(ctx, element, seed) {
   // 頭部の明るい上面
   fillRect(buf, headX + 1, headY, headW - 2, 1, METAL_M, W, H);
 
+  // 頭部アンテナ（ランダム）
+  if (rng.bool(0.5)) {
+    const antennaX = headX + Math.floor(headW / 2);
+    setPixel(buf, antennaX, headY - 1, METAL_L, W, H);
+    setPixel(buf, antennaX, headY - 2, pal.glow, W, H);
+  }
+
   // ─ 胴体ボックス
   const bodyW = rng.int(10, 13);
   const bodyH = rng.int(9, 13);
@@ -230,16 +427,57 @@ function drawMechanical(ctx, element, seed) {
   // 胴体の明るい上面
   fillRect(buf, bodyX + 1, bodyY, bodyW - 2, 1, METAL_L, W, H);
 
-  // ─ 発光コア（胴体中央）
+  // ─ 装甲板のリベット（胴体の角に4つ）
+  setPixel(buf, bodyX + 1, bodyY + 1, RIVET, W, H);
+  setPixel(buf, bodyX + bodyW - 2, bodyY + 1, RIVET, W, H);
+  setPixel(buf, bodyX + 1, bodyY + bodyH - 2, RIVET, W, H);
+  setPixel(buf, bodyX + bodyW - 2, bodyY + bodyH - 2, RIVET, W, H);
+
+  // 追加リベット（大きい胴体なら中間にも）
+  if (bodyW >= 12) {
+    setPixel(buf, bodyX + Math.floor(bodyW / 2), bodyY + 1, RIVET, W, H);
+    setPixel(buf, bodyX + Math.floor(bodyW / 2), bodyY + bodyH - 2, RIVET, W, H);
+  }
+
+  // ─ 装甲ディテールライン（横線）
+  const detailY = bodyY + Math.floor(bodyH * 0.35);
+  fillRect(buf, bodyX + 1, detailY, bodyW - 2, 1, METAL_D, W, H);
+  const detailY2 = bodyY + Math.floor(bodyH * 0.7);
+  fillRect(buf, bodyX + 1, detailY2, bodyW - 2, 1, METAL_D, W, H);
+
+  // ─ 装甲ひびわれ（ランダム）
+  if (rng.bool(0.4)) {
+    const crackStartX = bodyX + rng.int(2, bodyW - 3);
+    const crackStartY = bodyY + rng.int(2, bodyH - 3);
+    const crackLen = rng.int(2, 4);
+    for (let i = 0; i < crackLen; i++) {
+      const cx = crackStartX + rng.int(-1, 1);
+      const cy = crackStartY + i;
+      setPixel(buf, cx, cy, METAL_D, W, H);
+    }
+  }
+
+  // ─ 発光コア（胴体中央、強化版）
   const coreX = Math.floor(W / 2) - 1;
   const coreY = bodyY + Math.floor(bodyH / 2) - 1;
-  fillRect(buf, coreX - 1, coreY - 1, 4, 4, pal.dark, W, H);
-  fillRect(buf, coreX, coreY, 2, 2, pal.mid, W, H);
-  buf[coreY][coreX] = pal.glow;
+  // コア外殻
+  fillRect(buf, coreX - 2, coreY - 1, 5, 4, pal.dark, W, H);
+  // コア内部
+  fillRect(buf, coreX - 1, coreY, 4, 2, pal.mid, W, H);
+  // コア発光中心
+  fillRect(buf, coreX, coreY, 2, 2, pal.glow, W, H);
+  // コアの上下に光漏れ
+  setPixel(buf, coreX, coreY - 1, pal.mid, W, H);
+  setPixel(buf, coreX + 1, coreY - 1, pal.mid, W, H);
+  setPixel(buf, coreX, coreY + 2, pal.mid, W, H);
+  setPixel(buf, coreX + 1, coreY + 2, pal.mid, W, H);
 
   // ─ 眼（スリット）
   const eyeY = headY + 2;
   fillRect(buf, headX + 1, eyeY, headW - 2, 1, pal.glow, W, H);
+  // 目の上下にダーク枠
+  fillRect(buf, headX + 1, eyeY - 1, headW - 2, 1, pal.dark, W, H);
+  fillRect(buf, headX + 1, eyeY + 1, headW - 2, 1, pal.dark, W, H);
 
   // ─ 腕（左右対称）
   const armW = rng.int(2, 3);
@@ -247,9 +485,21 @@ function drawMechanical(ctx, element, seed) {
   const armY = bodyY + 1;
   fillRect(buf, bodyX - armW, armY, armW, armH, METAL_D, W, H);
   fillRect(buf, bodyX + bodyW, armY, armW, armH, METAL_D, W, H);
+  // 腕の関節（明るいライン）
+  const jointY = armY + Math.floor(armH / 2);
+  fillRect(buf, bodyX - armW, jointY, armW, 1, METAL_L, W, H);
+  fillRect(buf, bodyX + bodyW, jointY, armW, 1, METAL_L, W, H);
   // 腕の先端（属性色）
-  buf[armY + armH - 1][bodyX - armW] = pal.mid;
-  buf[armY + armH - 1][bodyX + bodyW + armW - 1] = pal.mid;
+  fillRect(buf, bodyX - armW, armY + armH - 1, armW, 1, pal.mid, W, H);
+  fillRect(buf, bodyX + bodyW, armY + armH - 1, armW, 1, pal.mid, W, H);
+
+  // ─ 肩アーマー（ランダム）
+  if (rng.bool(0.5)) {
+    setPixel(buf, bodyX - armW, armY - 1, METAL_L, W, H);
+    setPixel(buf, bodyX - armW + 1, armY - 1, METAL_L, W, H);
+    setPixel(buf, bodyX + bodyW, armY - 1, METAL_L, W, H);
+    setPixel(buf, bodyX + bodyW + armW - 2, armY - 1, METAL_L, W, H);
+  }
 
   // ─ 足（左右対称）
   const legW = 2;
@@ -259,6 +509,10 @@ function drawMechanical(ctx, element, seed) {
   const leg2X = bodyX + bodyW - 2 - legW;
   fillRect(buf, leg1X, legY, legW, legH, METAL_D, W, H);
   fillRect(buf, leg2X, legY, legW, legH, METAL_D, W, H);
+  // 足の関節
+  const legJointY = legY + Math.floor(legH / 2);
+  fillRect(buf, leg1X, legJointY, legW, 1, METAL_L, W, H);
+  fillRect(buf, leg2X, legJointY, legW, 1, METAL_L, W, H);
   // 足裏
   fillRect(buf, leg1X - 1, legY + legH - 1, legW + 2, 1, METAL_M, W, H);
   fillRect(buf, leg2X - 1, legY + legH - 1, legW + 2, 1, METAL_M, W, H);
@@ -267,8 +521,9 @@ function drawMechanical(ctx, element, seed) {
   addOutline(buf, pal.outline, W, H);
 
   // アウトラインで潰れた目・コアを復元
-  fillRect(buf, headX + 1, eyeY, headW - 2, 1, pal.glow, W, H);
-  buf[coreY][coreX] = pal.glow;
+  fillRect(buf, headX + 2, eyeY, headW - 4, 1, pal.glow, W, H);
+  setPixel(buf, coreX, coreY, pal.glow, W, H);
+  setPixel(buf, coreX + 1, coreY, pal.glow, W, H);
 
   bufToCanvas(buf, ctx, W, H);
 }
@@ -296,4 +551,7 @@ export function generateMonsterSprite(canvas, monsterData) {
   } else {
     drawOrganic(ctx, element, seed, sizeParam);
   }
+
+  // 属性に応じたidleアニメーションクラスを付与
+  canvas.dataset.element = element;
 }

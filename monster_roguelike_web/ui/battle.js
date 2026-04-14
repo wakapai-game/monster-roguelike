@@ -2,6 +2,7 @@ import { appState } from '../state.js';
 import { BATTLE_ITEMS_DATA } from '../data.js';
 import { generateMonsterSprite } from './sprite-generator.js';
 import { isTutorialActive, isTutorialFullMode, hasShownStep, showTutorialStep, hideTutorialHint } from './tutorial.js';
+import { playEffect } from './effects.js';
 import {
   actionMenu, actionPhaseHeader, actionTabs,
   defendWrapper, btnDefendAction, swapWrapper, btnSwapAction, swapSelectPanel,
@@ -585,53 +586,60 @@ export function executeAction(playerNum, attacker, defender, skillId) {
   const result = appState.engine.executeSkill(attacker, defender, skillId);
   const targetSide = playerNum === 1 ? 'p2' : 'p1';
 
-  let msg = `<b>${attacker.name}</b> の <b>${result.skill}</b>! `;
-  if (result.st_damage > 0) msg += ` <span class="st-dmg">(${result.st_damage} ST DMG)</span>`;
-  if (result.hp_damage > 0) msg += ` <span class="dmg">(${result.hp_damage} HP DMG)</span>`;
+  // Determine skill element for effect
+  const skillData = appState.engine.getSkill(skillId);
+  const skillElement = skillData?.element || 'none';
 
-  if (result.is_weakness) msg += ` <span style="color:#ef4444; font-weight:bold;">★バツグン！</span>`;
-  if (result.self_damage > 0) msg += ` <br><span style="color:#f97316;">${attacker.name}は疲労で ${result.self_damage} DMGを受けた！</span>`;
-  if (result.buffs_applied) {
-    const STAT_LABEL = { atk:'ATK', def:'DEF', mag:'MAG', spd:'SPD' };
-    result.buffs_applied.forEach(b => {
-      const who = b.who === 'self' ? attacker.name : defender.name;
-      const stat = STAT_LABEL[b.stat] || b.stat;
-      const dir = b.mult >= 1 ? `<span style="color:#6ee7b7;">▲${stat}UP</span>` : `<span style="color:#fca5a5;">▼${stat}DOWN</span>`;
-      msg += ` <br>${who} ${dir}`;
-    });
-  }
+  // Play attack effect, then show damage
+  playEffect(skillElement, targetSide, () => {
+    let msg = `<b>${attacker.name}</b> の <b>${result.skill}</b>! `;
+    if (result.st_damage > 0) msg += ` <span class="st-dmg">(${result.st_damage} ST DMG)</span>`;
+    if (result.hp_damage > 0) msg += ` <span class="dmg">(${result.hp_damage} HP DMG)</span>`;
 
-  toast(msg);
-  triggerDamageAnimation(targetSide);
-  const dmgInfo = { aff: result.calc?.aff ?? 1, is_stab: result.calc?.is_stab ?? false };
-  showDamagePopup(targetSide, result.hp_damage, result.st_damage, dmgInfo);
-  if (result.self_damage > 0) showDamagePopup(playerNum === 1 ? 'p1' : 'p2', result.self_damage, 0);
-
-  // Check Death
-  if (defender.current_hp <= 0) {
-    toast(`<span style="color:#ef4444;">${defender.name} was defeated!</span>`);
-
-    const defTeam = playerNum === 1 ? appState.p2Team : appState.p1Team;
-    const nextAliveIdx = defTeam.findIndex(m => m.current_hp > 0);
-
-    if (nextAliveIdx !== -1) {
-      const swapped = appState.timeline.swapActive(playerNum === 1 ? 2 : 1, nextAliveIdx);
-      if(swapped) toast(`<span class="log-system">次の個体 ${defTeam[nextAliveIdx].name} が出撃！</span>`);
-    } else {
-      endBattle(playerNum === 1);
-      return;
+    if (result.is_weakness) msg += ` <span style="color:#ef4444; font-weight:bold;">★バツグン！</span>`;
+    if (result.self_damage > 0) msg += ` <br><span style="color:#f97316;">${attacker.name}は疲労で ${result.self_damage} DMGを受けた！</span>`;
+    if (result.buffs_applied) {
+      const STAT_LABEL = { atk:'ATK', def:'DEF', mag:'MAG', spd:'SPD' };
+      result.buffs_applied.forEach(b => {
+        const who = b.who === 'self' ? attacker.name : defender.name;
+        const stat = STAT_LABEL[b.stat] || b.stat;
+        const dir = b.mult >= 1 ? `<span style="color:#6ee7b7;">▲${stat}UP</span>` : `<span style="color:#fca5a5;">▼${stat}DOWN</span>`;
+        msg += ` <br>${who} ${dir}`;
+      });
     }
-  }
 
-  appState.timeline.onActionCompleted(playerNum);
-  updateUI();
+    toast(msg);
+    triggerDamageAnimation(targetSide);
+    const dmgInfo = { aff: result.calc?.aff ?? 1, is_stab: result.calc?.is_stab ?? false };
+    showDamagePopup(targetSide, result.hp_damage, result.st_damage, dmgInfo);
+    if (result.self_damage > 0) showDamagePopup(playerNum === 1 ? 'p1' : 'p2', result.self_damage, 0);
 
-  // チュートリアル: ST削り説明（プレイヤー攻撃でSTダメージを与えた場合）
-  if (isTutorialActive() && !hasShownStep('st-chip') && playerNum === 1 && result.st_damage > 0) {
-    showTutorialStep('st-chip', null);
-  }
+    // Check Death
+    if (defender.current_hp <= 0) {
+      toast(`<span style="color:#ef4444;">${defender.name} was defeated!</span>`);
 
-  setTimeout(() => { resumeLoop(); }, 1200);
+      const defTeam = playerNum === 1 ? appState.p2Team : appState.p1Team;
+      const nextAliveIdx = defTeam.findIndex(m => m.current_hp > 0);
+
+      if (nextAliveIdx !== -1) {
+        const swapped = appState.timeline.swapActive(playerNum === 1 ? 2 : 1, nextAliveIdx);
+        if(swapped) toast(`<span class="log-system">次の個体 ${defTeam[nextAliveIdx].name} が出撃！</span>`);
+      } else {
+        endBattle(playerNum === 1);
+        return;
+      }
+    }
+
+    appState.timeline.onActionCompleted(playerNum);
+    updateUI();
+
+    // チュートリアル: ST削り説明（プレイヤー攻撃でSTダメージを与えた場合）
+    if (isTutorialActive() && !hasShownStep('st-chip') && playerNum === 1 && result.st_damage > 0) {
+      showTutorialStep('st-chip', null);
+    }
+
+    setTimeout(() => { resumeLoop(); }, 1200);
+  });
 }
 
 export function endBattle(isPlayerWin) {
