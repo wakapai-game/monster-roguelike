@@ -47,7 +47,7 @@
       margin-bottom: 14px;
     }
 
-    /* モンスターカード */
+    /* ジュウマカード */
     .test-monster-card {
       background: rgba(30,41,59,0.7); border: 1px solid rgba(255,255,255,0.1);
       border-radius: 12px; padding: 14px; position: relative; overflow: visible;
@@ -437,7 +437,7 @@
       <h2>共通システム <span class="badge badge-common">全案共通</span></h2>
 
       <h3>ATB（アクティブタイムバトル）</h3>
-      <p>毎ティック、各モンスターの ATBゲージ が <strong>SPD 値</strong> 分ずつ増加する。ゲージが 100 に達したモンスターの行動順が来る。行動完了後はゲージが <strong>0 にリセット</strong> される。</p>
+      <p>毎ティック、各ジュウマの ATBゲージ が <strong>SPD 値</strong> 分ずつ増加する。ゲージが 100 に達したジュウマの行動順が来る。行動完了後はゲージが <strong>0 にリセット</strong> される。</p>
       <div class="formula-box">
 <span class="comment">// Timelineクラス tick() より</span>
 <span class="key">gauge</span> += <span class="key">stats.spd</span>
@@ -446,8 +446,8 @@
       </div>
       <div class="callout info">SPD が高いほど連続行動しやすい。「速攻 vs 耐久」プリセットでは SPD 50 vs 30。</div>
 
-      <h3>控えモンスター ST 自動回復</h3>
-      <p>いずれかのモンスターが行動を完了するたびに、<strong>同チームの控えモンスター</strong>の ST が max_st の <strong>5%</strong> 回復する。</p>
+      <h3>控えジュウマ ST 自動回復</h3>
+      <p>いずれかのジュウマが行動を完了するたびに、<strong>同チームの控えジュウマ</strong>の ST が max_st の <strong>5%</strong> 回復する。</p>
       <div class="formula-box">
 <span class="comment">// Timeline onActionCompleted() より</span>
 <span class="key">bench_monster.current_st</span> += <span class="key">stats.max_st</span> * <span class="val">0.05</span>
@@ -480,7 +480,7 @@ effPow  = is_stab ? base_power × <span class="val">1.5</span> : base_power
       </div>
 
       <h3>連続行動ペナルティ（ST コスト増加）</h3>
-      <p>自分のターンが連続するたびに、<strong>攻撃カテゴリのスキル</strong>の ST 消費が増加する。素早さが高いモンスターが一方的に攻め続けることへの抑制として機能する。</p>
+      <p>自分のターンが連続するたびに、<strong>攻撃カテゴリのスキル</strong>の ST 消費が増加する。素早さが高いジュウマが一方的に攻め続けることへの抑制として機能する。</p>
       <div class="formula-box">
 <span class="comment">// attacker.consecutive_count = 連続行動回数（1から始まる）</span>
 extra_cost = (<span class="key">consecutive_count</span> - 1) × <span class="val">5</span>

@@ -1,6 +1,7 @@
 import { appState } from '../state.js';
 import { SKILLS, FOOD_DATA } from '../data.js';
 import { Monster } from '../game.js';
+import { generateMonsterSprite } from './sprite-generator.js';
 import {
   switchScreen,
   screenInventory, screenParty, screenHub,
@@ -73,7 +74,19 @@ export function selectInvItem(element, type, index, name) {
     appState.globalRoster.forEach(m => {
         const card = document.createElement('div');
         card.className = 'roster-card';
-        card.innerHTML = `<h4>${m.name}</h4><p style="font-size:0.75rem; color:#94a3b8; margin-top:5px;">HP:${m.base_stats.hp} ST:${m.base_stats.max_st}</p>`;
+        try {
+          const offscreen = document.createElement('canvas');
+          generateMonsterSprite(offscreen, m);
+          const spriteImg = document.createElement('img');
+          spriteImg.src = offscreen.toDataURL();
+          spriteImg.style.cssText = 'display:block; width:48px; height:48px; margin:0 auto 4px; image-rendering:pixelated; image-rendering:crisp-edges;';
+          card.appendChild(spriteImg);
+        } catch(e) {
+          console.warn('sprite error:', m.id, e);
+        }
+        const info = document.createElement('div');
+        info.innerHTML = `<h4>${m.name}</h4><p style="font-size:0.75rem; color:#94a3b8; margin-top:5px;">HP:${m.base_stats.hp} ST:${m.base_stats.max_st}</p>`;
+        card.appendChild(info);
         card.onclick = () => applyItemToMonster(m);
         invRosterGrid.appendChild(card);
     });
@@ -273,6 +286,18 @@ export function renderParty() {
         orderBar.appendChild(leftGroup);
         orderBar.appendChild(moveBtns);
         card.appendChild(orderBar);
+
+        // スプライト（offscreen→img）
+        try {
+          const offscreen = document.createElement('canvas');
+          generateMonsterSprite(offscreen, mc);
+          const spriteImg = document.createElement('img');
+          spriteImg.src = offscreen.toDataURL();
+          spriteImg.style.cssText = 'display:block; width:80px; height:80px; margin:0 auto 10px; image-rendering:pixelated; image-rendering:crisp-edges;';
+          card.appendChild(spriteImg);
+        } catch(e) {
+          console.warn('sprite error:', mc.id, e);
+        }
 
         // ステータス
         const statsDiv = document.createElement('div');

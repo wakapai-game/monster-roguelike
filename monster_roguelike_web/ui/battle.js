@@ -1,5 +1,6 @@
 import { appState } from '../state.js';
 import { BATTLE_ITEMS_DATA } from '../data.js';
+import { generateMonsterSprite } from './sprite-generator.js';
 import { isTutorialActive, isTutorialFullMode, hasShownStep, showTutorialStep, hideTutorialHint } from './tutorial.js';
 import {
   actionMenu, actionPhaseHeader, actionTabs,
@@ -34,6 +35,15 @@ export function triggerDamageAnimation(side) {
     card.style.animation = 'none';
     card.offsetHeight;
     card.style.animation = 'shake 0.4s ease';
+
+    // スプライトに hurt アニメーション
+    const sprite = document.getElementById(`${side}-sprite`);
+    if (sprite) {
+      sprite.classList.remove('sprite-hurt');
+      sprite.offsetHeight; // reflow
+      sprite.classList.add('sprite-hurt');
+      setTimeout(() => sprite.classList.remove('sprite-hurt'), 400);
+    }
 }
 
 function showDamagePopup(side, hpDmg, stDmg, info = {}) {
@@ -128,6 +138,13 @@ export function updateUI(onlyGauges = false) {
   }
 
   const setCard = (side, activeMonster) => {
+      // スプライト描画
+      const spriteCanvas = document.getElementById(`${side}-sprite`);
+      if (spriteCanvas) {
+        spriteCanvas.classList.remove('sprite-hurt');
+        generateMonsterSprite(spriteCanvas, activeMonster);
+      }
+
       document.getElementById(`${side}-name`).innerText = activeMonster.name;
 
       const elemBadge = document.getElementById(`${side}-elem`);

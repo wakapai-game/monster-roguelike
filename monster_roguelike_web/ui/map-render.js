@@ -50,7 +50,7 @@ export function handleNodeClick(node, onBattleStart) {
 
   if (node.type === 'rest') {
       // Resting heals global roster (mocked here, then immediately unlocks)
-      alert("キャンプでモンスターの負傷が癒えた！（演出省略）");
+      alert("キャンプでジュウマの負傷が癒えた！（演出省略）");
       appState.mapGenerator.unlockNextNodes(node.id);
       renderMap(onBattleStart);
       return;

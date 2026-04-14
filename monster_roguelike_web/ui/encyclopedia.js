@@ -1,4 +1,5 @@
 import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA, TUTORIAL_ENEMY } from '../data.js';
+import { generateMonsterSprite } from './sprite-generator.js';
 
 const overlay = document.getElementById('screen-encyclopedia');
 const content = document.getElementById('enc-content');
@@ -47,7 +48,21 @@ function _monsterCard(m) {
     const s = SKILLS.find(sk => sk.id === sid);
     return s ? s.name : sid;
   }).join(' / ');
-  card.innerHTML = `
+
+  // スプライト（offscreenで描画→img要素に変換）
+  try {
+    const offscreen = document.createElement('canvas');
+    generateMonsterSprite(offscreen, m);
+    const img = document.createElement('img');
+    img.src = offscreen.toDataURL();
+    img.style.cssText = 'display:block; width:64px; height:64px; margin:0 auto 8px; image-rendering:pixelated; image-rendering:crisp-edges;';
+    card.appendChild(img);
+  } catch(e) {
+    console.warn('sprite error:', m.id, e);
+  }
+
+  // テキスト情報
+  card.insertAdjacentHTML('beforeend', `
     <div class="enc-card-header">
       <span class="elem-badge elem-${m.main_element}">${m.main_element.toUpperCase()}</span>
       ${subBadge}
@@ -62,7 +77,7 @@ function _monsterCard(m) {
       <span>SPD: ${m.base_stats.spd}</span>
     </div>
     <div class="enc-skills">技: ${skillNames}</div>
-  `;
+  `);
   return card;
 }
 

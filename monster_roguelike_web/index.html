@@ -37,7 +37,7 @@
           <button id="btn-close-encyclopedia" class="btn skill-btn">✕ 閉じる</button>
         </div>
         <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
-          <button class="btn skill-btn active-tab" data-enc-tab="monsters">モンスター</button>
+          <button class="btn skill-btn active-tab" data-enc-tab="monsters">ジュウマ</button>
           <button class="btn skill-btn inactive-tab" data-enc-tab="enemies">カラクリ</button>
           <button class="btn skill-btn inactive-tab" data-enc-tab="skills">技</button>
           <button class="btn skill-btn inactive-tab" data-enc-tab="items">アイテム</button>
@@ -60,14 +60,14 @@
           <p>大気が回復し、地上に戻ってから100年になる。</p>
           <p>だが地上には、カラクリが巣くっていた。</p>
           <p>機械のような生き物だ。人間を見ると、問答無用で襲いかかってくる。</p>
-          <p>地上にはもう一種類の生き物もいた。モンスターだ。育てれば、仲間になる。</p>
-          <p>モンスターを育て、カラクリと戦いながら地上を開拓する者を、ビーステイカーと呼ぶ。</p>
+          <p>地上にはもう一種類の生き物もいた。ジュウマだ。育てれば、仲間になる。</p>
+          <p>ジュウマを育て、カラクリと戦いながら地上を開拓する者を、ビーステイカーと呼ぶ。</p>
         </div>
         <div id="story-page-3" class="story-content hide">
           <p>ギルドを取り仕切るのはコルクだ。無愛想だが、頼りになる。</p>
           <p style="color:#fbbf24;">コルク：「新顔か。ビーステイカーとして登録しに来たか？」</p>
           <p style="color:#94a3b8;">ビーステイカー：「はい。地上を開拓しに来ました。」</p>
-          <p style="color:#fbbf24;">コルク：「ひとりじゃカラクリには勝てない。モンスターを育てて、共に戦うしかない。それがここで生きる方法だ。」</p>
+          <p style="color:#fbbf24;">コルク：「ひとりじゃカラクリには勝てない。ジュウマを育てて、共に戦うしかない。それがここで生きる方法だ。」</p>
           <p style="color:#fbbf24;">コルク：「問題ない。問題があっても問題ない。」</p>
         </div>
       </div>
@@ -85,10 +85,10 @@
       <button id="btn-submit-name" class="btn primary-btn pulse-glow">決定</button>
     </section>
 
-    <!-- 画面0.6.5: モンスター受け渡しイベント画面 -->
+    <!-- 画面0.6.5: ジュウマ受け渡しイベント画面 -->
     <section id="screen-starter-event" class="screen full-center hide glass-panel">
       <h2>出発のまえに</h2>
-      <p style="color: #94a3b8; margin-bottom: 20px;" id="starter-event-msg">コルク：「モンスターを3体やる。仲間にしろ。問題ない。」</p>
+      <p style="color: #94a3b8; margin-bottom: 20px;" id="starter-event-msg">コルク：「ジュウマを3体やる。仲間にしろ。問題ない。」</p>
       <div id="starter-event-grid" class="monster-grid" style="margin-bottom: 30px; justify-content: center;"></div>
       <button id="btn-starter-event-proceed" class="btn primary-btn pulse-glow">拠点へ進む</button>
     </section>
@@ -270,7 +270,7 @@
       </div>
     </div>
 
-    <!-- モンスター詳細モーダル（バトル中） -->
+    <!-- ジュウマ詳細モーダル（バトル中） -->
     <div id="monster-detail-overlay" class="monster-detail-overlay hide">
       <div class="monster-detail-panel glass-panel">
         <div class="monster-detail-header">
@@ -292,6 +292,7 @@
         <div class="side-panel p1-side glass-panel">
           <h3>Your Team</h3>
           <div class="active-monster-card" id="p1-active-card">
+            <canvas id="p1-sprite" class="monster-sprite-canvas"></canvas>
             <div class="card-header">
               <h4 id="p1-name">-</h4>
               <span class="elem-badge" id="p1-elem">-</span>
@@ -323,6 +324,7 @@
         <div class="side-panel p2-side glass-panel">
           <h3>Opponent</h3>
           <div class="active-monster-card" id="p2-active-card">
+            <canvas id="p2-sprite" class="monster-sprite-canvas p2-sprite"></canvas>
             <div class="card-header">
               <h4 id="p2-name">-</h4>
               <span class="elem-badge" id="p2-elem">-</span>
@@ -356,7 +358,7 @@
           </div>
 
           <div id="swap-wrapper" style="margin-top:10px;">
-            <button id="btn-swap-action" class="btn" style="width:100%; padding: 10px; background: #475569; color: white; border: none; font-weight: bold; cursor: pointer;">🔄 モンスター交代</button>
+            <button id="btn-swap-action" class="btn" style="width:100%; padding: 10px; background: #475569; color: white; border: none; font-weight: bold; cursor: pointer;">🔄 ジュウマ交代</button>
             <div id="swap-select-panel" class="hide swap-select-panel"></div>
           </div>
         </div>
@@ -365,7 +367,7 @@
     </section>
   </main>
 
-  <button id="btn-monsters-global" class="help-float-btn monsters-float-btn" title="モンスター図鑑">図鑑</button>
+  <button id="btn-monsters-global" class="help-float-btn monsters-float-btn" title="ジュウマ図鑑">図鑑</button>
   <button id="btn-affinity-global" class="help-float-btn affinity-float-btn" title="属性相性早見表">属性</button>
   <button id="btn-help-global" class="help-float-btn" title="ゲームシステムを確認">?</button>
 

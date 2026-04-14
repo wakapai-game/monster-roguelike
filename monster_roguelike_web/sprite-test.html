@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>スプライト試作確認</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: monospace;
+      padding: 32px;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 24px; color: #fbbf24; letter-spacing: 2px; }
+    h2 { font-size: 0.9rem; color: #94a3b8; margin: 24px 0 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 16px;
+      width: 120px;
+    }
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      width: 96px;
+      height: 96px;
+      /* idle アニメ: 上下バウンス */
+      animation: idle-bob 1.2s ease-in-out infinite;
+    }
+    @keyframes idle-bob {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-3px); }
+    }
+    .name  { font-size: 0.75rem; color: #f8fafc; }
+    .elem  { font-size: 0.65rem; color: #64748b; }
+    .badge {
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.1);
+    }
+    /* 属性バッジ色 */
+    .fire    { color: #ef4444; }
+    .water   { color: #3b82f6; }
+    .thunder { color: #f59e0b; }
+    .earth   { color: #d97706; }
+    .ice     { color: #0ea5e9; }
+    .wind    { color: #16a34a; }
+    .light   { color: #fbbf24; }
+    .dark    { color: #a855f7; }
+
+    .sep { width: 100%; height: 1px; background: rgba(255,255,255,0.07); margin: 8px 0; }
+    .note { font-size: 0.72rem; color: #475569; margin-top: 32px; line-height: 1.8; }
+    .regenerate-btn {
+      margin-bottom: 24px;
+      padding: 8px 20px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #94a3b8;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    .regenerate-btn:hover { background: #334155; color: #f8fafc; }
+  </style>
+</head>
+<body>
+
+<h1>🎮 スプライト試作 — プロシージャル生成</h1>
+<button class="regenerate-btn" onclick="location.reload()">↺ 再生成（リロード）</button>
+
+<h2>ジュウマ（味方・有機的デザイン）</h2>
+<div class="grid" id="monster-grid"></div>
+
+<h2>カラクリ（敵・機械的デザイン）</h2>
+<div class="grid" id="enemy-grid"></div>
+
+<div class="note">
+  ・各スプライトは 32×32px を CSS で 3倍（96px）表示<br>
+  ・image-rendering: pixelated でシャープ拡大<br>
+  ・IDベースのシード値で毎回同じ形を生成（パラメータを変えると形が変わる）<br>
+  ・idle アニメーション：CSS transform translateY でバウンス
+</div>
+
+<script type="module">
+import { generateMonsterSprite, ELEMENT_PALETTES } from './ui/sprite-generator.js';
+
+const MONSTERS = [
+  { id: 'm_001', name: 'ランタン', main_element: 'fire',    sub: 'none',  params: { size: 0 } },
+  { id: 'm_002', name: 'マッド',   main_element: 'water',   sub: 'earth', params: { size: 2 } },
+  { id: 'm_003', name: 'サニー',   main_element: 'thunder', sub: 'wind',  params: { size: -2 } },
+  { id: 'm_004', name: 'タロ',     main_element: 'earth',   sub: 'none',  params: { size: 5 } },
+  { id: 'm_005', name: 'ミスト',   main_element: 'dark',    sub: 'none',  params: { size: -3 } },
+  { id: 'm_006', name: 'あかり',   main_element: 'light',   sub: 'fire',  params: { size: 0 } },
+];
+
+const ENEMIES = [
+  { id: 'e_001',      name: 'ヒカラ',       main_element: 'fire',    sub: 'none',  params: {} },
+  { id: 'e_002',      name: 'ドロカラ',     main_element: 'water',   sub: 'earth', params: {} },
+  { id: 'e_003',      name: 'ライカラ',     main_element: 'thunder', sub: 'wind',  params: {} },
+  { id: 'e_boss_01',  name: 'ダイカラ',     main_element: 'earth',   sub: 'none',  params: {} },
+  { id: 'e_tutorial', name: '修行用ダミー', main_element: 'ice',     sub: 'none',  params: {} },
+];
+
+function makeCard(data, container) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const canvas = document.createElement('canvas');
+  generateMonsterSprite(canvas, data);
+
+  const name = document.createElement('div');
+  name.className = 'name';
+  name.textContent = data.name;
+
+  const elem = document.createElement('div');
+  elem.className = `badge ${data.main_element}`;
+  elem.textContent = data.main_element + (data.sub && data.sub !== 'none' ? ` / ${data.sub}` : '');
+
+  card.append(canvas, name, elem);
+  container.appendChild(card);
+}
+
+const mGrid = document.getElementById('monster-grid');
+const eGrid = document.getElementById('enemy-grid');
+MONSTERS.forEach(m => makeCard(m, mGrid));
+ENEMIES.forEach(e => makeCard(e, eGrid));
+</script>
+</body>
+</html>

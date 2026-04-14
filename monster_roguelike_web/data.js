@@ -30,7 +30,7 @@ const SKILLS = [
   { id: "slow", name: "スロウ", description: "敵の行動ゲージを50削り、ATKを0.7倍に低下（2ターン）。", category: "attack", type: "magic", element: "none", cost_st: 20, effects: [{ type: "delay_gauge", value: 50 }, { type: "buff_stat", stat: "atk", mult: 0.7, target: "enemy", turns: 2 }] }
 ];
 
-// モンスターベースデータ（味方用）
+// ジュウマベースデータ（味方用）
 const MONSTERS_DATA = [
   { id: "m_001", name: "ランタン", main_element: "fire", sub_element: "none", base_stats: {hp: 2000, atk: 40, def: 35, mag: 20, spd: 30, max_st: 150, st_rec: 5}, skills: ["strike", "fireball"] },
   { id: "m_002", name: "マッド", main_element: "water", sub_element: "earth", base_stats: {hp: 2500, atk: 35, def: 100, mag: 15, spd: 26, max_st: 150, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
@@ -40,7 +40,7 @@ const MONSTERS_DATA = [
   { id: "m_006", name: "あかり", main_element: "light", sub_element: "fire", base_stats: {hp: 2200, atk: 40, def: 45, mag: 30, spd: 20, max_st: 150, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] }
 ];
 
-// 敵専用モンスターデータ（序盤向けにステータス低下・野生化）
+// 敵専用ジュウマデータ（序盤向けにステータス低下・野生化）
 const ENEMY_DATA = [
   { id: "e_001", name: "ヒカラ", main_element: "fire", sub_element: "none", base_stats: {hp: 700, atk: 25, def: 15, mag: 10, spd: 20, max_st: 100, st_rec: 3}, skills: ["strike", "fireball"] },
   { id: "e_002", name: "ドロカラ", main_element: "water", sub_element: "earth", base_stats: {hp: 1200, atk: 18, def: 45, mag: 5, spd: 8, max_st: 100, st_rec: 5}, skills: ["strike", "water_gun"] },
@@ -58,7 +58,7 @@ const BATTLE_ITEMS_DATA = [
   { id: "bitem_bomb", name: "バクダン", type: "item_battle", description: "敵に30の防御無視ダメージ", effect: { type: "damage_hp_direct", value: 30 } }
 ];
 
-// えさ（モンスターに与えられる、最大10回まで。ベースステータスと大きさ・賢さを直接変動させる）
+// えさ（ジュウマに与えられる、最大10回まで。ベースステータスと大きさ・賢さを直接変動させる）
 // effect.base_stats: ベースステータスへの加算値
 // effect.params: params（size / intelligence）への加算値
 const FOOD_DATA = [

@@ -411,7 +411,7 @@ function generateRosterFromEgg(type) {
   };
   const biases = biasMap[type];
 
-  // 手持ちに既にいるモンスターの base ID を除外
+  // 手持ちに既にいるジュウマの base ID を除外
   const ownedBaseIds = new Set(
     MONSTERS_DATA
       .filter(m => (appState.globalRoster || []).some(r => r.id.startsWith(m.id)))

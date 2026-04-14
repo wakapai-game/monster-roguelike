@@ -185,6 +185,55 @@ header h1 {
   overflow: hidden;
 }
 
+/* ─── スプライト canvas ─── */
+.monster-sprite-canvas {
+  display: block;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 10px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  animation: sprite-idle-bob 1.2s ease-in-out infinite;
+}
+/* 図鑑カード内：少し小さめ */
+.enc-sprite {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 6px;
+}
+/* ロスター選択カード内：小さめ */
+.roster-sprite {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 4px;
+}
+/* パーティ画面：中サイズ */
+.party-sprite {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 10px;
+}
+.p2-sprite {
+  transform: scaleX(-1);
+  animation: sprite-idle-bob-mirror 1.2s ease-in-out infinite;
+}
+@keyframes sprite-idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+@keyframes sprite-idle-bob-mirror {
+  0%, 100% { transform: scaleX(-1) translateY(0); }
+  50%       { transform: scaleX(-1) translateY(-3px); }
+}
+.monster-sprite-canvas.sprite-hurt {
+  animation: sprite-hurt 0.4s steps(2) 1;
+}
+@keyframes sprite-hurt {
+  0%   { filter: brightness(3) saturate(0); transform: translateX(-3px); }
+  50%  { filter: brightness(3) saturate(0); transform: translateX(3px); }
+  100% { filter: none; transform: translateX(0); }
+}
+
 .active-monster-card {
   background: rgba(0,0,0,0.3);
   padding: 20px;
@@ -259,7 +308,7 @@ header h1 {
   overflow-y: auto;
 }
 
-/* モンスター詳細モーダル */
+/* ジュウマ詳細モーダル */
 .monster-detail-overlay {
   position: fixed;
   inset: 0;
@@ -1185,7 +1234,7 @@ header h1 {
   .center-panel { grid-column: 1 / -1; grid-row: 2; order: 0; padding: 8px; gap: 6px; }
   #action-menu  { grid-column: 1 / -1; grid-row: 3; }
 
-  /* コンパクトなモンスターカード */
+  /* コンパクトなジュウマカード */
   .active-monster-card { padding: 8px; }
   .active-monster-card h4 { font-size: 0.85rem; }
   .card-header { margin-bottom: 6px; padding-bottom: 6px; }
@@ -1282,7 +1331,7 @@ header h1 {
   /* 図鑑モーダル */
   .enc-panel { max-height: 95dvh; padding: 15px; }
 
-  /* モンスターグリッド */
+  /* ジュウマグリッド */
   .monster-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 10px 0; }
 }
 
@@ -1493,7 +1542,7 @@ header h1 {
   }
 }
 
-/* ---- モンスター図鑑 ---- */
+/* ---- ジュウマ図鑑 ---- */
 .monster-dex-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));

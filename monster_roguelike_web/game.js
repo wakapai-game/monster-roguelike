@@ -131,7 +131,7 @@ export class Timeline {
       }
     });
 
-    // バフ/デバフのターン数を全モンスター分デクリメント
+    // バフ/デバフのターン数を全ジュウマ分デクリメント
     [...this.p1_monsters, ...this.p2_monsters].forEach(m => {
       if (!m.buffs) return;
       for (const stat of Object.keys(m.buffs)) {
