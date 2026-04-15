@@ -1,6 +1,7 @@
 import { appState } from '../state.js';
 import { SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA } from '../data.js';
 import { mapNodesContainer, mapLinesContainer, rosterGrid, screenMap, screenSelection, switchScreen } from './dom.js';
+import { generateItemIcon } from './sprite-generator.js';
 
 export function generateRewards() {
     const rBoxes = document.getElementById('reward-boxes');
@@ -21,7 +22,23 @@ export function generateRewards() {
 
         const box = document.createElement('div');
         box.className = 'reward-box reward-box-selectable';
-        box.innerHTML = `<div class="reward-box-type">${pool.label}</div><h4>${item.name}</h4>`;
+
+        const typeDiv = document.createElement('div');
+        typeDiv.className = 'reward-box-type';
+        typeDiv.textContent = pool.label;
+
+        const iconCanvas = document.createElement('canvas');
+        iconCanvas.width = 24;
+        iconCanvas.height = 24;
+        iconCanvas.style.cssText = 'display:block;margin:8px auto 4px;image-rendering:pixelated;image-rendering:crisp-edges;width:48px;height:48px;';
+        generateItemIcon(iconCanvas, item.id, pool.type, item.element || 'none');
+
+        const nameH4 = document.createElement('h4');
+        nameH4.textContent = item.name;
+
+        box.appendChild(typeDiv);
+        box.appendChild(iconCanvas);
+        box.appendChild(nameH4);
         box.onclick = () => {
             // 選択済みを解除してこのboxを選択
             rBoxes.querySelectorAll('.reward-box-selectable').forEach(b => b.classList.remove('selected'));

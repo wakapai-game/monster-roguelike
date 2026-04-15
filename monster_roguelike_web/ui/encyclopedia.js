@@ -1,5 +1,5 @@
 import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA, TUTORIAL_ENEMY } from '../data.js';
-import { generateMonsterSprite } from './sprite-generator.js';
+import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
 
 const overlay = document.getElementById('screen-encyclopedia');
 const content = document.getElementById('enc-content');
@@ -41,9 +41,6 @@ function renderTab(tab) {
 function _monsterCard(m) {
   const card = document.createElement('div');
   card.className = 'enc-card';
-  const subBadge = m.sub_element !== 'none'
-    ? `<span class="elem-badge elem-${m.sub_element}">${m.sub_element.toUpperCase()}</span>`
-    : '';
   const skillNames = m.skills.map(sid => {
     const s = SKILLS.find(sk => sk.id === sid);
     return s ? s.name : sid;
@@ -62,12 +59,18 @@ function _monsterCard(m) {
   }
 
   // テキスト情報
+  const header = document.createElement('div');
+  header.className = 'enc-card-header';
+  header.appendChild(createElementBadge(m.main_element));
+  if (m.sub_element !== 'none') {
+    header.appendChild(createElementBadge(m.sub_element));
+  }
+  const nameStrong = document.createElement('strong');
+  nameStrong.textContent = m.name;
+  header.appendChild(nameStrong);
+  card.appendChild(header);
+
   card.insertAdjacentHTML('beforeend', `
-    <div class="enc-card-header">
-      <span class="elem-badge elem-${m.main_element}">${m.main_element.toUpperCase()}</span>
-      ${subBadge}
-      <strong>${m.name}</strong>
-    </div>
     <div class="enc-stats">
       <span>HP: ${m.base_stats.hp}</span>
       <span>ST: ${m.base_stats.max_st}</span>
@@ -96,17 +99,22 @@ function renderSkills() {
     const card = document.createElement('div');
     card.className = 'enc-card';
     const color = catColor[s.category] || '#64748b';
-    const elemTxt = s.element !== 'none' ? `　属性: <span class="elem-badge elem-${s.element}">${s.element.toUpperCase()}</span>` : '';
     card.innerHTML = `
       <div class="enc-card-header">
         <span class="enc-badge" style="background:${color};">${s.category.toUpperCase()}</span>
         <strong>${s.name}</strong>
         <span style="margin-left:auto; color:#94a3b8; font-size:0.85rem;">ST コスト: ${s.cost_st}</span>
       </div>
-      <div style="font-size:0.85rem; color:#cbd5e1; margin-top:6px;">
-        タイプ: ${s.type}${elemTxt}
+      <div class="enc-skill-type-row" style="font-size:0.85rem; color:#cbd5e1; margin-top:6px;">
+        タイプ: ${s.type}
       </div>
     `;
+    if (s.element !== 'none') {
+      const typeRow = card.querySelector('.enc-skill-type-row');
+      const elemLabel = document.createTextNode('\u3000属性: ');
+      typeRow.appendChild(elemLabel);
+      typeRow.appendChild(createElementBadge(s.element));
+    }
     content.appendChild(card);
   });
 }

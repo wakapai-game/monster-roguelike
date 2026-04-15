@@ -1,7 +1,7 @@
 import { appState } from '../state.js';
 import { SKILLS, FOOD_DATA } from '../data.js';
 import { Monster } from '../game.js';
-import { generateMonsterSprite } from './sprite-generator.js';
+import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
 import {
   switchScreen,
   screenInventory, screenParty, screenHub,
@@ -303,8 +303,8 @@ export function renderParty() {
         const statsDiv = document.createElement('div');
         statsDiv.innerHTML = `
             <div>
-                <h3 style="margin-bottom:5px;">${mc.name} <span class="elem-badge elem-${mc.main_element}" style="float:right;">${mc.main_element.toUpperCase()}</span></h3>
-                <p style="font-size:0.8rem; color:#94a3b8;">${mc.sub_element !== 'none' ? `Sub: ${mc.sub_element.toUpperCase()}` : ''}</p>
+                <h3 style="margin-bottom:5px;">${mc.name} <span class="party-main-elem-placeholder" style="float:right;"></span></h3>
+                <p class="party-sub-elem-container" style="font-size:0.8rem; color:#94a3b8;"></p>
             </div>
             <div class="party-stat-grid">
                 <div class="stat-row"><span class="stat-label">HP</span> <span class="stat-val">${mc.stats.hp}</span></div>
@@ -321,6 +321,13 @@ export function renderParty() {
                 <div class="stat-row"><span class="stat-label">えさ回数</span> <span class="stat-val" style="color:${(mc.feed_count||0)>=10?'#ef4444':'#94a3b8'};">${mc.feed_count||0} / 10</span></div>
             </div>
         `;
+        const mainElemPlaceholder = statsDiv.querySelector('.party-main-elem-placeholder');
+        if (mainElemPlaceholder) mainElemPlaceholder.replaceWith(createElementBadge(mc.main_element));
+        const subElemContainer = statsDiv.querySelector('.party-sub-elem-container');
+        if (subElemContainer && mc.sub_element !== 'none') {
+            subElemContainer.textContent = 'Sub: ';
+            subElemContainer.appendChild(createElementBadge(mc.sub_element));
+        }
         card.appendChild(statsDiv);
 
         // バトル技（読み取り専用 + 技設定ボタン）

@@ -18,6 +18,7 @@ import { toast, updateUI, resumeLoop } from './ui/battle.js';
 import { openEncyclopedia } from './ui/encyclopedia.js';
 import { saveGame, loadGame, deleteSave } from './persistence.js';
 import { openHelp, openHelpTab, initHelp } from './ui/help.js';
+import { generateNPCSprite } from './ui/sprite-generator.js';
 
 // ---- Help System ----
 initHelp();
@@ -27,6 +28,35 @@ const _btnAffinity = document.getElementById('btn-affinity-global');
 if (_btnAffinity) _btnAffinity.onclick = () => openHelpTab('affinity');
 const _btnMonsters = document.getElementById('btn-monsters-global');
 if (_btnMonsters) _btnMonsters.onclick = () => openEncyclopedia();
+
+// ---- Cork NPC Portraits ----
+function initCorkPortraits() {
+  document.querySelectorAll('.screen').forEach(screen => {
+    let inserted = false;
+    screen.querySelectorAll('p').forEach(p => {
+      if (p.closest('.story-content')) return;
+      if (p.textContent.startsWith('コルク') && !inserted) {
+        if (!p.previousElementSibling?.classList.contains('cork-portrait-wrap')) {
+          const wrap = document.createElement('div');
+          wrap.className = 'cork-portrait-wrap';
+          const c = document.createElement('canvas');
+          c.width = 32;
+          c.height = 32;
+          c.className = 'cork-portrait';
+          generateNPCSprite(c, 'cork');
+          wrap.appendChild(c);
+          const label = document.createElement('span');
+          label.className = 'cork-name-label';
+          label.textContent = 'コルク';
+          wrap.appendChild(label);
+          p.parentNode.insertBefore(wrap, p);
+          inserted = true;
+        }
+      }
+    });
+  });
+}
+initCorkPortraits();
 
 // ---- Save / Load ----
 

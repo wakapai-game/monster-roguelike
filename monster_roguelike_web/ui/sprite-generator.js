@@ -555,3 +555,514 @@ export function generateMonsterSprite(canvas, monsterData) {
   // 属性に応じたidleアニメーションクラスを付与
   canvas.dataset.element = element;
 }
+
+// ─── 属性アイコン（16×16） ─────────────────────────────────────
+
+export function generateElementIcon(canvas, element) {
+  canvas.width = 16;
+  canvas.height = 16;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const pal = ELEMENT_PALETTES[element] || ELEMENT_PALETTES.none;
+
+  const W = 16, H = 16;
+  const buf = makeBuffer(W, H);
+
+  switch (element) {
+    case 'fire': {
+      // 炎：底が広く上が細い
+      setPixel(buf, 7, 2, pal.glow, W, H);
+      setPixel(buf, 8, 2, pal.glow, W, H);
+      setPixel(buf, 7, 3, pal.light, W, H);
+      setPixel(buf, 8, 3, pal.light, W, H);
+      setPixel(buf, 6, 4, pal.light, W, H);
+      setPixel(buf, 7, 4, pal.mid, W, H);
+      setPixel(buf, 8, 4, pal.mid, W, H);
+      setPixel(buf, 9, 4, pal.light, W, H);
+      setPixel(buf, 6, 5, pal.mid, W, H);
+      setPixel(buf, 7, 5, pal.glow, W, H);
+      setPixel(buf, 8, 5, pal.glow, W, H);
+      setPixel(buf, 9, 5, pal.mid, W, H);
+      for (let y = 6; y <= 9; y++) {
+        for (let x = 5; x <= 10; x++) {
+          const c = (x >= 7 && x <= 8) ? pal.glow : pal.mid;
+          setPixel(buf, x, y, c, W, H);
+        }
+      }
+      for (let x = 5; x <= 10; x++) setPixel(buf, x, 10, pal.mid, W, H);
+      for (let x = 4; x <= 11; x++) setPixel(buf, x, 11, pal.dark, W, H);
+      for (let x = 5; x <= 10; x++) setPixel(buf, x, 12, pal.dark, W, H);
+      for (let x = 6; x <= 9; x++) setPixel(buf, x, 13, pal.dark, W, H);
+      break;
+    }
+    case 'water': {
+      // 水滴：上半分が丸、下が尖る
+      fillEllipse(buf, 8, 7, 4, 4, pal.mid, W, H);
+      fillEllipse(buf, 8, 6, 3, 3, pal.light, W, H);
+      setPixel(buf, 8, 3, pal.light, W, H);
+      setPixel(buf, 7, 4, pal.mid, W, H);
+      setPixel(buf, 9, 4, pal.mid, W, H);
+      setPixel(buf, 8, 12, pal.dark, W, H);
+      setPixel(buf, 7, 11, pal.dark, W, H);
+      setPixel(buf, 9, 11, pal.dark, W, H);
+      // ハイライト
+      setPixel(buf, 6, 6, pal.glow, W, H);
+      break;
+    }
+    case 'thunder': {
+      // 稲妻：Z字ジグザグ
+      const pts = [
+        [6,2],[7,2],[8,2],[9,2],
+        [8,3],[9,3],
+        [7,4],[8,4],
+        [6,5],[7,5],[8,5],[9,5],
+        [6,6],[7,6],
+        [7,7],[8,7],
+        [6,8],[7,8],[8,8],[9,8],
+        [8,9],[9,9],
+        [7,10],[8,10],
+        [6,11],[7,11],
+        [7,12],[8,12],
+      ];
+      for (const [x, y] of pts) setPixel(buf, x, y, pal.mid, W, H);
+      // 中心を明るく
+      setPixel(buf, 7, 5, pal.glow, W, H);
+      setPixel(buf, 8, 5, pal.glow, W, H);
+      setPixel(buf, 7, 8, pal.glow, W, H);
+      setPixel(buf, 8, 8, pal.glow, W, H);
+      break;
+    }
+    case 'ice': {
+      // 六角形の雪結晶：中心から6方向
+      const cx = 8, cy = 8;
+      setPixel(buf, cx, cy, pal.glow, W, H);
+      // 上下
+      for (let i = 1; i <= 3; i++) {
+        setPixel(buf, cx, cy - i, pal.light, W, H);
+        setPixel(buf, cx, cy + i, pal.light, W, H);
+      }
+      // 右上・左下
+      for (let i = 1; i <= 2; i++) {
+        setPixel(buf, cx + i, cy - i, pal.mid, W, H);
+        setPixel(buf, cx - i, cy + i, pal.mid, W, H);
+      }
+      // 左上・右下
+      for (let i = 1; i <= 2; i++) {
+        setPixel(buf, cx - i, cy - i, pal.mid, W, H);
+        setPixel(buf, cx + i, cy + i, pal.mid, W, H);
+      }
+      // 腕の先端に小枝
+      setPixel(buf, cx - 1, cy - 3, pal.mid, W, H);
+      setPixel(buf, cx + 1, cy - 3, pal.mid, W, H);
+      setPixel(buf, cx - 1, cy + 3, pal.mid, W, H);
+      setPixel(buf, cx + 1, cy + 3, pal.mid, W, H);
+      break;
+    }
+    case 'earth': {
+      // 山形3つ（横並び三角シルエット）
+      // 左の山
+      for (let i = 0; i <= 3; i++) {
+        for (let x = 4 - i; x <= 4 + i; x++) setPixel(buf, x, 10 - i, pal.dark, W, H);
+      }
+      // 中央の山（高い）
+      for (let i = 0; i <= 5; i++) {
+        for (let x = 8 - i; x <= 8 + i; x++) setPixel(buf, x, 11 - i, pal.mid, W, H);
+      }
+      // 右の山
+      for (let i = 0; i <= 3; i++) {
+        for (let x = 12 - i; x <= 12 + i; x++) setPixel(buf, x, 10 - i, pal.dark, W, H);
+      }
+      // 地面
+      for (let x = 1; x <= 14; x++) setPixel(buf, x, 12, pal.dark, W, H);
+      // 山頂ハイライト
+      setPixel(buf, 8, 6, pal.glow, W, H);
+      break;
+    }
+    case 'wind': {
+      // Cカーブ状の渦巻き弧
+      const arcs = [
+        [5,4],[6,3],[7,3],[8,3],[9,3],[10,4],
+        [10,5],[10,6],[9,7],[8,7],
+        [6,7],[7,7],[8,8],[9,9],[10,9],[11,9],
+        [11,10],[10,11],[9,11],[8,11],[7,10],
+        [5,5],[4,6],[4,7],[5,8],
+      ];
+      for (const [x, y] of arcs) setPixel(buf, x, y, pal.mid, W, H);
+      // 中心付近を明るく
+      setPixel(buf, 8, 7, pal.glow, W, H);
+      setPixel(buf, 7, 7, pal.light, W, H);
+      break;
+    }
+    case 'light': {
+      // 星型：中心＋8方向に放射線
+      const cx = 8, cy = 8;
+      setPixel(buf, cx, cy, pal.glow, W, H);
+      // 4方向
+      for (let i = 1; i <= 3; i++) {
+        setPixel(buf, cx, cy - i, pal.light, W, H);
+        setPixel(buf, cx, cy + i, pal.light, W, H);
+        setPixel(buf, cx - i, cy, pal.light, W, H);
+        setPixel(buf, cx + i, cy, pal.light, W, H);
+      }
+      // 斜め4方向
+      for (let i = 1; i <= 2; i++) {
+        setPixel(buf, cx - i, cy - i, pal.mid, W, H);
+        setPixel(buf, cx + i, cy - i, pal.mid, W, H);
+        setPixel(buf, cx - i, cy + i, pal.mid, W, H);
+        setPixel(buf, cx + i, cy + i, pal.mid, W, H);
+      }
+      // 先端を明るく
+      setPixel(buf, cx, cy - 3, pal.glow, W, H);
+      setPixel(buf, cx, cy + 3, pal.glow, W, H);
+      setPixel(buf, cx - 3, cy, pal.glow, W, H);
+      setPixel(buf, cx + 3, cy, pal.glow, W, H);
+      break;
+    }
+    case 'dark': {
+      // 三日月：大円から右側の小円を背景色で消す
+      fillEllipse(buf, 8, 8, 5, 5, pal.mid, W, H);
+      fillEllipse(buf, 7, 7, 4, 4, pal.light, W, H);
+      // 右側を消して三日月に
+      fillEllipse(buf, 10, 7, 4, 4, null, W, H);
+      // アクセント
+      setPixel(buf, 5, 5, pal.glow, W, H);
+      break;
+    }
+    default: {
+      // none：縦向きの剣
+      // 刃（菱形）
+      setPixel(buf, 8, 2, pal.light, W, H);
+      setPixel(buf, 7, 3, pal.mid, W, H);
+      setPixel(buf, 8, 3, pal.light, W, H);
+      setPixel(buf, 9, 3, pal.mid, W, H);
+      for (let y = 4; y <= 8; y++) {
+        setPixel(buf, 7, y, pal.mid, W, H);
+        setPixel(buf, 8, y, pal.light, W, H);
+        setPixel(buf, 9, y, pal.mid, W, H);
+      }
+      setPixel(buf, 7, 9, pal.dark, W, H);
+      setPixel(buf, 8, 9, pal.mid, W, H);
+      setPixel(buf, 9, 9, pal.dark, W, H);
+      // 鍔
+      for (let x = 5; x <= 11; x++) setPixel(buf, x, 10, pal.dark, W, H);
+      // 柄
+      setPixel(buf, 8, 11, pal.dark, W, H);
+      setPixel(buf, 8, 12, pal.dark, W, H);
+      setPixel(buf, 8, 13, pal.dark, W, H);
+      // 柄頭
+      setPixel(buf, 7, 13, pal.dark, W, H);
+      setPixel(buf, 9, 13, pal.dark, W, H);
+      break;
+    }
+  }
+
+  bufToCanvas(buf, ctx, W, H);
+}
+
+// ─── 属性バッジDOM要素 ──────────────────────────────────────────
+
+export function createElementBadge(element) {
+  const span = document.createElement('span');
+  span.className = `elem-badge elem-${element}`;
+  span.title = element;
+  const c = document.createElement('canvas');
+  c.width = 16; c.height = 16;
+  c.style.cssText = 'display:block;image-rendering:pixelated;width:16px;height:16px;';
+  generateElementIcon(c, element);
+  span.appendChild(c);
+  return span;
+}
+
+// ─── アイテムアイコン（24×24） ──────────────────────────────────
+
+export function generateItemIcon(canvas, itemId, itemType, element) {
+  canvas.width = 24;
+  canvas.height = 24;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const W = 24, H = 24;
+  const buf = makeBuffer(W, H);
+  const pal = ELEMENT_PALETTES[element] || ELEMENT_PALETTES.none;
+
+  if (itemType === 'skill') {
+    // 外枠：属性色の円
+    fillEllipse(buf, 12, 12, 10, 10, pal.dark, W, H);
+    fillEllipse(buf, 12, 12, 8, 8, pal.mid, W, H);
+    // 中心に属性シンボル（簡略版）
+    switch (element) {
+      case 'fire':
+        setPixel(buf, 12, 8, pal.glow, W, H);
+        setPixel(buf, 11, 9, pal.light, W, H); setPixel(buf, 12, 9, pal.glow, W, H); setPixel(buf, 13, 9, pal.light, W, H);
+        for (let y = 10; y <= 14; y++) { setPixel(buf, 11, y, pal.light, W, H); setPixel(buf, 12, y, pal.glow, W, H); setPixel(buf, 13, y, pal.light, W, H); }
+        for (let x = 10; x <= 14; x++) setPixel(buf, x, 15, pal.dark, W, H);
+        break;
+      case 'water':
+        setPixel(buf, 12, 7, pal.light, W, H);
+        setPixel(buf, 11, 8, pal.light, W, H); setPixel(buf, 13, 8, pal.light, W, H);
+        fillEllipse(buf, 12, 11, 3, 3, pal.light, W, H);
+        setPixel(buf, 12, 15, pal.dark, W, H);
+        break;
+      case 'thunder':
+        for (const [x, y] of [[11,7],[12,7],[12,8],[11,9],[12,9],[13,9],[12,10],[13,10],[12,11],[13,11],[12,12],[11,13],[12,14]])
+          setPixel(buf, x, y, pal.glow, W, H);
+        break;
+      case 'ice':
+        setPixel(buf, 12, 12, pal.glow, W, H);
+        for (let i = 1; i <= 2; i++) {
+          setPixel(buf, 12, 12 - i, pal.light, W, H); setPixel(buf, 12, 12 + i, pal.light, W, H);
+          setPixel(buf, 12 - i, 12, pal.light, W, H); setPixel(buf, 12 + i, 12, pal.light, W, H);
+        }
+        setPixel(buf, 11, 11, pal.light, W, H); setPixel(buf, 13, 11, pal.light, W, H);
+        setPixel(buf, 11, 13, pal.light, W, H); setPixel(buf, 13, 13, pal.light, W, H);
+        break;
+      default:
+        fillEllipse(buf, 12, 12, 3, 3, pal.glow, W, H);
+        break;
+    }
+    addOutline(buf, pal.outline, W, H);
+  } else if (itemType === 'battleItem') {
+    switch (itemId) {
+      case 'bitem_hp_potion': {
+        // 赤い瓶
+        fillRect(buf, 10, 4, 4, 2, '#d97706', W, H); // 蓋
+        fillRect(buf, 9, 6, 6, 3, '#fca5a5', W, H);  // 首
+        fillRect(buf, 7, 9, 10, 10, '#ef4444', W, H); // 胴
+        fillRect(buf, 8, 10, 8, 8, '#dc2626', W, H);  // 胴内
+        // ハイライト
+        fillRect(buf, 8, 10, 2, 6, '#fca5a5', W, H);
+        // ラベル
+        fillRect(buf, 9, 14, 6, 2, '#ffffff', W, H);
+        addOutline(buf, '#450a0a', W, H);
+        break;
+      }
+      case 'bitem_st_potion': {
+        // 青い缶（円柱）
+        fillEllipse(buf, 12, 6, 5, 2, '#93c5fd', W, H); // 上蓋
+        fillRect(buf, 7, 6, 10, 12, '#3b82f6', W, H);   // 胴
+        fillEllipse(buf, 12, 18, 5, 2, '#1e40af', W, H); // 底
+        fillRect(buf, 8, 8, 8, 8, '#2563eb', W, H);      // 胴内
+        // ハイライト
+        fillRect(buf, 8, 8, 2, 8, '#93c5fd', W, H);
+        addOutline(buf, '#082f49', W, H);
+        break;
+      }
+      case 'bitem_bomb': {
+        // 黒い球＋導火線
+        fillEllipse(buf, 12, 13, 6, 6, '#334155', W, H);
+        fillEllipse(buf, 12, 13, 4, 4, '#475569', W, H);
+        // ハイライト
+        setPixel(buf, 10, 10, '#94a3b8', W, H);
+        // 導火線
+        setPixel(buf, 14, 7, '#78350f', W, H);
+        setPixel(buf, 15, 6, '#78350f', W, H);
+        setPixel(buf, 16, 5, '#78350f', W, H);
+        // 火花
+        setPixel(buf, 17, 4, '#fbbf24', W, H);
+        setPixel(buf, 16, 4, '#ef4444', W, H);
+        addOutline(buf, '#0f172a', W, H);
+        break;
+      }
+      default: {
+        // 汎用の箱
+        fillRect(buf, 6, 7, 12, 12, '#92400e', W, H);
+        fillRect(buf, 7, 8, 10, 10, '#b45309', W, H);
+        fillRect(buf, 6, 7, 12, 2, '#d97706', W, H); // 蓋
+        addOutline(buf, '#422006', W, H);
+        break;
+      }
+    }
+  } else if (itemType === 'food') {
+    switch (itemId) {
+      case 'food_01':
+      case 'food_02': {
+        // 骨付き肉（T字）
+        // 骨
+        fillRect(buf, 11, 3, 2, 4, '#e2e8f0', W, H);
+        setPixel(buf, 10, 3, '#e2e8f0', W, H);
+        setPixel(buf, 13, 3, '#e2e8f0', W, H);
+        // 肉
+        fillEllipse(buf, 12, 12, 6, 5, '#991b1b', W, H);
+        fillEllipse(buf, 12, 11, 5, 4, '#dc2626', W, H);
+        // ハイライト
+        setPixel(buf, 9, 10, '#fca5a5', W, H);
+        setPixel(buf, 10, 9, '#fca5a5', W, H);
+        addOutline(buf, '#450a0a', W, H);
+        break;
+      }
+      case 'food_03':
+      case 'food_04': {
+        // 魚：楕円ボディ＋三角尾
+        fillEllipse(buf, 11, 12, 7, 3, '#64748b', W, H);
+        fillEllipse(buf, 10, 12, 6, 2, '#94a3b8', W, H);
+        // 尾
+        setPixel(buf, 19, 10, '#64748b', W, H);
+        setPixel(buf, 20, 10, '#64748b', W, H);
+        setPixel(buf, 19, 11, '#64748b', W, H);
+        setPixel(buf, 20, 12, '#64748b', W, H);
+        setPixel(buf, 19, 13, '#64748b', W, H);
+        setPixel(buf, 20, 14, '#64748b', W, H);
+        setPixel(buf, 19, 14, '#64748b', W, H);
+        // 目
+        setPixel(buf, 6, 11, '#0f172a', W, H);
+        // ハイライト
+        setPixel(buf, 8, 10, '#e2e8f0', W, H);
+        addOutline(buf, '#0f172a', W, H);
+        break;
+      }
+      case 'food_05':
+      case 'food_06': {
+        // 葉っぱ：水滴型＋葉脈
+        setPixel(buf, 12, 4, '#16a34a', W, H);
+        setPixel(buf, 11, 5, '#16a34a', W, H); setPixel(buf, 12, 5, '#22c55e', W, H); setPixel(buf, 13, 5, '#16a34a', W, H);
+        for (let y = 6; y <= 11; y++) {
+          const w = Math.min(y - 3, 5);
+          for (let x = 12 - w; x <= 12 + w; x++) {
+            setPixel(buf, x, y, '#16a34a', W, H);
+          }
+          setPixel(buf, 12, y, '#22c55e', W, H); // 葉脈
+        }
+        for (let y = 12; y <= 15; y++) {
+          const w = 15 - y;
+          for (let x = 12 - w; x <= 12 + w; x++) {
+            setPixel(buf, x, y, '#16a34a', W, H);
+          }
+          setPixel(buf, 12, y, '#22c55e', W, H);
+        }
+        // 茎
+        setPixel(buf, 12, 16, '#166534', W, H);
+        setPixel(buf, 12, 17, '#166534', W, H);
+        addOutline(buf, '#052e16', W, H);
+        break;
+      }
+      case 'food_07':
+      case 'food_08': {
+        // 丸い実（紫系）
+        fillEllipse(buf, 12, 12, 5, 5, '#7c3aed', W, H);
+        fillEllipse(buf, 12, 11, 4, 4, '#8b5cf6', W, H);
+        // ハイライト
+        setPixel(buf, 10, 9, '#c4b5fd', W, H);
+        setPixel(buf, 10, 10, '#c4b5fd', W, H);
+        // ヘタ
+        setPixel(buf, 12, 6, '#166534', W, H);
+        setPixel(buf, 13, 5, '#166534', W, H);
+        addOutline(buf, '#1a0533', W, H);
+        break;
+      }
+      case 'food_09': {
+        // 星形の実（黄系5角星）
+        const star = [
+          [12,4],
+          [11,7],[12,7],[13,7],
+          [10,8],[11,8],[12,8],[13,8],[14,8],
+          [8,9],[9,9],[10,9],[14,9],[15,9],[16,9],
+          [9,10],[10,10],[14,10],[15,10],
+          [10,11],[11,11],[12,11],[13,11],[14,11],
+          [10,12],[11,12],[13,12],[14,12],
+          [9,13],[10,13],[14,13],[15,13],
+          [9,14],[14,14],
+        ];
+        for (const [x, y] of star) setPixel(buf, x, y, '#f59e0b', W, H);
+        // 中心を明るく
+        setPixel(buf, 12, 8, '#fcd34d', W, H);
+        setPixel(buf, 11, 9, '#fcd34d', W, H);
+        setPixel(buf, 12, 9, '#fcd34d', W, H);
+        setPixel(buf, 13, 9, '#fcd34d', W, H);
+        setPixel(buf, 12, 10, '#fcd34d', W, H);
+        addOutline(buf, '#422006', W, H);
+        break;
+      }
+      default: {
+        // 汎用の丸い球（緑）
+        fillEllipse(buf, 12, 12, 5, 5, '#16a34a', W, H);
+        fillEllipse(buf, 12, 11, 4, 4, '#22c55e', W, H);
+        setPixel(buf, 10, 9, '#86efac', W, H);
+        addOutline(buf, '#052e16', W, H);
+        break;
+      }
+    }
+  }
+
+  bufToCanvas(buf, ctx, W, H);
+}
+
+// ─── NPCスプライト（32×32） ────────────────────────────────────
+
+export function generateNPCSprite(canvas, npcId) {
+  canvas.width = 32;
+  canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const W = 32, H = 32;
+  const buf = makeBuffer(W, H);
+
+  if (npcId === 'cork') {
+    const skin = '#c8956c';
+    const hair = '#3d2b1f';
+    const suit = '#2d3748';
+    const badge = '#fbbf24';
+    const outline = '#1a1a2a';
+    const eye = '#1a1a2a';
+
+    // 頭（楕円）
+    fillEllipse(buf, 16, 9, 6, 7, skin, W, H);
+
+    // 髪（頭の上半分を覆う）
+    fillEllipse(buf, 16, 6, 6, 4, hair, W, H);
+    // 横髪
+    setPixel(buf, 10, 8, hair, W, H);
+    setPixel(buf, 10, 9, hair, W, H);
+    setPixel(buf, 22, 8, hair, W, H);
+    setPixel(buf, 22, 9, hair, W, H);
+
+    // 眉（への字：内側が少し下がった）
+    setPixel(buf, 13, 8, eye, W, H);
+    setPixel(buf, 14, 9, eye, W, H);
+    setPixel(buf, 18, 9, eye, W, H);
+    setPixel(buf, 19, 8, eye, W, H);
+
+    // 目（ふさぎかけた小さい目）
+    setPixel(buf, 13, 10, eye, W, H);
+    setPixel(buf, 19, 10, eye, W, H);
+
+    // 口（一文字口）
+    setPixel(buf, 15, 13, eye, W, H);
+    setPixel(buf, 16, 13, eye, W, H);
+
+    // 胴体（制服）
+    fillRect(buf, 10, 18, 12, 10, suit, W, H);
+
+    // 腕左
+    fillRect(buf, 7, 19, 3, 7, suit, W, H);
+    // 腕右
+    fillRect(buf, 22, 19, 3, 7, suit, W, H);
+
+    // 首
+    fillRect(buf, 14, 16, 4, 3, skin, W, H);
+
+    // 手
+    fillRect(buf, 7, 26, 3, 2, skin, W, H);
+    fillRect(buf, 22, 26, 3, 2, skin, W, H);
+
+    // ギルドバッジ（胸中央に星：中心＋4方向）
+    setPixel(buf, 15, 22, badge, W, H);
+    setPixel(buf, 15, 21, badge, W, H);
+    setPixel(buf, 15, 23, badge, W, H);
+    setPixel(buf, 14, 22, badge, W, H);
+    setPixel(buf, 16, 22, badge, W, H);
+
+    // 足
+    fillRect(buf, 11, 28, 4, 3, '#1a1a2a', W, H);
+    fillRect(buf, 17, 28, 4, 3, '#1a1a2a', W, H);
+
+    // アウトライン
+    addOutline(buf, outline, W, H);
+
+    // アウトラインで潰れた目を復元
+    setPixel(buf, 13, 10, eye, W, H);
+    setPixel(buf, 19, 10, eye, W, H);
+  }
+
+  bufToCanvas(buf, ctx, W, H);
+}

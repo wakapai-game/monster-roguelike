@@ -11,6 +11,7 @@
 </head>
 <body>
   <div class="bg-gradient"></div>
+  <canvas id="bg-pixel-canvas"></canvas>
 
   <main id="app-container">
     <header class="glass-panel" id="main-header" style="display:none;">
@@ -20,8 +21,9 @@
     <!-- 画面0: スタート画面 -->
     <section id="screen-start" class="screen full-center active">
       <div class="title-container">
-        <h1 class="mega-title">MONSTER ROGUE</h1>
-        <p class="subtitle">Tactical Stamina Battles</p>
+        <h1 class="mega-title mega-title-hidden">MONSTER ROGUE</h1>
+        <p class="subtitle mega-title-hidden">Tactical Stamina Battles</p>
+        <canvas id="title-canvas"></canvas>
       </div>
       <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:8px;">
         <button id="btn-begin" class="btn primary-btn pulse-glow start-btn">START GAME</button>
@@ -383,5 +385,15 @@
 
   <!-- ES Modules -->
   <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initTitleArt } from './title-art.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      const titleCanvas = document.getElementById('title-canvas');
+      const bgCanvas = document.getElementById('bg-pixel-canvas');
+      if (titleCanvas && bgCanvas) {
+        initTitleArt(titleCanvas, bgCanvas);
+      }
+    });
+  </script>
 </body>
 </html>

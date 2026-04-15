@@ -1,6 +1,6 @@
 import { appState } from '../state.js';
 import { BATTLE_ITEMS_DATA } from '../data.js';
-import { generateMonsterSprite } from './sprite-generator.js';
+import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
 import { isTutorialActive, isTutorialFullMode, hasShownStep, showTutorialStep, hideTutorialHint } from './tutorial.js';
 import { playEffect } from './effects.js';
 import {
@@ -150,8 +150,9 @@ export function updateUI(onlyGauges = false) {
 
       const elemBadge = document.getElementById(`${side}-elem`);
       if (elemBadge) {
-          elemBadge.innerText = activeMonster.main_element.toUpperCase();
-          elemBadge.className = `elem-badge elem-${activeMonster.main_element}`;
+          elemBadge.innerHTML = '';
+          elemBadge.className = '';
+          elemBadge.appendChild(createElementBadge(activeMonster.main_element));
       }
 
       setBar(document.getElementById(`${side}-hp-fill`), activeMonster.current_hp, activeMonster.stats.hp);
@@ -211,12 +212,14 @@ function renderP1Reserves() {
     div.innerHTML = `
       <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
         <span style="font-size:0.75rem; font-weight:bold;">${m.name}</span>
-        <span class="elem-badge elem-${m.main_element}" style="font-size:0.55rem; padding:1px 3px;">${m.main_element.toUpperCase()}</span>
+        <span class="p1-reserve-elem-placeholder"></span>
       </div>
       <div style="height:3px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:3px;">
         <div style="width:${hpPct}%; height:100%; background:${isDead ? '#475569' : hpPct < 30 ? '#ef4444' : '#10b981'}; border-radius:2px; transition:width 0.3s;"></div>
       </div>
     `;
+    const reserveElemPlaceholder = div.querySelector('.p1-reserve-elem-placeholder');
+    if (reserveElemPlaceholder) reserveElemPlaceholder.replaceWith(createElementBadge(m.main_element));
     div.onclick = () => showMonsterDetail(m);
     container.appendChild(div);
   });
@@ -231,8 +234,9 @@ function showMonsterDetail(monster) {
 
   document.getElementById('md-name').textContent = monster.name;
   const elemEl = document.getElementById('md-elem');
-  elemEl.textContent = monster.main_element.toUpperCase();
-  elemEl.className = `elem-badge elem-${monster.main_element}`;
+  elemEl.innerHTML = '';
+  elemEl.className = '';
+  elemEl.appendChild(createElementBadge(monster.main_element));
 
   const s = monster.stats;
   document.getElementById('md-stats').innerHTML = `
@@ -246,28 +250,44 @@ function showMonsterDetail(monster) {
     </div>
   `;
 
-  const skillsHtml = (monster.skills || []).map(skillId => {
-    const sk = appState.engine.getSkill(skillId);
-    if (!sk) return '';
-    const elemBadge = sk.element !== 'none'
-      ? `<span class="elem-badge elem-${sk.element}" style="font-size:0.6rem; padding:1px 4px;">${sk.element.toUpperCase()}</span>`
-      : '';
-    return `<div class="md-skill-card">
-      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-        <span style="font-weight:bold;">${sk.name}</span>
-        ${elemBadge}
-        <span style="font-size:0.75rem; color:#94a3b8;">ST:${sk.cost_st}</span>
-      </div>
-      ${sk.description ? `<p style="font-size:0.8rem; color:#94a3b8; margin:4px 0 0;">${sk.description}</p>` : ''}
-    </div>`;
-  }).join('');
+  const mdSkillsEl = document.getElementById('md-skills');
+  mdSkillsEl.innerHTML = `<p style="font-size:0.8rem; color:#94a3b8; margin:0 0 8px;">セット中の技</p>`;
+  const skillsContainer = document.createElement('div');
+  skillsContainer.style.cssText = 'display:flex; flex-direction:column; gap:6px;';
 
-  document.getElementById('md-skills').innerHTML = `
-    <p style="font-size:0.8rem; color:#94a3b8; margin:0 0 8px;">セット中の技</p>
-    <div style="display:flex; flex-direction:column; gap:6px;">
-      ${skillsHtml || '<p style="color:#94a3b8; font-size:0.85rem; margin:0;">技なし</p>'}
-    </div>
-  `;
+  const monsterSkills = monster.skills || [];
+  if (monsterSkills.length === 0) {
+    skillsContainer.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem; margin:0;">技なし</p>';
+  } else {
+    monsterSkills.forEach(skillId => {
+      const sk = appState.engine.getSkill(skillId);
+      if (!sk) return;
+      const skillCard = document.createElement('div');
+      skillCard.className = 'md-skill-card';
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; align-items:center; gap:6px; flex-wrap:wrap;';
+      const nameSpan = document.createElement('span');
+      nameSpan.style.fontWeight = 'bold';
+      nameSpan.textContent = sk.name;
+      row.appendChild(nameSpan);
+      if (sk.element !== 'none') {
+        row.appendChild(createElementBadge(sk.element));
+      }
+      const costSpan = document.createElement('span');
+      costSpan.style.cssText = 'font-size:0.75rem; color:#94a3b8;';
+      costSpan.textContent = `ST:${sk.cost_st}`;
+      row.appendChild(costSpan);
+      skillCard.appendChild(row);
+      if (sk.description) {
+        const desc = document.createElement('p');
+        desc.style.cssText = 'font-size:0.8rem; color:#94a3b8; margin:4px 0 0;';
+        desc.textContent = sk.description;
+        skillCard.appendChild(desc);
+      }
+      skillsContainer.appendChild(skillCard);
+    });
+  }
+  mdSkillsEl.appendChild(skillsContainer);
 
   const overlay = document.getElementById('monster-detail-overlay');
   overlay.classList.remove('hide');
@@ -293,12 +313,14 @@ function renderEnemyRoster() {
     div.innerHTML = `
       <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
         <span style="font-size:0.75rem; font-weight:bold;">${isActive ? '▶ ' : ''}${m.name}</span>
-        <span class="elem-badge elem-${m.main_element}" style="font-size:0.55rem; padding:1px 3px;">${m.main_element.toUpperCase()}</span>
+        <span class="enemy-roster-elem-placeholder"></span>
       </div>
       <div style="height:3px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:3px;">
         <div style="width:${hpPct}%; height:100%; background:${isDead ? '#475569' : hpPct < 30 ? '#ef4444' : '#10b981'}; border-radius:2px; transition:width 0.3s;"></div>
       </div>
     `;
+    const enemyElemPlaceholder = div.querySelector('.enemy-roster-elem-placeholder');
+    if (enemyElemPlaceholder) enemyElemPlaceholder.replaceWith(createElementBadge(m.main_element));
     container.appendChild(div);
   });
 }
@@ -528,9 +550,11 @@ export function setupSwapButton(phaseType, currentMonster, enemyAttacker, enemyS
                     const hpPct = Math.round((m.current_hp / m.stats.hp) * 100);
                     btn.innerHTML = `
                         <span class="swap-bench-name">${m.name}</span>
-                        <span class="swap-bench-elem elem-badge elem-${m.main_element}">${m.main_element.toUpperCase()}</span>
+                        <span class="swap-bench-elem-placeholder"></span>
                         <span class="swap-bench-hp">HP ${m.current_hp}/${m.stats.hp} (${hpPct}%)</span>
                     `;
+                    const swapElemPlaceholder = btn.querySelector('.swap-bench-elem-placeholder');
+                    if (swapElemPlaceholder) swapElemPlaceholder.replaceWith(createElementBadge(m.main_element));
                     btn.onclick = () => {
                         swapSelectPanel.classList.add('hide');
                         appState.timeline.swapActive(1, idx);
