@@ -607,6 +607,11 @@ export function resolveDefensePhase(defender, reactId, attacker, attackSkillId, 
 }
 
 export function executeAction(playerNum, attacker, defender, skillId) {
+  if (!attacker || !defender) {
+    console.warn('[battle] executeAction: attacker/defender が null のため resumeLoop にフォールバック');
+    setTimeout(() => resumeLoop(), 200);
+    return;
+  }
   const result = appState.engine.executeSkill(attacker, defender, skillId);
   const targetSide = playerNum === 1 ? 'p2' : 'p1';
 

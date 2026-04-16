@@ -3,6 +3,26 @@ import { SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA } from '../data.js';
 import { mapNodesContainer, mapLinesContainer, rosterGrid, screenMap, screenSelection, switchScreen } from './dom.js';
 import { generateItemIcon } from './sprite-generator.js';
 
+// ---- 戦利品ツールチップ ----
+const _tooltip = document.getElementById('reward-tooltip');
+let _longPressTimer = null;
+
+function showRewardTooltip(box, item) {
+  if (!_tooltip) return;
+  _tooltip.innerHTML = `<strong>${item.name}</strong>${item.description || ''}`;
+  const rect = box.getBoundingClientRect();
+  // ボックス中央上に配置、画面端でクランプ
+  let left = rect.left + rect.width / 2;
+  left = Math.max(120, Math.min(left, window.innerWidth - 120));
+  _tooltip.style.left = `${left}px`;
+  _tooltip.style.top = `${rect.top + window.scrollY}px`;
+  _tooltip.classList.remove('hide');
+}
+
+function hideRewardTooltip() {
+  if (_tooltip) _tooltip.classList.add('hide');
+}
+
 export function generateRewards() {
     const rBoxes = document.getElementById('reward-boxes');
     const btnCollect = document.getElementById('btn-collect-reward');
@@ -40,14 +60,31 @@ export function generateRewards() {
         box.appendChild(iconCanvas);
         box.appendChild(nameH4);
         box.onclick = () => {
-            // 選択済みを解除してこのboxを選択
             rBoxes.querySelectorAll('.reward-box-selectable').forEach(b => b.classList.remove('selected'));
             box.classList.add('selected');
             btnCollect.disabled = false;
-
-            // 選択されたアイテムをインベントリに反映（以前の選択分をクリアして再登録）
             appState.globalInventory._pendingReward = { type: pool.type, id: item.id };
         };
+
+        // PCホバー
+        box.addEventListener('mouseenter', () => showRewardTooltip(box, item));
+        box.addEventListener('mouseleave', hideRewardTooltip);
+
+        // スマホ長押し（400ms）
+        box.addEventListener('touchstart', (e) => {
+            _longPressTimer = setTimeout(() => {
+                showRewardTooltip(box, item);
+            }, 400);
+        }, { passive: true });
+        box.addEventListener('touchend', () => {
+            clearTimeout(_longPressTimer);
+            setTimeout(hideRewardTooltip, 1200);
+        });
+        box.addEventListener('touchmove', () => {
+            clearTimeout(_longPressTimer);
+            hideRewardTooltip();
+        });
+
         rBoxes.appendChild(box);
     }
 }

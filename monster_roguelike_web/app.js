@@ -29,6 +29,23 @@ if (_btnAffinity) _btnAffinity.onclick = () => openHelpTab('affinity');
 const _btnMonsters = document.getElementById('btn-monsters-global');
 if (_btnMonsters) _btnMonsters.onclick = () => openEncyclopedia();
 
+// ---- フロートメニュー トグル ----
+const _btnMenuToggle = document.getElementById('btn-float-menu-toggle');
+const _floatMenuPanel = document.getElementById('float-menu-panel');
+if (_btnMenuToggle && _floatMenuPanel) {
+  _btnMenuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = _floatMenuPanel.classList.toggle('hide');
+    _btnMenuToggle.textContent = isHidden ? '☰' : '✕';
+  });
+  document.addEventListener('click', () => {
+    if (!_floatMenuPanel.classList.contains('hide')) {
+      _floatMenuPanel.classList.add('hide');
+      _btnMenuToggle.textContent = '☰';
+    }
+  });
+}
+
 // ---- Cork NPC Portraits ----
 function initCorkPortraits() {
   document.querySelectorAll('.screen').forEach(screen => {
@@ -60,14 +77,28 @@ initCorkPortraits();
 
 // ---- Save / Load ----
 
-document.getElementById('save-btn').onclick = () => {
+const _saveModal       = document.getElementById('save-modal');
+const _saveModalClose  = document.getElementById('save-modal-close');
+const _saveModalDo     = document.getElementById('save-modal-do');
+const _saveModalMsg    = _saveModal?.querySelector('.save-modal-msg');
+
+function openSaveModal() { _saveModal?.classList.remove('hide'); }
+function closeSaveModal() { _saveModal?.classList.add('hide'); }
+
+document.getElementById('save-btn').onclick = openSaveModal;
+
+if (_saveModalClose) _saveModalClose.onclick = closeSaveModal;
+
+if (_saveModalDo) _saveModalDo.onclick = () => {
   saveGame(appState);
-  alert('コルク：「記録した。問題ない。」');
+  if (_saveModalMsg) _saveModalMsg.textContent = 'コルク：「記録した。問題ない。」';
+  setTimeout(closeSaveModal, 1200);
 };
 
 document.getElementById('delete-save-btn').onclick = () => {
   if (confirm('コルク：「記録を消すぞ。本当にいいか？　俺はいいが。」')) {
     deleteSave();
+    closeSaveModal();
     alert('コルク：「消した。問題ない。問題があっても問題ない。」');
   }
 };

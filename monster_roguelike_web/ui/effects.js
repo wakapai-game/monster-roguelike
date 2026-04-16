@@ -28,6 +28,16 @@ export function playEffect(elementType, targetSide, callback) {
   const duration = effectFn.duration || 700;
   const startTime = performance.now();
 
+  // rAFが止まった場合（スマホ画面OFF・タブ切替など）のフォールバック
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    canvas.remove();
+    callback?.();
+  };
+  const safetyTimer = setTimeout(finish, duration + 400);
+
   function animate(now) {
     const elapsed = now - startTime;
     const t = Math.min(elapsed / duration, 1);
@@ -38,8 +48,8 @@ export function playEffect(elementType, targetSide, callback) {
     if (t < 1) {
       requestAnimationFrame(animate);
     } else {
-      canvas.remove();
-      callback?.();
+      clearTimeout(safetyTimer);
+      finish();
     }
   }
 
