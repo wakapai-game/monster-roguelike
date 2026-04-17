@@ -139,9 +139,9 @@ export function initStartScene() {
   section.style.position = 'relative';
   section.insertBefore(canvas, section.firstChild);
 
-  // 既存コンテンツを前面に
+  // 既存コンテンツを前面に（シルエットSVGはabsolute配置を維持するためスキップ）
   [...section.children].forEach(el => {
-    if (el !== canvas) {
+    if (el !== canvas && !el.classList.contains('start-silhouette')) {
       el.style.position = 'relative';
       el.style.zIndex = '1';
     }

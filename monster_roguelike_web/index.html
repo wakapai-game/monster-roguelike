@@ -20,6 +20,74 @@
 
     <!-- 画面0: スタート画面 -->
     <section id="screen-start" class="screen full-center active">
+      <!-- モンスターシルエット背景 -->
+      <svg class="start-silhouette" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sil-fade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0"/>
+            <stop offset="50%" stop-color="#1e3a8a" stop-opacity="0.1"/>
+            <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0.18"/>
+          </linearGradient>
+        </defs>
+        <!-- 左端：小さいモンスター -->
+        <g opacity="0.13" fill="#60a5fa">
+          <rect x="80" y="340" width="64" height="52" rx="6"/>
+          <rect x="92" y="298" width="40" height="46" rx="6"/>
+          <rect x="68"  y="384" width="16" height="36"/>
+          <rect x="136" y="384" width="16" height="36"/>
+          <circle cx="104" cy="312" r="6" fill="#020617"/>
+          <circle cx="120" cy="312" r="6" fill="#020617"/>
+        </g>
+        <!-- 左寄り：縦長モンスター -->
+        <g opacity="0.10" fill="#818cf8">
+          <rect x="260" y="290" width="52" height="80" rx="8"/>
+          <rect x="272" y="248" width="28" height="46" rx="6"/>
+          <rect x="248" y="360" width="14" height="44"/>
+          <rect x="310" y="360" width="14" height="44"/>
+          <rect x="234" y="308" width="10" height="28" rx="4"/>
+          <circle cx="282" cy="262" r="6" fill="#020617"/>
+          <circle cx="298" cy="262" r="6" fill="#020617"/>
+        </g>
+        <!-- 中央：最大・どっしり -->
+        <g opacity="0.18" fill="#6366f1">
+          <ellipse cx="600" cy="390" rx="72" ry="56"/>
+          <ellipse cx="600" cy="328" rx="52" ry="46"/>
+          <rect x="536" y="434" width="22" height="46" rx="6"/>
+          <rect x="642" y="434" width="22" height="46" rx="6"/>
+          <rect x="518" y="344" width="14" height="36" rx="4"/>
+          <rect x="668" y="344" width="14" height="36" rx="4"/>
+          <circle cx="586" cy="324" r="8" fill="#020617"/>
+          <circle cx="614" cy="324" r="8" fill="#020617"/>
+          <polygon points="582,296 576,268 592,280"/>
+          <polygon points="618,296 624,268 608,280"/>
+        </g>
+        <!-- 右寄り：カラクリ風（四角・アンテナ） -->
+        <g opacity="0.10" fill="#38bdf8">
+          <rect x="840" y="300" width="60" height="70" rx="4"/>
+          <rect x="848" y="262" width="44" height="42" rx="4"/>
+          <rect x="828" y="362" width="14" height="40"/>
+          <rect x="898" y="362" width="14" height="40"/>
+          <rect x="900" y="310" width="12" height="30" rx="3"/>
+          <rect x="862" y="244" width="4" height="20"/>
+          <rect x="874" y="244" width="4" height="20"/>
+          <circle cx="864" cy="244" r="4"/>
+          <circle cx="876" cy="244" r="4"/>
+          <circle cx="862" cy="278" r="5" fill="#020617"/>
+          <circle cx="878" cy="278" r="5" fill="#020617"/>
+        </g>
+        <!-- 右端：小さいモンスター -->
+        <g opacity="0.12" fill="#a78bfa">
+          <rect x="1056" y="350" width="56" height="46" rx="6"/>
+          <rect x="1066" y="312" width="36" height="42" rx="6"/>
+          <rect x="1044" y="388" width="14" height="32"/>
+          <rect x="1108" y="388" width="14" height="32"/>
+          <circle cx="1078" cy="326" r="5" fill="#020617"/>
+          <circle cx="1092" cy="326" r="5" fill="#020617"/>
+        </g>
+        <!-- 地面フェード -->
+        <rect x="0" y="360" width="1200" height="120" fill="url(#sil-fade)"/>
+      </svg>
+
       <div class="title-container">
         <h1 class="mega-title mega-title-hidden">MONSTER ROGUE</h1>
         <p class="subtitle mega-title-hidden">Tactical Stamina Battles</p>

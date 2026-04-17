@@ -1034,6 +1034,8 @@ header h1 {
 
 /* Start Screen Visual Enhancement */
 #screen-start {
+  position: relative;
+  overflow: hidden;
   background:
     /* Radial vignette */
     radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.6) 100%),
@@ -1082,6 +1084,139 @@ header h1 {
   font-weight: 600;
 }
 
+/* ── スタート画面：シルエット背景 ── */
+.start-silhouette {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  pointer-events: none;
+  z-index: 0 !important;
+}
+
+/* ── スタート画面：新レイアウト ── */
+.start-eyebrow {
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  color: #38bdf8;
+  opacity: 0.6;
+  margin-bottom: 14px;
+}
+
+.start-divider {
+  width: min(380px, 88vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #1e3a5f, transparent);
+  margin: 14px 0;
+}
+
+.start-catch {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(4px, 2vw, 10px);
+}
+
+.start-catch-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.start-catch-reading {
+  font-size: clamp(1.5rem, 5vw, 2.4rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  background: linear-gradient(180deg, #f1f5f9 30%, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.start-catch-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #1e3a5f, transparent);
+}
+
+.start-catch-kanji {
+  font-size: clamp(0.55rem, 1.2vw, 0.68rem);
+  letter-spacing: 0.45em;
+  text-indent: 0.45em;
+  color: #334155;
+  position: relative;
+  display: inline-block;
+}
+.start-catch-kanji::before,
+.start-catch-kanji::after {
+  content: attr(data-t);
+  position: absolute;
+  inset: 0;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-indent: inherit;
+}
+.start-catch-kanji::before { color: #ff6b35; }
+.start-catch-kanji::after  { color: #38bdf8; }
+
+/* 各単語を独立タイミングでグリッチ */
+.cg1 { animation: sc-glitch 3.5s steps(1) 0.0s infinite; }
+.cg1::before { animation: sc-glitch-r 3.5s steps(1) 0.0s infinite; }
+.cg1::after  { animation: sc-glitch-b 3.5s steps(1) 0.0s infinite; }
+.cg2 { animation: sc-glitch 5.2s steps(1) 1.3s infinite; }
+.cg2::before { animation: sc-glitch-r 5.2s steps(1) 1.3s infinite; }
+.cg2::after  { animation: sc-glitch-b 5.2s steps(1) 1.3s infinite; }
+.cg3 { animation: sc-glitch 4.1s steps(1) 2.7s infinite; }
+.cg3::before { animation: sc-glitch-r 4.1s steps(1) 2.7s infinite; }
+.cg3::after  { animation: sc-glitch-b 4.1s steps(1) 2.7s infinite; }
+
+@keyframes sc-glitch {
+  0%,86%,100% { transform: none; }
+  87%  { transform: translate(-3px,1px) skewX(-2deg); }
+  88%  { transform: translate(3px,-1px); }
+  89%  { transform: none; }
+  91%  { transform: translate(-1px); }
+  92%  { transform: none; }
+}
+@keyframes sc-glitch-r {
+  0%,86%,100% { transform:none; clip-path:none; opacity:0; }
+  87%  { clip-path:polygon(0 15%,100% 15%,100% 45%,0 45%); transform:translate(5px); opacity:1; }
+  88%  { clip-path:polygon(0 55%,100% 55%,100% 70%,0 70%); transform:translate(-5px); opacity:1; }
+  89%  { opacity:0; }
+  91%  { clip-path:polygon(0 30%,100% 30%,100% 50%,0 50%); transform:translate(3px); opacity:.7; }
+  92%  { opacity:0; }
+}
+@keyframes sc-glitch-b {
+  0%,86%,100% { transform:none; clip-path:none; opacity:0; }
+  87%  { clip-path:polygon(0 50%,100% 50%,100% 75%,0 75%); transform:translate(-5px); opacity:1; }
+  88%  { clip-path:polygon(0 10%,100% 10%,100% 30%,0 30%); transform:translate(4px); opacity:1; }
+  89%  { opacity:0; }
+  91%  { clip-path:polygon(0 65%,100% 65%,100% 85%,0 85%); transform:translate(-3px); opacity:.7; }
+  92%  { opacity:0; }
+}
+
+.start-catch-sep {
+  font-size: clamp(1rem, 2.5vw, 1.6rem);
+  color: #0f172a;
+  margin-bottom: clamp(12px, 2.5vw, 18px);
+  user-select: none;
+}
+
+.start-btn-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.start-footer {
+  font-size: 0.5rem;
+  letter-spacing: 0.22em;
+  color: #1e293b;
+  margin-top: 14px;
+}
+
 @keyframes title-shimmer {
   0%   { background-position: 0% 50%;   filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.3)); }
   50%  { background-position: 100% 50%; filter: drop-shadow(0 0 30px rgba(247, 201, 72, 0.5)); }
@@ -1090,8 +1225,8 @@ header h1 {
 
 .pulse-glow { animation: pulseBtn 2s infinite; }
 @keyframes pulseBtn {
-  0% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.6); }
-  70% { box-shadow: 0 0 0 15px rgba(255, 107, 53, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.6); }
+  70%  { box-shadow: 0 0 0 15px rgba(255, 107, 53, 0); }
   100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0); }
 }
 
@@ -1733,6 +1868,7 @@ header h1 {
 @media (max-width: 900px) {
   .mega-title { font-size: 2.8rem; }
   .battle-arena { gap: 12px; }
+  .start-catch-reading { font-size: 1.8rem; }
 }
 
 /* ポートレート スマホ */
@@ -1743,6 +1879,12 @@ header h1 {
   #app-container { padding: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); gap: 0; }
   .mega-title { font-size: 2rem; letter-spacing: 2px; }
   .subtitle { font-size: 1rem; }
+  .start-eyebrow { font-size: 0.5rem; margin-bottom: 10px; }
+  .start-divider { margin: 10px 0; }
+  .start-catch-reading { font-size: 1.45rem; }
+  .start-catch-kanji { font-size: 0.5rem; }
+  .start-catch-sep { font-size: 1rem; }
+  .start-footer { margin-top: 10px; }
   .modern-input { width: 90%; max-width: 280px; }
 
   /* バトル: 上段に左右ステータス / 中段にキュー / 下段にアクションメニュー */
@@ -1863,6 +2005,10 @@ header h1 {
   .title-container { margin-bottom: 15px; }
   .subtitle { font-size: 1rem; }
   .story-content { font-size: 1rem; line-height: 1.8; }
+  .start-eyebrow { display: none; }
+  .start-divider { margin: 8px 0; }
+  .start-catch-reading { font-size: 1.3rem; }
+  .start-footer { display: none; }
 
   /* 名前入力 */
   .modern-input { font-size: 1.1rem; padding: 10px 15px; }
