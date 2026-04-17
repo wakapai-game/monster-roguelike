@@ -25,10 +25,10 @@ const SCREEN_LABELS = {
   'screen-reward':          '報酬',
   'screen-inventory':       'インベントリ',
   'screen-party':           'パーティ',
+  'screen-sound-test':      'サウンドテスト',
 };
 
 export function initDevOverlay() {
-  if (!DEV_MODE) return;
 
   // ---- 画面IDバッジ ----
   const badge = document.createElement('div');

@@ -2468,3 +2468,192 @@ header h1 {
   font-weight: bold;
   letter-spacing: 1px;
 }
+
+/* ---- Battle Start Overlay ---- */
+#battle-start-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.88);
+  pointer-events: none;
+  opacity: 0;
+}
+#battle-start-overlay.bso-active {
+  animation: bso-bg 1.65s ease forwards;
+}
+@keyframes bso-bg {
+  0%   { opacity: 0; }
+  12%  { opacity: 1; }
+  72%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+#bso-battle {
+  font-size: clamp(3.2rem, 11vw, 6.5rem);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #f8fafc;
+  text-shadow:
+    0 0 24px rgba(251,191,36,0.9),
+    0 0 60px rgba(251,191,36,0.4),
+    4px 4px 0 rgba(0,0,0,0.6);
+  opacity: 0;
+  transform: translateX(-130%);
+  will-change: transform, opacity;
+}
+#battle-start-overlay.bso-active #bso-battle {
+  animation: bso-slide 0.38s cubic-bezier(0.15, 0, 0.1, 1) 0.18s forwards;
+}
+@keyframes bso-slide {
+  to { transform: translateX(0); opacity: 1; }
+}
+
+#bso-start {
+  font-size: clamp(2rem, 7.5vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: 0.35em;
+  color: #fbbf24;
+  text-shadow:
+    0 0 16px rgba(251,191,36,1),
+    0 0 40px rgba(251,191,36,0.6),
+    3px 3px 0 rgba(0,0,0,0.5);
+  opacity: 0;
+  transform: scale(2.8);
+  will-change: transform, opacity;
+}
+#battle-start-overlay.bso-active #bso-start {
+  animation: bso-zoom 0.32s cubic-bezier(0.15, 0, 0.1, 1) 0.48s forwards;
+}
+@keyframes bso-zoom {
+  to { transform: scale(1); opacity: 1; }
+}
+
+#bso-line {
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #fbbf24, transparent);
+  opacity: 0;
+}
+#battle-start-overlay.bso-active #bso-line {
+  animation: bso-line 0.3s ease 0.72s forwards;
+}
+@keyframes bso-line {
+  to { width: min(60vw, 420px); opacity: 0.7; }
+}
+
+#bso-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+#battle-start-overlay.bso-active #bso-flash {
+  animation: bso-flash 0.28s ease-in-out 1.1s forwards;
+}
+@keyframes bso-flash {
+  0%   { opacity: 0; }
+  45%  { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
+/* ---- Battle End Overlay ---- */
+#battle-end-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.82);
+}
+#battle-end-overlay.beo-active {
+  animation: beo-bg 1.8s ease forwards;
+}
+@keyframes beo-bg {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* VICTORY */
+#battle-end-overlay.beo-win  { background: radial-gradient(ellipse at center, rgba(16,185,129,0.25) 0%, rgba(0,0,0,0.88) 70%); }
+/* DEFEAT */
+#battle-end-overlay.beo-lose { background: radial-gradient(ellipse at center, rgba(239,68,68,0.2) 0%, rgba(0,0,0,0.92) 70%); }
+
+#beo-main {
+  font-size: clamp(3.2rem, 12vw, 7rem);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  opacity: 0;
+  transform: scale(0.4);
+  will-change: transform, opacity;
+}
+#battle-end-overlay.beo-win  #beo-main { color: #10b981; text-shadow: 0 0 30px rgba(16,185,129,0.9), 0 0 70px rgba(16,185,129,0.4), 3px 3px 0 rgba(0,0,0,0.5); }
+#battle-end-overlay.beo-lose #beo-main { color: #ef4444; text-shadow: 0 0 30px rgba(239,68,68,0.9), 0 0 70px rgba(239,68,68,0.4), 3px 3px 0 rgba(0,0,0,0.5); }
+
+#battle-end-overlay.beo-active #beo-main {
+  animation: beo-pop 0.4s cubic-bezier(0.15, 0, 0.1, 1.3) 0.2s forwards;
+}
+@keyframes beo-pop {
+  to { transform: scale(1); opacity: 1; }
+}
+
+#beo-sub {
+  font-size: clamp(0.95rem, 3vw, 1.4rem);
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: #94a3b8;
+  opacity: 0;
+  transform: translateY(12px);
+  will-change: transform, opacity;
+}
+#battle-end-overlay.beo-active #beo-sub {
+  animation: beo-sub-in 0.3s ease 0.55s forwards;
+}
+@keyframes beo-sub-in {
+  to { transform: translateY(0); opacity: 1; }
+}
+
+#beo-line {
+  width: 0;
+  height: 2px;
+  opacity: 0;
+}
+#battle-end-overlay.beo-win  #beo-line { background: linear-gradient(90deg, transparent, #10b981, transparent); }
+#battle-end-overlay.beo-lose #beo-line { background: linear-gradient(90deg, transparent, #ef4444, transparent); }
+
+#battle-end-overlay.beo-active #beo-line {
+  animation: beo-line 0.35s ease 0.5s forwards;
+}
+@keyframes beo-line {
+  to { width: min(55vw, 380px); opacity: 0.6; }
+}
+
+#beo-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+#battle-end-overlay.beo-win  #beo-flash { background: #10b981; }
+#battle-end-overlay.beo-lose #beo-flash { background: #ef4444; }
+
+#battle-end-overlay.beo-active #beo-flash {
+  animation: beo-flash 0.25s ease-in-out 0.12s forwards;
+}
+@keyframes beo-flash {
+  0%   { opacity: 0; }
+  40%  { opacity: 0.35; }
+  100% { opacity: 0; }
+}

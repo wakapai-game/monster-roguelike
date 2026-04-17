@@ -11,6 +11,22 @@ import {
   timelineQueue, toastContainer, battleLog
 } from './dom.js';
 
+// ---- Battle Start Fanfare ----
+export function playBattleStart(onDone) {
+  const overlay = document.getElementById('battle-start-overlay');
+  if (!overlay) { onDone?.(); return; }
+
+  // アニメーションをリセットして再生
+  overlay.classList.remove('bso-active');
+  overlay.offsetHeight; // force reflow
+  overlay.classList.add('bso-active');
+
+  setTimeout(() => {
+    overlay.classList.remove('bso-active');
+    onDone?.();
+  }, 1650);
+}
+
 // ---- UI Rendering Helpers ----
 // トースト通知による簡易ログ
 export function toast(htmlStr) {
@@ -675,15 +691,30 @@ export function endBattle(isPlayerWin) {
     updateUI();
     actionMenu.classList.add('hide');
 
-    if (isPlayerWin) {
-        const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
-        const isBoss = currentNode?.type === 'boss';
-        toast(`<span style="font-size:1.5rem; color:#10b981; font-weight:bold;">${isBoss ? 'STAGE CLEAR!' : 'VICTORY!'}</span>`);
-    } else {
-        toast(`<span style="font-size:1.5rem; color:#ef4444; font-weight:bold;">PARTY ANNIHILATED...</span>`);
+    const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
+    const isBoss = currentNode?.type === 'boss';
+
+    const overlay = document.getElementById('battle-end-overlay');
+    const mainEl  = document.getElementById('beo-main');
+    const subEl   = document.getElementById('beo-sub');
+
+    if (overlay && mainEl && subEl) {
+        // 勝利・敗北でテキストと色を切替
+        overlay.classList.remove('beo-win', 'beo-lose', 'beo-active');
+        if (isPlayerWin) {
+            mainEl.textContent = isBoss ? 'STAGE CLEAR!' : 'VICTORY!';
+            subEl.textContent  = isBoss ? '— STAGE COMPLETE —' : '— BATTLE OVER —';
+            overlay.classList.add('beo-win');
+        } else {
+            mainEl.textContent = 'DEFEAT...';
+            subEl.textContent  = '— PARTY ANNIHILATED —';
+            overlay.classList.add('beo-lose');
+        }
+        overlay.offsetHeight; // force reflow
+        overlay.classList.add('beo-active');
     }
 
     setTimeout(() => {
         document.dispatchEvent(new CustomEvent('battle-end', { detail: { win: isPlayerWin } }));
-    }, 1500);
+    }, 1900);
 }

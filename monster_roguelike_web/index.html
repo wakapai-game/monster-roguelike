@@ -27,8 +27,23 @@
       </div>
       <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:8px;">
         <button id="btn-begin" class="btn primary-btn pulse-glow start-btn">START GAME</button>
-        <a href="test-battle.html" style="font-size:0.8rem; color:#475569; margin-top:8px; text-decoration:none;">⚙ バトルシステムテスト</a>
+        <button id="btn-sound-test" class="btn skill-btn" style="font-size:0.85rem; letter-spacing:0.05em;">♪ SOUND TEST</button>
+        <a href="test-battle.html" style="font-size:0.8rem; color:#475569; margin-top:4px; text-decoration:none;">⚙ バトルシステムテスト</a>
       </div>
+    </section>
+
+    <!-- サウンドテスト画面 -->
+    <section id="screen-sound-test" class="screen full-center hide glass-panel">
+      <h2 style="letter-spacing:0.1em;">♪ SOUND TEST</h2>
+      <p style="color:#94a3b8; margin-bottom:8px; font-size:0.85rem;">ゲーム内BGMを試聴できます</p>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+        <span style="color:#64748b; font-size:0.8rem; white-space:nowrap;">VOL</span>
+        <input type="range" id="bgm-volume-slider" min="0" max="100" value="40"
+          style="width:140px; accent-color:#00ff88;">
+        <span id="bgm-volume-label" style="color:#94a3b8; font-size:0.8rem; width:3em; text-align:right;">40%</span>
+      </div>
+      <div id="sound-test-list" style="display:flex; flex-direction:column; gap:8px; width:100%; max-width:420px;"></div>
+      <button id="btn-sound-test-back" class="btn skill-btn" style="margin-top:28px;">← タイトルへ戻る</button>
     </section>
 
     <!-- 図鑑モーダル -->
@@ -378,6 +393,22 @@
       </div>
     </section>
   </main>
+
+  <!-- バトル終了演出オーバーレイ -->
+  <div id="battle-end-overlay">
+    <div id="beo-flash"></div>
+    <div id="beo-main">VICTORY!</div>
+    <div id="beo-line"></div>
+    <div id="beo-sub">— BATTLE OVER —</div>
+  </div>
+
+  <!-- バトル開始演出オーバーレイ -->
+  <div id="battle-start-overlay">
+    <div id="bso-battle">BATTLE</div>
+    <div id="bso-line"></div>
+    <div id="bso-start">START</div>
+    <div id="bso-flash"></div>
+  </div>
 
   <!-- 戦利品ツールチップ -->
   <div id="reward-tooltip" class="reward-tooltip hide"></div>

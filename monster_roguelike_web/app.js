@@ -14,13 +14,14 @@ import {
 import { initTutorial, showTutorialStep } from './ui/tutorial.js';
 import { openInventory, openParty } from './ui/inventory.js';
 import { renderMap, generateRewards, collectPendingReward } from './ui/map-render.js';
-import { toast, updateUI, resumeLoop } from './ui/battle.js';
+import { toast, updateUI, resumeLoop, playBattleStart } from './ui/battle.js';
 import { openEncyclopedia } from './ui/encyclopedia.js';
 import { saveGame, loadGame, deleteSave } from './persistence.js';
 import { openHelp, openHelpTab, initHelp } from './ui/help.js';
 import { generateNPCSprite, generateUIIcon, generateEggSprite } from './ui/sprite-generator.js';
 import { initDevOverlay } from './ui/dev-overlay.js';
 import { initStartScene } from './ui/start-scene.js';
+import { play, stop, setVolume, getVolume, initBgmObserver, TRACKS, screenToBgm } from './ui/bgm.js';
 
 // ---- ボタンアイコン（マップ画面・ハブ画面共通） ----
 [
@@ -39,6 +40,103 @@ initDevOverlay();
 
 // ---- スタート画面モンスターパレード ----
 initStartScene();
+
+// ---- BGM: 最初のインタラクションでタイトルBGM開始 + 画面切替で自動切替 ----
+initBgmObserver();
+document.addEventListener('click', () => {
+  const active = document.querySelector('.screen.active');
+  const trackId = active ? screenToBgm(active.id) : 'title';
+  play(trackId || 'title');
+}, { once: true });
+
+// ---- サウンドテスト ----
+(function initSoundTest() {
+  const btnOpen = document.getElementById('btn-sound-test');
+  const btnBack = document.getElementById('btn-sound-test-back');
+  const screenST = document.getElementById('screen-sound-test');
+  const list = document.getElementById('sound-test-list');
+  const slider = document.getElementById('bgm-volume-slider');
+  const volLabel = document.getElementById('bgm-volume-label');
+
+  if (!btnOpen || !btnBack || !screenST) return;
+
+  // 音量スライダー
+  slider.addEventListener('input', () => {
+    const v = slider.value / 100;
+    setVolume(v);
+    volLabel.textContent = `${slider.value}%`;
+  });
+
+  // サウンドテスト画面を開く
+  btnOpen.addEventListener('click', () => {
+    play('title'); // BGM起動（最初のインタラクション対応）
+    screenStart.classList.remove('active');
+    screenStart.classList.add('hide');
+    screenST.classList.remove('hide');
+    screenST.classList.add('active');
+    renderSoundTestList();
+  });
+
+  // タイトルへ戻る
+  btnBack.addEventListener('click', () => {
+    stop();
+    screenST.classList.remove('active');
+    screenST.classList.add('hide');
+    screenStart.classList.remove('hide');
+    screenStart.classList.add('active');
+    play('title');
+  });
+
+  function renderSoundTestList() {
+    list.innerHTML = '';
+    let playingBtn = null;
+
+    for (const [trackId, track] of Object.entries(TRACKS)) {
+      const row = document.createElement('div');
+      row.style.cssText = [
+        'display:flex',
+        'justify-content:space-between',
+        'align-items:center',
+        'padding:10px 14px',
+        'background:rgba(0,0,0,0.3)',
+        'border-radius:8px',
+        'border:1px solid rgba(255,255,255,0.08)',
+        'gap:12px',
+      ].join(';');
+
+      const name = document.createElement('span');
+      name.textContent = track.name;
+      name.style.cssText = 'font-size:0.85rem; flex:1; color:#e2e8f0;';
+
+      const btn = document.createElement('button');
+      btn.className = 'btn skill-btn';
+      btn.style.cssText = 'font-size:0.75rem; padding:4px 12px; white-space:nowrap; flex-shrink:0;';
+      btn.textContent = '▶ 再生';
+
+      btn.addEventListener('click', () => {
+        if (playingBtn && playingBtn !== btn) {
+          playingBtn.textContent = '▶ 再生';
+          playingBtn.style.background = '';
+        }
+        if (btn.textContent === '▶ 再生') {
+          play(trackId);
+          btn.textContent = '■ 停止';
+          btn.style.background = 'rgba(0,255,136,0.15)';
+          playingBtn = btn;
+        } else {
+          stop();
+          btn.textContent = '▶ 再生';
+          btn.style.background = '';
+          playingBtn = null;
+        }
+      });
+
+      row.appendChild(name);
+      row.appendChild(btn);
+      list.appendChild(row);
+    }
+  }
+})();
 
 // ---- Help System ----
 initHelp();
@@ -332,9 +430,12 @@ function confirmBattleSetup() {
 
   appState.timeline = new Timeline(appState.p1Team, appState.p2Team);
   const encounterLabel = { battle: '遭遇', elite: '強敵', boss: 'ボス', rest: '休憩' }[currentNode.type] ?? currentNode.type;
-  toast(`<span class="log-system">【${encounterLabel}】地上が動き出した。</span>`);
+
   updateUI();
-  resumeLoop();
+  playBattleStart(() => {
+    toast(`<span class="log-system">【${encounterLabel}】地上が動き出した。</span>`);
+    resumeLoop();
+  });
 }
 
 // ---- Tutorial Battle ----
@@ -354,9 +455,11 @@ function startTutorialBattle() {
   appState.p2Team = [new Monster(enemyData)];
 
   appState.timeline = new Timeline(appState.p1Team, appState.p2Team);
-  toast(`<span class="log-system">コルク：「ダミーが相手だ。負けても問題ない。勝っても特に何もないが。」</span>`);
   updateUI();
-  resumeLoop();
+  playBattleStart(() => {
+    toast(`<span class="log-system">コルク：「ダミーが相手だ。負けても問題ない。勝っても特に何もないが。」</span>`);
+    resumeLoop();
+  });
 }
 
 // ---- Map / Reward Flow ----
