@@ -109,4 +109,17 @@ const FOOD_DATA = [
   }
 ];
 
-export { AFFINITY, SKILLS, MONSTERS_DATA, ENEMY_DATA, BATTLE_ITEMS_DATA, FOOD_DATA, TUTORIAL_ENEMY };
+// 卵報酬データ（ステージクリア後の報酬として出現）
+// 受け取ると対応属性のジュウマが1体ロースターに加わる
+const EGG_DATA = [
+  { id: 'egg_fire',    name: '炎の卵',   element: 'fire',    description: '孵化すると炎属性のジュウマが生まれる' },
+  { id: 'egg_water',   name: '水の卵',   element: 'water',   description: '孵化すると水属性のジュウマが生まれる' },
+  { id: 'egg_thunder', name: '雷の卵',   element: 'thunder', description: '孵化すると雷属性のジュウマが生まれる' },
+  { id: 'egg_earth',   name: '土の卵',   element: 'earth',   description: '孵化すると土属性のジュウマが生まれる' },
+  { id: 'egg_ice',     name: '氷の卵',   element: 'ice',     description: '孵化すると氷属性のジュウマが生まれる' },
+  { id: 'egg_wind',    name: '風の卵',   element: 'wind',    description: '孵化すると風属性のジュウマが生まれる' },
+  { id: 'egg_light',   name: '光の卵',   element: 'light',   description: '孵化すると光属性のジュウマが生まれる' },
+  { id: 'egg_dark',    name: '闇の卵',   element: 'dark',    description: '孵化すると闇属性のジュウマが生まれる' },
+];
+
+export { AFFINITY, SKILLS, MONSTERS_DATA, ENEMY_DATA, BATTLE_ITEMS_DATA, FOOD_DATA, TUTORIAL_ENEMY, EGG_DATA };

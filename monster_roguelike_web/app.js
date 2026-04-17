@@ -19,6 +19,14 @@ import { openEncyclopedia } from './ui/encyclopedia.js';
 import { saveGame, loadGame, deleteSave } from './persistence.js';
 import { openHelp, openHelpTab, initHelp } from './ui/help.js';
 import { generateNPCSprite } from './ui/sprite-generator.js';
+import { initDevOverlay } from './ui/dev-overlay.js';
+import { initStartScene } from './ui/start-scene.js';
+
+// ---- Dev Overlay (?dev で有効化) ----
+initDevOverlay();
+
+// ---- スタート画面モンスターパレード ----
+initStartScene();
 
 // ---- Help System ----
 initHelp();

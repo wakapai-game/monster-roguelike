@@ -1,7 +1,8 @@
 import { appState } from '../state.js';
-import { SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA } from '../data.js';
+import { SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA, EGG_DATA, MONSTERS_DATA } from '../data.js';
+import { Monster } from '../game.js';
 import { mapNodesContainer, mapLinesContainer, rosterGrid, screenMap, screenSelection, switchScreen } from './dom.js';
-import { generateItemIcon } from './sprite-generator.js';
+import { generateItemIcon, generateEggSprite } from './sprite-generator.js';
 
 // ---- 戦利品ツールチップ ----
 const _tooltip = document.getElementById('reward-tooltip');
@@ -32,7 +33,8 @@ export function generateRewards() {
     const pools = [
        { type: 'skill',      data: SKILLS,            label: '技' },
        { type: 'battleItem', data: BATTLE_ITEMS_DATA,  label: 'バトルアイテム' },
-       { type: 'food',       data: FOOD_DATA,          label: 'えさ' }
+       { type: 'food',       data: FOOD_DATA,          label: 'えさ' },
+       { type: 'egg',        data: EGG_DATA,           label: '卵' },
     ];
 
     // 3候補をランダム生成（未選択はインベントリに追加しない）
@@ -48,10 +50,17 @@ export function generateRewards() {
         typeDiv.textContent = pool.label;
 
         const iconCanvas = document.createElement('canvas');
-        iconCanvas.width = 24;
-        iconCanvas.height = 24;
-        iconCanvas.style.cssText = 'display:block;margin:8px auto 4px;image-rendering:pixelated;image-rendering:crisp-edges;width:48px;height:48px;';
-        generateItemIcon(iconCanvas, item.id, pool.type, item.element || 'none');
+        if (pool.type === 'egg') {
+          iconCanvas.width = 32;
+          iconCanvas.height = 32;
+          iconCanvas.style.cssText = 'display:block;margin:4px auto 4px;image-rendering:pixelated;image-rendering:crisp-edges;width:80px;height:80px;';
+          generateEggSprite(iconCanvas, item.element);
+        } else {
+          iconCanvas.width = 24;
+          iconCanvas.height = 24;
+          iconCanvas.style.cssText = 'display:block;margin:8px auto 4px;image-rendering:pixelated;image-rendering:crisp-edges;width:48px;height:48px;';
+          generateItemIcon(iconCanvas, item.id, pool.type, item.element || 'none');
+        }
 
         const nameH4 = document.createElement('h4');
         nameH4.textContent = item.name;
@@ -63,7 +72,7 @@ export function generateRewards() {
             rBoxes.querySelectorAll('.reward-box-selectable').forEach(b => b.classList.remove('selected'));
             box.classList.add('selected');
             btnCollect.disabled = false;
-            appState.globalInventory._pendingReward = { type: pool.type, id: item.id };
+            appState.globalInventory._pendingReward = { type: pool.type, id: item.id, element: item.element };
         };
 
         // PCホバー
@@ -95,6 +104,17 @@ export function collectPendingReward() {
     if (pending.type === 'skill')      appState.globalInventory.skills.push(pending.id);
     if (pending.type === 'battleItem') appState.globalInventory.battleItems.push(pending.id);
     if (pending.type === 'food')       appState.globalInventory.mapItems.push(pending.id);
+    if (pending.type === 'egg') {
+        // 対応属性のジュウマをロースターに追加
+        const elementPool = MONSTERS_DATA.filter(m => m.main_element === pending.element);
+        const base = elementPool.length > 0
+            ? elementPool[Math.floor(Math.random() * elementPool.length)]
+            : MONSTERS_DATA[Math.floor(Math.random() * MONSTERS_DATA.length)];
+        const monsterData = JSON.parse(JSON.stringify(base));
+        appState.monsterIdCounter = (appState.monsterIdCounter || 0) + 1;
+        monsterData.id = monsterData.id + '_egg' + appState.monsterIdCounter;
+        appState.globalRoster.push(new Monster(monsterData));
+    }
     delete appState.globalInventory._pendingReward;
 }
 

@@ -1066,3 +1066,96 @@ export function generateNPCSprite(canvas, npcId) {
 
   bufToCanvas(buf, ctx, W, H);
 }
+
+// ─── 卵スプライト（32×32） ────────────────────────────────────────
+// 属性ごとに色・模様が異なるピクセルアートの卵
+
+export function generateEggSprite(canvas, element) {
+  canvas.width = 32;
+  canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const W = 32, H = 32;
+  const buf = makeBuffer(W, H);
+  const pal = ELEMENT_PALETTES[element] || ELEMENT_PALETTES.none;
+
+  // 卵の基本形（縦長オーバル、中心をやや下に）
+  const cx = 16, cy = 18, rx = 9, ry = 11;
+  fillEllipse(buf, cx, cy, rx, ry, pal.light, W, H);
+  // 下半分をやや暗く（立体感）
+  fillEllipse(buf, cx, cy + 4, rx - 2, ry - 5, pal.mid, W, H);
+
+  // 属性別の模様
+  switch (element) {
+    case 'fire':
+      // 炎のしずく斑点
+      for (const [px, py] of [[13,14],[17,16],[12,19],[18,19],[15,22]])
+        if (buf[py]?.[px]) { setPixel(buf, px, py, pal.glow, W, H); setPixel(buf, px, py + 1, pal.glow, W, H); }
+      break;
+    case 'water':
+      // 水玉
+      for (const [px, py] of [[13,15],[19,17],[14,21],[20,20]])
+        fillEllipse(buf, px, py, 1, 1, pal.dark, W, H);
+      break;
+    case 'thunder':
+      // 稲妻ジグザグ
+      for (const [px, py] of [[16,13],[15,15],[17,15],[16,17],[15,19],[17,21]])
+        if (buf[py]?.[px]) setPixel(buf, px, py, pal.glow, W, H);
+      break;
+    case 'earth':
+      // 格子（菱形模様）
+      for (let y = 14; y <= 24; y += 4)
+        for (let x = 9; x <= 23; x += 4)
+          if (buf[y]?.[x]) setPixel(buf, x, y, pal.dark, W, H);
+      for (let y = 16; y <= 24; y += 4)
+        for (let x = 11; x <= 23; x += 4)
+          if (buf[y]?.[x]) setPixel(buf, x, y, pal.dark, W, H);
+      break;
+    case 'ice':
+      // 雪の結晶（十字＋斜め）
+      for (let i = -3; i <= 3; i++) {
+        if (buf[18]?.[16 + i]) setPixel(buf, 16 + i, 18, pal.glow, W, H);
+        if (buf[18 + i]?.[16]) setPixel(buf, 16, 18 + i, pal.glow, W, H);
+      }
+      for (const [px, py] of [[14,16],[18,16],[14,20],[18,20]])
+        if (buf[py]?.[px]) setPixel(buf, px, py, pal.glow, W, H);
+      break;
+    case 'wind':
+      // 流れる曲線2本
+      for (const [px, py] of [[11,15],[12,14],[14,14],[16,15],[18,14],[20,14]])
+        if (buf[py]?.[px]) setPixel(buf, px, py, pal.glow, W, H);
+      for (const [px, py] of [[11,19],[12,20],[14,20],[16,19],[18,20],[20,20]])
+        if (buf[py]?.[px]) setPixel(buf, px, py, pal.glow, W, H);
+      break;
+    case 'light':
+      // 放射の光条
+      for (let i = 0; i < 4; i++) {
+        if (buf[16]?.[13 + i]) setPixel(buf, 13 + i, 16, pal.glow, W, H);
+        if (buf[16]?.[17 + i]) setPixel(buf, 17 + i, 16, pal.glow, W, H);
+        if (buf[13 + i]?.[16]) setPixel(buf, 16, 13 + i, pal.glow, W, H);
+        if (buf[17 + i]?.[16]) setPixel(buf, 16, 17 + i, pal.glow, W, H);
+      }
+      break;
+    case 'dark':
+      // 星型の点
+      for (const [px, py] of [[13,14],[19,14],[11,18],[21,18],[13,22],[19,22]])
+        if (buf[py]?.[px]) setPixel(buf, px, py, pal.glow, W, H);
+      break;
+    default:
+      // 横ストライプ2本
+      for (let x = 8; x <= 23; x++) {
+        if (buf[17]?.[x]) setPixel(buf, x, 17, pal.dark, W, H);
+        if (buf[21]?.[x]) setPixel(buf, x, 21, pal.dark, W, H);
+      }
+  }
+
+  addOutline(buf, pal.outline, W, H);
+
+  // ハイライト（左上）―アウトラインの上から重ねる
+  setPixel(buf, 12, 11, '#ffffff', W, H);
+  setPixel(buf, 13, 11, '#ffffff', W, H);
+  setPixel(buf, 12, 12, '#ffffff', W, H);
+
+  bufToCanvas(buf, ctx, W, H);
+}
