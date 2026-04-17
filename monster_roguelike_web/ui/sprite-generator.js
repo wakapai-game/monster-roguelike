@@ -1159,3 +1159,111 @@ export function generateEggSprite(canvas, element) {
 
   bufToCanvas(buf, ctx, W, H);
 }
+
+// ─── UI ボタン用アイコン（24×24） ────────────────────────────────
+
+export function generateUIIcon(canvas, iconType) {
+  const W = 24, H = 24;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const buf = makeBuffer(W, H);
+
+  if (iconType === 'party') {
+    // 3体のジュウマシルエット（奥左・中央大・奥右）
+
+    // 奥左（小さめ・暗め）
+    fillEllipse(buf, 5, 10, 3, 3, '#334155', W, H);
+    fillEllipse(buf, 5, 15, 3, 3, '#334155', W, H);
+    setPixel(buf, 3, 18, '#334155', W, H);
+    setPixel(buf, 7, 18, '#334155', W, H);
+
+    // 奥右（小さめ・暗め）
+    fillEllipse(buf, 19, 10, 3, 3, '#334155', W, H);
+    fillEllipse(buf, 19, 15, 3, 3, '#334155', W, H);
+    setPixel(buf, 17, 18, '#334155', W, H);
+    setPixel(buf, 21, 18, '#334155', W, H);
+
+    // 中央（大きめ・明るめ）
+    fillEllipse(buf, 12, 8, 4, 4, '#94a3b8', W, H);
+    fillEllipse(buf, 12, 15, 4, 4, '#64748b', W, H);
+    setPixel(buf, 9, 19, '#64748b', W, H);
+    setPixel(buf, 10, 19, '#64748b', W, H);
+    setPixel(buf, 14, 19, '#64748b', W, H);
+    setPixel(buf, 15, 19, '#64748b', W, H);
+    // 目（中央キャラ）
+    setPixel(buf, 10, 7, '#e2e8f0', W, H);
+    setPixel(buf, 14, 7, '#e2e8f0', W, H);
+
+    addOutline(buf, '#0f172a', W, H);
+    // アウトラインで潰れた目を復元
+    setPixel(buf, 10, 7, '#e2e8f0', W, H);
+    setPixel(buf, 14, 7, '#e2e8f0', W, H);
+
+  } else if (iconType === 'inventory') {
+    // バックパック
+
+    // ハンドル
+    fillRect(buf, 9, 3, 6, 3, '#92400e', W, H);
+    fillRect(buf, 10, 4, 4, 3, '#b45309', W, H);
+
+    // 本体
+    fillRect(buf, 4, 8, 16, 13, '#92400e', W, H);
+    fillRect(buf, 5, 9, 14, 11, '#b45309', W, H);
+
+    // フラップ（蓋）
+    fillRect(buf, 4, 6, 16, 4, '#78350f', W, H);
+    fillEllipse(buf, 12, 6, 8, 2, '#78350f', W, H);
+
+    // ポケット（前面）
+    fillRect(buf, 8, 13, 8, 5, '#78350f', W, H);
+    fillRect(buf, 9, 14, 6, 3, '#92400e', W, H);
+
+    // バックル
+    setPixel(buf, 11, 11, '#d97706', W, H);
+    setPixel(buf, 12, 11, '#fbbf24', W, H);
+    setPixel(buf, 13, 11, '#d97706', W, H);
+    fillRect(buf, 11, 12, 3, 1, '#d97706', W, H);
+
+    // ハイライト
+    fillRect(buf, 5, 9, 2, 5, '#d97706', W, H);
+
+    addOutline(buf, '#422006', W, H);
+
+  } else if (iconType === 'save') {
+    // フロッピーディスク
+
+    // 本体
+    fillRect(buf, 3, 2, 18, 20, '#334155', W, H);
+    fillRect(buf, 4, 3, 16, 18, '#475569', W, H);
+
+    // 右上カット（フロッピー特徴）
+    fillRect(buf, 15, 2, 6, 6, null, W, H);
+    fillRect(buf, 15, 2, 5, 5, '#334155', W, H);
+    setPixel(buf, 19, 3, '#334155', W, H);
+    setPixel(buf, 19, 4, '#334155', W, H);
+    setPixel(buf, 20, 4, '#334155', W, H);
+
+    // ラベル部分（中央の明るい面）
+    fillRect(buf, 5, 11, 14, 8, '#94a3b8', W, H);
+    fillRect(buf, 6, 12, 12, 6, '#cbd5e1', W, H);
+    // ラベルの線
+    fillRect(buf, 6, 14, 12, 1, '#94a3b8', W, H);
+    fillRect(buf, 6, 16, 12, 1, '#94a3b8', W, H);
+
+    // ラベル上部の書き込み口（スロット）
+    fillRect(buf, 8, 3, 8, 6, '#1e293b', W, H);
+    fillRect(buf, 10, 4, 4, 4, '#0f172a', W, H);
+    // スロット内のシャッター
+    fillRect(buf, 9, 4, 1, 4, '#334155', W, H);
+
+    // ハイライト
+    setPixel(buf, 4, 3, '#64748b', W, H);
+    setPixel(buf, 4, 4, '#64748b', W, H);
+
+    addOutline(buf, '#0f172a', W, H);
+  }
+
+  bufToCanvas(buf, ctx, W, H);
+}

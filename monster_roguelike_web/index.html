@@ -120,11 +120,7 @@
       <h2>卵を選べ</h2>
       <p style="color: #94a3b8; margin-bottom: 30px;">コルク：「3つある。好きなのを選べ。どれが光るかは俺にもわからん。なんかそういうもんらしい。」</p>
       
-      <div id="egg-container" class="egg-container">
-        <div class="egg egg-red" data-type="red"><div class="egg-spot"></div></div>
-        <div class="egg egg-blue" data-type="blue"><div class="egg-spot"></div></div>
-        <div class="egg egg-green" data-type="green"><div class="egg-spot"></div></div>
-      </div>
+      <div id="egg-container" class="egg-container"></div>
       <p id="egg-hatch-text" class="hide" style="margin-top:20px; font-weight:bold; color:#f8fafc;"></p>
       <button id="btn-egg-proceed" class="btn primary-btn hide mt-2">マップへ進む</button>
     </section>
@@ -155,9 +151,18 @@
       </div>
 
       <div id="hub-nav-btns">
-        <button id="btn-hub-party" class="btn hub-nav-btn active-tab">PARTY</button>
-        <button id="btn-hub-inventory" class="btn hub-nav-btn">INVENTORY</button>
-        <button id="save-btn" class="btn hub-nav-btn">SAVE</button>
+        <button id="btn-hub-party" class="btn hub-nav-btn active-tab">
+          <canvas id="icon-hub-party" class="map-btn-icon"></canvas>
+          <span>PARTY</span>
+        </button>
+        <button id="btn-hub-inventory" class="btn hub-nav-btn">
+          <canvas id="icon-hub-inventory" class="map-btn-icon"></canvas>
+          <span>INVENTORY</span>
+        </button>
+        <button id="save-btn" class="btn hub-nav-btn">
+          <canvas id="icon-hub-save" class="map-btn-icon"></canvas>
+          <span>SAVE</span>
+        </button>
       </div>
     </section>
 
@@ -171,13 +176,19 @@
         <span>👑 ボス</span>
         <span>⛺ 休憩</span>
       </div>
-      <div style="position:absolute; top:20px; right:20px; display:flex; gap:10px;">
-        <button id="btn-map-party" class="btn skill-btn active-tab" style="font-size:0.9rem; padding:6px 12px;">PARTY</button>
-        <button id="btn-map-inventory" class="btn skill-btn" style="font-size:0.9rem; padding:6px 12px;">INVENTORY</button>
-      </div>
       <div id="map-container" class="map-container">
         <svg id="map-lines" class="map-lines"></svg>
         <div id="map-nodes" class="map-nodes"></div>
+      </div>
+      <div class="map-bottom-btns">
+        <button id="btn-map-party" class="btn skill-btn map-action-btn active-tab">
+          <canvas id="icon-map-party" class="map-btn-icon"></canvas>
+          <span>PARTY</span>
+        </button>
+        <button id="btn-map-inventory" class="btn skill-btn map-action-btn">
+          <canvas id="icon-map-inventory" class="map-btn-icon"></canvas>
+          <span>INVENTORY</span>
+        </button>
       </div>
     </section>
 

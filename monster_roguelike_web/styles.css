@@ -855,24 +855,30 @@ header h1 {
   margin-bottom: 20px;
 }
 
-.egg {
-  width: 100px;
-  height: 140px;
-  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-  position: relative;
+.egg-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.45), inset -6px -12px 18px rgba(0,0,0,0.12);
-  overflow: hidden;
+  transition: transform 0.3s ease;
 }
-
-.egg:hover {
-  transform: scale(1.05) translateY(-10px);
-}
-
-.egg.hatching {
+.egg-card:hover { transform: scale(1.08) translateY(-8px); }
+.egg-card.hatching {
   animation: eggShake 0.5s ease;
   pointer-events: none;
+}
+.egg-canvas {
+  display: block;
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+}
+.egg-label {
+  font-size: 0.9rem;
+  color: #f8fafc;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
 
 @keyframes eggShake {
@@ -883,41 +889,6 @@ header h1 {
   100% { transform: rotate(0deg); opacity: 0.5; filter: grayscale(1); }
 }
 
-/* 水玉 (赤) */
-.egg-red {
-  background-color: #f7f0ed;
-  background-image: radial-gradient(circle, #dc2626 4.5px, transparent 4.5px);
-  background-size: 22px 22px;
-}
-
-/* 星 (青) */
-.egg-blue {
-  background-color: #eef2f8;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Ctext x='3' y='16' font-size='13' fill='%232563eb'%3E%E2%98%85%3C/text%3E%3C/svg%3E");
-  background-size: 22px 22px;
-}
-
-/* ひし形格子 (緑) */
-.egg-green {
-  background-color: #edf5ef;
-  background-image:
-    repeating-linear-gradient(45deg,  transparent, transparent 7px, #16a34a 7px, #16a34a 9px),
-    repeating-linear-gradient(-45deg, transparent, transparent 7px, #16a34a 7px, #16a34a 9px);
-}
-
-/* 卵の光沢ハイライト */
-.egg-spot {
-  position: absolute;
-  width: 38px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.65);
-  top: 20px;
-  left: 14px;
-  transform: rotate(-30deg);
-  filter: blur(5px);
-  pointer-events: none;
-}
 
 .mt-2 { margin-top: 20px; }
 
@@ -1369,12 +1340,20 @@ header h1 {
 }
 
 .hub-nav-btn {
-  font-size: 1rem;
-  padding: 10px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  padding: 10px 0;
   flex: 1;
   max-width: 160px;
   text-align: center;
+  background: rgba(255,255,255,0.1);
+  color: var(--text-main);
+  border: 1px solid var(--panel-border);
 }
+.hub-nav-btn:hover { background: rgba(59, 130, 246, 0.4); border-color: var(--accent); }
 
 .hub-nav-btn--danger { color: #ef4444; border-color: rgba(239, 68, 68, 0.4); }
 .hub-nav-btn--muted  { color: #94a3b8; border-color: rgba(148, 163, 184, 0.3); background: rgba(255,255,255,0.03); }
@@ -1484,6 +1463,23 @@ header h1 {
 }
 
 .map-screen { padding: 30px; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+.map-bottom-btns { display: flex; gap: 12px; margin-top: 12px; }
+.map-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100px;
+  padding: 8px 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+.map-btn-icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+}
 .map-desc { color: var(--text-muted); margin-bottom: 6px; }
 .map-legend {
   display: flex;

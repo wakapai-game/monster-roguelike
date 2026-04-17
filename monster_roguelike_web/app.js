@@ -1,4 +1,4 @@
-import { MONSTERS_DATA, ENEMY_DATA, TUTORIAL_ENEMY } from './data.js';
+import { MONSTERS_DATA, ENEMY_DATA, TUTORIAL_ENEMY, EGG_DATA } from './data.js';
 import { Monster, Timeline, BattleEngine } from './game.js';
 import { MapGenerator } from './map.js';
 import { appState } from './state.js';
@@ -18,9 +18,21 @@ import { toast, updateUI, resumeLoop } from './ui/battle.js';
 import { openEncyclopedia } from './ui/encyclopedia.js';
 import { saveGame, loadGame, deleteSave } from './persistence.js';
 import { openHelp, openHelpTab, initHelp } from './ui/help.js';
-import { generateNPCSprite } from './ui/sprite-generator.js';
+import { generateNPCSprite, generateUIIcon, generateEggSprite } from './ui/sprite-generator.js';
 import { initDevOverlay } from './ui/dev-overlay.js';
 import { initStartScene } from './ui/start-scene.js';
+
+// ---- ボタンアイコン（マップ画面・ハブ画面共通） ----
+[
+  ['icon-map-party',      'party'],
+  ['icon-map-inventory',  'inventory'],
+  ['icon-hub-party',      'party'],
+  ['icon-hub-inventory',  'inventory'],
+  ['icon-hub-save',       'save'],
+].forEach(([id, type]) => {
+  const c = document.getElementById(id);
+  if (c) generateUIIcon(c, type);
+});
 
 // ---- Dev Overlay (?dev で有効化) ----
 initDevOverlay();
@@ -93,7 +105,7 @@ const _saveModalMsg    = _saveModal?.querySelector('.save-modal-msg');
 function openSaveModal() { _saveModal?.classList.remove('hide'); }
 function closeSaveModal() { _saveModal?.classList.add('hide'); }
 
-document.getElementById('save-btn').onclick = openSaveModal;
+document.getElementById('save-btn')?.addEventListener('click', openSaveModal);
 
 if (_saveModalClose) _saveModalClose.onclick = closeSaveModal;
 
@@ -103,13 +115,13 @@ if (_saveModalDo) _saveModalDo.onclick = () => {
   setTimeout(closeSaveModal, 1200);
 };
 
-document.getElementById('delete-save-btn').onclick = () => {
+document.getElementById('delete-save-btn')?.addEventListener('click', () => {
   if (confirm('コルク：「記録を消すぞ。本当にいいか？　俺はいいが。」')) {
     deleteSave();
     closeSaveModal();
     alert('コルク：「消した。問題ない。問題があっても問題ない。」');
   }
-};
+});
 
 // Restore save data on load
 (function restoreSave() {
@@ -130,21 +142,7 @@ document.getElementById('delete-save-btn').onclick = () => {
     // Skip start/story/name screens, go directly to hub
     switchScreen(screenStart, screenHub);
     rosterGrid.innerHTML = '';
-    appState.globalRoster.forEach(data => {
-      const card = document.createElement('div');
-      card.className = 'roster-card glass-panel';
-      card.dataset.id = data.id;
-      card.innerHTML = `
-        <h3>${data.name}</h3>
-        <p style="font-size: 0.8rem; margin-top: 5px; color: #94a3b8;">Elem: ${data.main_element.toUpperCase()}</p>
-        <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
-          <span style="font-size: 0.75rem; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px;">HP ${data.base_stats.hp}</span>
-          <span style="font-size: 0.75rem; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px;">ST ${data.base_stats.max_st}</span>
-        </div>
-      `;
-      card.onclick = () => toggleRosterSelection(card, data.id);
-      rosterGrid.appendChild(card);
-    });
+    appendRosterUI(appState.globalRoster);
     btnStartBattle.onclick = confirmBattleSetup;
     updateHubUI();
   }
@@ -315,11 +313,11 @@ function confirmBattleSetup() {
   if (floor >= 2) p2Count = 2;
   if (floor >= 4) p2Count = 3;
   if (currentNode.type === 'elite') p2Count += 1;
-  if (isBoss) p2Count = 4;
+  if (isBoss) p2Count = 1;
 
-  // ボスノードは弱い敵を先に出し、ダイカラを最後に固定
+  // ボスノードはボス1体のみ
   const pool = isBoss
-    ? [...shuffled.slice(0, p2Count - 1), ENEMY_DATA.find(e => e.id === 'e_boss_01')]
+    ? [ENEMY_DATA.find(e => e.id === 'e_boss_01')]
     : shuffled.slice(0, p2Count);
 
   appState.p2Team = pool.map(data => {
@@ -448,70 +446,78 @@ function toggleRosterSelection(card, id) {
 }
 
 // ---- Egg Selection ----
-const eggs = document.querySelectorAll('.egg');
 const eggText = document.getElementById('egg-hatch-text');
 const btnEggProceed = document.getElementById('btn-egg-proceed');
 let generatedRoster = [];
 let instCount = 0;
 
-eggs.forEach(egg => {
-  egg.onclick = () => {
-    eggs.forEach(e => e.style.pointerEvents = 'none');
-    egg.classList.add('hatching');
-    setTimeout(() => {
-      const type = egg.dataset.type;
-      generatedRoster = generateRosterFromEgg(type);
-      const names = generatedRoster.map(m => m.name).join(', ');
-      eggText.innerHTML = `孵化した。<br><span style="color:#fbbf24;">${names}</span> があなたを選んだ。<br><span style="color:#94a3b8; font-size:0.85rem;">コルク：「問題ない。」</span>`;
-      eggText.classList.remove('hide');
-      btnEggProceed.classList.remove('hide');
-      egg.classList.remove('hatching');
-      egg.style.transform = 'scale(0)';
-    }, 1500);
-  };
-});
+function populateEggScreen(elements) {
+  const container = document.getElementById('egg-container');
+  container.innerHTML = '';
+  elements.forEach(element => {
+    const eggData = EGG_DATA.find(e => e.element === element) || { name: element + 'の卵' };
 
-function generateRosterFromEgg(type) {
-  const roster = [];
-  const biasMap = {
-    'red': ['fire', 'earth', 'light'],
-    'blue': ['water', 'ice', 'dark'],
-    'green': ['wind', 'thunder', 'none']
-  };
-  const biases = biasMap[type];
+    const card = document.createElement('div');
+    card.className = 'egg-card';
+    card.dataset.element = element;
 
-  // 手持ちに既にいるジュウマの base ID を除外
+    const canvas = document.createElement('canvas');
+    canvas.className = 'egg-canvas';
+    generateEggSprite(canvas, element);
+
+    const label = document.createElement('div');
+    label.className = 'egg-label';
+    label.textContent = eggData.name;
+
+    card.appendChild(canvas);
+    card.appendChild(label);
+    container.appendChild(card);
+
+    card.onclick = () => {
+      container.querySelectorAll('.egg-card').forEach(c => { c.style.pointerEvents = 'none'; });
+      card.classList.add('hatching');
+      setTimeout(() => {
+        generatedRoster = generateRosterFromEgg(element);
+        const names = generatedRoster.map(m => m.name).join(', ');
+        eggText.innerHTML = `孵化した。<br><span style="color:#fbbf24;">${names}</span> があなたを選んだ。<br><span style="color:#94a3b8; font-size:0.85rem;">コルク：「問題ない。」</span>`;
+        eggText.classList.remove('hide');
+        btnEggProceed.classList.remove('hide');
+        card.classList.remove('hatching');
+        card.style.transform = 'scale(0)';
+      }, 1500);
+    };
+  });
+}
+
+function generateRosterFromEgg(element) {
   const ownedBaseIds = new Set(
     MONSTERS_DATA
       .filter(m => (appState.globalRoster || []).some(r => r.id.startsWith(m.id)))
       .map(m => m.id)
   );
   const unownedPool = MONSTERS_DATA.filter(m => !ownedBaseIds.has(m.id));
-  // 全種類所持済みの場合はフルプールにフォールバック
   const basePool = unownedPool.length > 0 ? unownedPool : MONSTERS_DATA;
 
-  let pool = basePool;
-  if (Math.random() < 0.5) {
-    const biasedPool = basePool.filter(m => biases.includes(m.main_element));
-    if (biasedPool.length > 0) pool = biasedPool;
-  }
+  const elementPool = basePool.filter(m => m.main_element === element);
+  const pool = elementPool.length > 0 ? elementPool : basePool;
+
   const picked = pool[Math.floor(Math.random() * pool.length)];
   const monsterData = JSON.parse(JSON.stringify(picked));
   monsterData.id = monsterData.id + '_inst' + (instCount++);
-  roster.push(new Monster(monsterData));
-  return roster;
+  return [new Monster(monsterData)];
 }
 
 function resetEggScreen() {
-  eggs.forEach(egg => {
-    egg.style.pointerEvents = 'auto';
-    egg.style.transform = 'scale(1)';
-    egg.classList.remove('hatching');
-  });
+  const allElements = EGG_DATA.map(e => e.element);
+  const shuffled = [...allElements].sort(() => 0.5 - Math.random());
+  populateEggScreen(shuffled.slice(0, 3));
   eggText.classList.add('hide');
   btnEggProceed.classList.add('hide');
   generatedRoster = [];
 }
+
+// 初期卵画面を生成
+resetEggScreen();
 
 btnEggProceed.onclick = () => {
   if (!appState.hubVisited) {
