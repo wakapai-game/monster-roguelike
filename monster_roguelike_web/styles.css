@@ -1062,7 +1062,7 @@ header h1 {
   -webkit-backdrop-filter: none;
 }
 
-.title-container { margin-bottom: 40px; }
+.title-container { margin-bottom: 12px; }
 .mega-title {
   font-size: 4rem;
   font-weight: 800;

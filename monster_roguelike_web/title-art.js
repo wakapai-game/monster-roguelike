@@ -222,23 +222,17 @@ export function initTitleArt(titleCanvas, bgCanvas) {
   // --- Title canvas setup ---
   const titleText = 'MONSTER ROGUE';
   const titlePixel = 4;
-  const subText = 'TACTICAL STAMINA BATTLES';
-  const subPixel = 2;
 
   const titleMeasure = measureBitmapText(titleText, titlePixel);
-  const subMeasure = measureBitmapText(subText, subPixel);
   const padding = 16;
-  const gap = 12;
-  const cw = Math.max(titleMeasure.width, subMeasure.width) + padding * 2;
-  const ch = titleMeasure.height + gap + subMeasure.height + padding * 2;
+  const cw = titleMeasure.width + padding * 2;
+  const ch = titleMeasure.height + padding * 2;
   titleCanvas.width = cw;
   titleCanvas.height = ch;
   titleCtx.imageSmoothingEnabled = false;
 
   const titleX = Math.floor((cw - titleMeasure.width) / 2);
   const titleY = padding;
-  const subX = Math.floor((cw - subMeasure.width) / 2);
-  const subY = titleY + titleMeasure.height + gap;
 
   // Title glow animation
   let titleRaf;
