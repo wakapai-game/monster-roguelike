@@ -35,8 +35,8 @@ export function initDevOverlay() {
   badge.id = 'dev-screen-badge';
   Object.assign(badge.style, {
     position: 'fixed',
-    top: '8px',
-    right: '8px',
+    bottom: '8px',
+    left: '8px',
     background: 'rgba(0,0,0,0.75)',
     color: '#00ff88',
     fontFamily: 'monospace',

@@ -5,12 +5,10 @@ import { generateMonsterSprite, createElementBadge } from './sprite-generator.js
 import {
   switchScreen,
   screenInventory, screenParty, screenHub,
-  invSkillsContent, invFoodContent, invTargetSelection,
-  invRosterGrid, invTargetMsg, btnCancelUse,
+  invSkillsContent, invFoodContent,
   partyDetailsGrid, btnCloseInventory, btnCloseParty
 } from './dom.js';
 
-let activeInvItem = null;
 let dragSrcIndex = -1;
 
 // 技設定モーダルの状態
@@ -30,6 +28,7 @@ export function openInventory(fromScreen) {
 
 export function openParty(fromScreen) {
     appState.returnScreen = fromScreen;
+    partySelectedIndex = 0;
     renderParty();
     switchScreen(fromScreen, screenParty);
 }
@@ -38,136 +37,37 @@ export function renderInventory() {
     invSkillsContent.innerHTML = '';
     invFoodContent.innerHTML = '';
 
-    if(appState.globalInventory.skills.length === 0) invSkillsContent.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">No Skills Available</span>';
-    if(appState.globalInventory.mapItems.length === 0) invFoodContent.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">No Food Available</span>';
+    if (appState.globalInventory.skills.length === 0) {
+        invSkillsContent.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
+    }
+    if (appState.globalInventory.mapItems.length === 0) {
+        invFoodContent.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
+    }
 
-    appState.globalInventory.skills.forEach((id, index) => {
+    // 技一覧（確認のみ）
+    appState.globalInventory.skills.forEach(id => {
         const item = SKILLS.find(s => s.id === id);
-        if(!item) return;
+        if (!item) return;
         const el = document.createElement('div');
         el.className = 'inv-item-row';
-        el.innerHTML = `<span>${item.name}</span> <span style="font-size:0.7em;">技</span>`;
-        el.onclick = () => selectInvItem(el, 'skill', index, item.name);
+        el.style.cursor = 'default';
+        el.innerHTML = `<span>${item.name}</span><span style="font-size:0.7em; color:#94a3b8;">技</span>`;
         invSkillsContent.appendChild(el);
     });
 
-    appState.globalInventory.mapItems.forEach((id, index) => {
+    // えさ一覧（同種まとめ・確認のみ）
+    const grouped = {};
+    appState.globalInventory.mapItems.forEach(id => { grouped[id] = (grouped[id] || 0) + 1; });
+    Object.entries(grouped).forEach(([id, count]) => {
         const item = FOOD_DATA.find(s => s.id === id);
-        if(!item) return;
+        if (!item) return;
         const el = document.createElement('div');
         el.className = 'inv-item-row';
-        el.innerHTML = `<span>${item.name}</span> <span style="font-size:0.7em; color:#10b981;">${item.description}</span>`;
-        el.onclick = () => selectInvItem(el, 'mapItem', index, item.name);
+        el.style.cursor = 'default';
+        el.innerHTML = `<span>${item.name}</span><span style="font-size:0.75em; color:#94a3b8;">×${count}</span>`;
         invFoodContent.appendChild(el);
     });
 }
-
-export function selectInvItem(element, type, index, name) {
-    document.querySelectorAll('.inv-item-row').forEach(e => e.classList.remove('selected'));
-    element.classList.add('selected');
-    activeInvItem = { type, index, name };
-
-    invTargetSelection.classList.remove('hide');
-    invTargetMsg.innerText = `「${name}」を誰に使いますか？`;
-
-    invRosterGrid.innerHTML = '';
-    appState.globalRoster.forEach(m => {
-        const card = document.createElement('div');
-        card.className = 'roster-card';
-        try {
-          const offscreen = document.createElement('canvas');
-          generateMonsterSprite(offscreen, m);
-          const spriteImg = document.createElement('img');
-          spriteImg.src = offscreen.toDataURL();
-          spriteImg.style.cssText = 'display:block; width:48px; height:48px; margin:0 auto 4px; image-rendering:pixelated; image-rendering:crisp-edges;';
-          card.appendChild(spriteImg);
-        } catch(e) {
-          console.warn('sprite error:', m.id, e);
-        }
-        const info = document.createElement('div');
-        info.innerHTML = `<h4>${m.name}</h4><p style="font-size:0.75rem; color:#94a3b8; margin-top:5px;">HP:${m.base_stats.hp} ST:${m.base_stats.max_st}</p>`;
-        card.appendChild(info);
-        card.onclick = () => applyItemToMonster(m);
-        invRosterGrid.appendChild(card);
-    });
-}
-
-export function applyItemToMonster(m) {
-    if(!activeInvItem) return;
-
-    if(activeInvItem.type === 'skill') {
-        const skillId = appState.globalInventory.skills[activeInvItem.index];
-        if (!m.known_skills) m.known_skills = [...m.skills];
-
-        if (m.known_skills.includes(skillId)) {
-            alert(`${m.name} はすでに覚えている！`);
-            return;
-        }
-        if (m.known_skills.length >= 10) {
-            alert(`${m.name} はこれ以上技を覚えられない！（修得技の上限は10個）`);
-            return;
-        }
-        m.known_skills.push(skillId);
-        if (m.skills.length < 4) {
-            m.skills.push(skillId);
-        }
-        appState.globalInventory.skills.splice(activeInvItem.index, 1);
-        const autoMsg = m.skills.includes(skillId) ? '（バトルにセット済み）' : '（修得技に追加。技設定でセットしてください）';
-        alert(`${m.name} は ${activeInvItem.name} を覚えた！${autoMsg}`);
-
-    } else if (activeInvItem.type === 'mapItem') {
-        const MAX_FEED = 10;
-        if ((m.feed_count || 0) >= MAX_FEED) {
-            alert(`${m.name} はもうこれ以上えさを食べられない！（上限${MAX_FEED}回）`);
-            return;
-        }
-
-        const itemId = appState.globalInventory.mapItems[activeInvItem.index];
-        const itemData = FOOD_DATA.find(i => i.id === itemId);
-        if (!itemData) return;
-
-        if (!m.params) m.params = { size: 0, hardness: 0, weight: 0, intelligence: 0 };
-
-        if (itemData.effect.base_stats) {
-            for (const [stat, delta] of Object.entries(itemData.effect.base_stats)) {
-                const before = m.base_stats[stat] || 0;
-                m.base_stats[stat] = before + delta;
-                if (typeof m.logGrowth === 'function') m.logGrowth(itemId, stat, before, m.base_stats[stat]);
-            }
-        }
-        if (itemData.effect.params) {
-            for (const [param, delta] of Object.entries(itemData.effect.params)) {
-                const before = m.params[param] || 0;
-                m.params[param] = before + delta;
-                if (typeof m.logGrowth === 'function') m.logGrowth(itemId, param, before, m.params[param]);
-            }
-        }
-
-        m.feed_count = (m.feed_count || 0) + 1;
-        if (typeof m.recalculateStats === 'function') {
-            m.recalculateStats();
-            m.current_hp = m.stats.hp;
-        } else {
-            const mc = new Monster(m);
-            m.stats = mc.stats;
-            m.current_hp = m.stats.hp;
-        }
-
-        appState.globalInventory.mapItems.splice(activeInvItem.index, 1);
-        const remaining = MAX_FEED - m.feed_count;
-        alert(`${m.name} は ${itemData.name} を食べた！（残り${remaining}回）`);
-    }
-
-    invTargetSelection.classList.add('hide');
-    activeInvItem = null;
-    renderInventory();
-}
-
-btnCancelUse.onclick = () => {
-    invTargetSelection.classList.add('hide');
-    document.querySelectorAll('.inv-item-row').forEach(e => e.classList.remove('selected'));
-    activeInvItem = null;
-};
 
 function renderGrowthLog(monster) {
     const log = monster.growth_log;
@@ -188,183 +88,447 @@ function renderGrowthLog(monster) {
 
 // ---- Party Screen ----
 
+let partySelectedIndex = 0;
+
+function _showPartyToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(30,41,59,0.95); border:1px solid rgba(255,255,255,0.15); color:#f8fafc; font-size:0.82rem; padding:6px 16px; border-radius:20px; pointer-events:none; z-index:9999; white-space:nowrap; transition:opacity 0.3s;';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 1800);
+}
+
 export function renderParty() {
-    partyDetailsGrid.innerHTML = '';
     const roster = appState.globalRoster;
+    partySelectedIndex = Math.max(0, Math.min(partySelectedIndex, roster.length - 1));
+    _renderPartyRoster(roster);
+    _renderPartyDetail(roster);
+}
 
-    roster.forEach((data, index) => {
+// ---- ロースター一覧（3×2固定グリッド） ----
+let _rosterDragSrc = -1;
+
+function _renderPartyRoster(roster) {
+    const panel = document.getElementById('party-roster-list');
+    if (!panel) return;
+    panel.innerHTML = '';
+
+    for (let i = 0; i < 6; i++) {
+        const data = roster[i];
+
+        if (!data) {
+            // 空きスロット
+            const empty = document.createElement('div');
+            empty.className = 'party-mini-card-empty';
+            empty.dataset.slot = i;
+            _setupRosterDropTarget(empty, i, roster);
+            panel.appendChild(empty);
+            continue;
+        }
+
         const mc = (data instanceof Monster) ? data : new Monster(data);
-        if (!data.known_skills) data.known_skills = [...data.skills];
-
-        const isFirst = index === 0;
-        const isLast = index === roster.length - 1;
-
         const card = document.createElement('div');
-        card.className = 'party-stat-card';
+        card.className = `party-mini-card${i === partySelectedIndex ? ' selected' : ''}`;
+        card.dataset.slot = i;
         card.draggable = true;
-        card.dataset.index = index;
 
-        // ドラッグ&ドロップ（隊列並べ替え）
+        // タップで選択
+        card.onclick = () => { partySelectedIndex = i; renderParty(); };
+
+        // ドラッグ開始
         card.addEventListener('dragstart', (e) => {
-            dragSrcIndex = index;
-            card.classList.add('dragging');
+            _rosterDragSrc = i;
             e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', 'party-card');
+            e.dataTransfer.setData('text/plain', String(i));
+            setTimeout(() => card.style.opacity = '0.4', 0);
         });
-        card.addEventListener('dragend', () => {
-            card.classList.remove('dragging');
-            partyDetailsGrid.querySelectorAll('.party-stat-card').forEach(c => c.classList.remove('drag-over'));
-        });
-        card.addEventListener('dragover', (e) => {
-            if (e.dataTransfer.getData('text/plain') === 'party-card' || dragSrcIndex !== -1) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            }
-        });
-        card.addEventListener('dragenter', (e) => {
-            e.preventDefault();
-            if (dragSrcIndex !== index) card.classList.add('drag-over');
-        });
-        card.addEventListener('dragleave', () => {
-            card.classList.remove('drag-over');
-        });
-        card.addEventListener('drop', (e) => {
-            e.preventDefault();
-            card.classList.remove('drag-over');
-            const dropIndex = index;
-            if (dragSrcIndex === -1 || dragSrcIndex === dropIndex) return;
-            const moved = roster.splice(dragSrcIndex, 1)[0];
-            roster.splice(dropIndex, 0, moved);
-            dragSrcIndex = -1;
-            renderParty();
-        });
+        card.addEventListener('dragend', () => { card.style.opacity = ''; _rosterDragSrc = -1; });
 
-        // 隊列バー
-        const orderBar = document.createElement('div');
-        orderBar.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1);';
+        _setupRosterDropTarget(card, i, roster);
 
-        const leftGroup = document.createElement('div');
-        leftGroup.style.cssText = 'display:flex; align-items:center; gap:6px;';
-
-        const dragHandle = document.createElement('span');
-        dragHandle.className = 'party-drag-handle';
-        dragHandle.textContent = '⠿';
-        dragHandle.title = 'ドラッグして並べ替え';
-
-        const posLabel = document.createElement('span');
-        posLabel.style.cssText = `font-size:0.85rem; font-weight:bold; color:${isFirst ? '#fbbf24' : '#94a3b8'};`;
-        posLabel.textContent = `No.${index + 1}${isFirst ? ' ★先頭' : ''}`;
-
-        leftGroup.appendChild(dragHandle);
-        leftGroup.appendChild(posLabel);
-
-        const moveBtns = document.createElement('div');
-        moveBtns.style.cssText = 'display:flex; gap:4px;';
-
-        const leftBtn = document.createElement('button');
-        leftBtn.className = 'btn skill-btn';
-        leftBtn.style.cssText = 'padding:3px 8px; font-size:0.75rem;';
-        leftBtn.textContent = '◀';
-        leftBtn.disabled = isFirst;
-        leftBtn.onclick = () => {
-            [roster[index - 1], roster[index]] = [roster[index], roster[index - 1]];
-            renderParty();
-        };
-
-        const rightBtn = document.createElement('button');
-        rightBtn.className = 'btn skill-btn';
-        rightBtn.style.cssText = 'padding:3px 8px; font-size:0.75rem;';
-        rightBtn.textContent = '▶';
-        rightBtn.disabled = isLast;
-        rightBtn.onclick = () => {
-            [roster[index], roster[index + 1]] = [roster[index + 1], roster[index]];
-            renderParty();
-        };
-
-        moveBtns.appendChild(leftBtn);
-        moveBtns.appendChild(rightBtn);
-        orderBar.appendChild(leftGroup);
-        orderBar.appendChild(moveBtns);
-        card.appendChild(orderBar);
-
-        // スプライト（offscreen→img）
+        // スプライト
         try {
-          const offscreen = document.createElement('canvas');
-          generateMonsterSprite(offscreen, mc);
-          const spriteImg = document.createElement('img');
-          spriteImg.src = offscreen.toDataURL();
-          spriteImg.style.cssText = 'display:block; width:80px; height:80px; margin:0 auto 10px; image-rendering:pixelated; image-rendering:crisp-edges;';
-          card.appendChild(spriteImg);
-        } catch(e) {
-          console.warn('sprite error:', mc.id, e);
+            const offscreen = document.createElement('canvas');
+            generateMonsterSprite(offscreen, mc);
+            const img = document.createElement('img');
+            img.src = offscreen.toDataURL();
+            card.appendChild(img);
+        } catch(e) {}
+
+        // 名前 + HPバー
+        const info = document.createElement('div');
+        info.className = 'party-mini-info';
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'party-mini-name';
+        nameEl.textContent = mc.name;
+        info.appendChild(nameEl);
+
+        if (i === 0) {
+            const star = document.createElement('div');
+            star.className = 'party-mini-pos';
+            star.textContent = '★先頭';
+            info.appendChild(star);
         }
 
-        // ステータス
-        const statsDiv = document.createElement('div');
-        statsDiv.innerHTML = `
-            <div>
-                <h3 style="margin-bottom:5px;">${mc.name} <span class="party-main-elem-placeholder" style="float:right;"></span></h3>
-                <p class="party-sub-elem-container" style="font-size:0.8rem; color:#94a3b8;"></p>
-            </div>
-            <div class="party-stat-grid">
-                <div class="stat-row"><span class="stat-label">HP</span> <span class="stat-val">${mc.stats.hp}</span></div>
-                <div class="stat-row"><span class="stat-label">ST (Armor)</span> <span class="stat-val">${mc.stats.max_st}</span></div>
-                <div class="stat-row"><span class="stat-label">ATK</span> <span class="stat-val">${mc.stats.atk}</span></div>
-                <div class="stat-row"><span class="stat-label">DEF</span> <span class="stat-val">${mc.stats.def}</span></div>
-                <div class="stat-row"><span class="stat-label">MAG</span> <span class="stat-val">${mc.stats.mag}</span></div>
-                <div class="stat-row"><span class="stat-label">SPD</span> <span class="stat-val">${mc.stats.spd}</span></div>
-            </div>
-            <div style="font-size:0.85rem; font-weight:bold; color:#cbd5e1; margin-top:10px; margin-bottom:5px;">可変ステータス (Variable Extras)</div>
-            <div class="party-stat-grid" style="border-top:1px dashed #334155; padding-top:10px; margin-bottom:10px;">
-                <div class="stat-row"><span class="stat-label">大きさ</span> <span class="stat-val" style="color:#fde047;">${mc.getSizeLabel()} (${mc.params.size||0})</span></div>
-                <div class="stat-row"><span class="stat-label">賢さランク</span> <span class="stat-val" style="color:#fde047;">Lv.${mc.getIntelligenceLevel()} (${mc.params.intelligence||0})</span></div>
-                <div class="stat-row"><span class="stat-label">えさ回数</span> <span class="stat-val" style="color:${(mc.feed_count||0)>=10?'#ef4444':'#94a3b8'};">${mc.feed_count||0} / 10</span></div>
-            </div>
-        `;
-        const mainElemPlaceholder = statsDiv.querySelector('.party-main-elem-placeholder');
-        if (mainElemPlaceholder) mainElemPlaceholder.replaceWith(createElementBadge(mc.main_element));
-        const subElemContainer = statsDiv.querySelector('.party-sub-elem-container');
-        if (subElemContainer && mc.sub_element !== 'none') {
-            subElemContainer.textContent = 'Sub: ';
-            subElemContainer.appendChild(createElementBadge(mc.sub_element));
-        }
-        card.appendChild(statsDiv);
+        const maxHp = mc.stats.hp;
+        const curHp = data.current_hp !== undefined ? Math.max(0, data.current_hp) : maxHp;
+        const hpPct = maxHp > 0 ? (curHp / maxHp * 100) : 100;
+        const hpColor = hpPct > 50 ? '#22c55e' : hpPct > 25 ? '#eab308' : '#ef4444';
+        info.innerHTML += `<div class="party-mini-hp"><div class="party-mini-hp-fill" style="width:${hpPct}%;background:${hpColor};"></div></div>`;
 
-        // バトル技（読み取り専用 + 技設定ボタン）
-        const skillsDiv = document.createElement('div');
-        const equipped = data.skills || [];
-        const skillBadges = equipped.map(sid => {
-            const info = SKILLS.find(s => s.id === sid);
-            return info ? `<span class="party-skill-badge">${info.name}</span>` : '';
-        }).join('');
+        card.appendChild(info);
+        panel.appendChild(card);
+    }
 
-        const skillsHeader = document.createElement('div');
-        skillsHeader.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;';
-        skillsHeader.innerHTML = `
-            <span style="font-size:0.85rem; font-weight:bold; color:#cbd5e1;">バトル技 (${equipped.length}/4)</span>
-        `;
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn skill-btn';
-        editBtn.style.cssText = 'padding:3px 12px; font-size:0.75rem; color:#fbbf24; border-color:rgba(251,191,36,0.4);';
-        editBtn.textContent = '技設定';
-        editBtn.onclick = () => openSkillEdit(data);
-        skillsHeader.appendChild(editBtn);
+    // スワイプで隊列入れ替え（スマホ）
+    _initRosterSwipe(panel, roster);
+}
 
-        const badgesDiv = document.createElement('div');
-        badgesDiv.className = 'party-skills';
-        badgesDiv.innerHTML = skillBadges || '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
-
-        skillsDiv.appendChild(skillsHeader);
-        skillsDiv.appendChild(badgesDiv);
-        card.appendChild(skillsDiv);
-
-        // 育成記録
-        const growthDiv = document.createElement('div');
-        growthDiv.innerHTML = renderGrowthLog(data);
-        card.appendChild(growthDiv);
-
-        partyDetailsGrid.appendChild(card);
+function _setupRosterDropTarget(el, targetIdx, roster) {
+    el.addEventListener('dragover', (e) => {
+        if (_rosterDragSrc === -1 || _rosterDragSrc === targetIdx) return;
+        e.preventDefault();
+        el.style.outline = '2px solid #3b82f6';
     });
+    el.addEventListener('dragleave', () => { el.style.outline = ''; });
+    el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        el.style.outline = '';
+        if (_rosterDragSrc === -1 || _rosterDragSrc === targetIdx) return;
+        const src = _rosterDragSrc;
+        // src と target を入れ替え（空きスロットへのドロップも対応）
+        const tmp = roster[src];
+        roster[src] = roster[targetIdx]; // undefined の場合もある
+        if (roster[src] === undefined) roster.splice(src, 1);
+        if (targetIdx < roster.length) {
+            roster[targetIdx] = tmp;
+        } else {
+            roster.push(tmp);
+        }
+        // undefined を詰める
+        const cleaned = roster.filter(Boolean);
+        roster.length = 0;
+        cleaned.forEach(m => roster.push(m));
+        partySelectedIndex = roster.indexOf(tmp);
+        if (partySelectedIndex < 0) partySelectedIndex = 0;
+        renderParty();
+    });
+}
+
+function _initRosterSwipe(panel, roster) {
+    let startX = 0, startY = 0, swipeSrcIdx = -1;
+    panel.addEventListener('touchstart', (e) => {
+        const card = e.target.closest('.party-mini-card');
+        if (!card) return;
+        swipeSrcIdx = parseInt(card.dataset.slot);
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    panel.addEventListener('touchend', (e) => {
+        if (swipeSrcIdx === -1) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) < 40 && Math.abs(dy) < 40) { swipeSrcIdx = -1; return; }
+
+        // スワイプ先のカードを特定
+        const endEl = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        const destCard = endEl?.closest('[data-slot]');
+        const destIdx = destCard ? parseInt(destCard.dataset.slot) : -1;
+
+        if (destIdx >= 0 && destIdx !== swipeSrcIdx) {
+            // 入れ替え
+            const a = roster[swipeSrcIdx], b = roster[destIdx];
+            if (a) { roster[destIdx] = a; }
+            if (b) { roster[swipeSrcIdx] = b; } else { roster.splice(swipeSrcIdx, 1); }
+            const cleaned = roster.filter(Boolean);
+            roster.length = 0;
+            cleaned.forEach(m => roster.push(m));
+            partySelectedIndex = 0;
+            renderParty();
+            _showPartyToast('隊列を入れ替えました');
+        }
+        swipeSrcIdx = -1;
+    }, { passive: true });
+}
+
+// ---- 選択モンスター詳細（右/下パネル） ----
+function _renderPartyDetail(roster) {
+    partyDetailsGrid.innerHTML = '';
+    const index = partySelectedIndex;
+    const data = roster[index];
+    if (!data) return;
+
+    const mc = (data instanceof Monster) ? data : new Monster(data);
+    if (!data.known_skills) data.known_skills = [...data.skills];
+
+    // 名前 + 属性バッジ
+    const nameRow = document.createElement('div');
+    nameRow.className = 'party-single-name-row';
+    const nameH = document.createElement('h3');
+    nameH.textContent = mc.name;
+    nameRow.appendChild(nameH);
+    nameRow.appendChild(createElementBadge(mc.main_element));
+    if (mc.sub_element && mc.sub_element !== 'none') {
+        const subL = document.createElement('span');
+        subL.style.cssText = 'font-size:0.72rem; color:#64748b;';
+        subL.textContent = 'Sub:';
+        nameRow.appendChild(subL);
+        nameRow.appendChild(createElementBadge(mc.sub_element));
+    }
+    partyDetailsGrid.appendChild(nameRow);
+
+    // ステータスグリッド
+    const statsEl = document.createElement('div');
+    statsEl.innerHTML = `
+        <div class="party-stat-grid">
+            <div class="stat-row"><span class="stat-label">HP</span><span class="stat-val">${mc.stats.hp}</span></div>
+            <div class="stat-row"><span class="stat-label">ST</span><span class="stat-val">${mc.stats.max_st}</span></div>
+            <div class="stat-row"><span class="stat-label">ATK</span><span class="stat-val">${mc.stats.atk}</span></div>
+            <div class="stat-row"><span class="stat-label">DEF</span><span class="stat-val">${mc.stats.def}</span></div>
+            <div class="stat-row"><span class="stat-label">MAG</span><span class="stat-val">${mc.stats.mag}</span></div>
+            <div class="stat-row"><span class="stat-label">SPD</span><span class="stat-val">${mc.stats.spd}</span></div>
+        </div>
+        <div class="party-stat-grid party-param-grid">
+            <div class="stat-row"><span class="stat-label">大きさ</span><span class="stat-val" style="color:#fde047;">${mc.getSizeLabel()}</span></div>
+            <div class="stat-row"><span class="stat-label">賢さ</span><span class="stat-val" style="color:#fde047;">Lv.${mc.getIntelligenceLevel()}</span></div>
+            <div class="stat-row"><span class="stat-label">えさ</span><span class="stat-val" style="color:${(mc.feed_count||0)>=10?'#ef4444':'#94a3b8'};">${mc.feed_count||0}/10</span></div>
+        </div>
+    `;
+    partyDetailsGrid.appendChild(statsEl);
+
+    // バトル技
+    const skillsDiv = document.createElement('div');
+    const equipped = data.skills || [];
+    const skillsHeader = document.createElement('div');
+    skillsHeader.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;';
+    skillsHeader.innerHTML = `<span style="font-size:0.85rem; font-weight:bold; color:#cbd5e1;">バトル技 (${equipped.length}/4)</span>`;
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn skill-btn';
+    editBtn.style.cssText = 'padding:3px 12px; font-size:0.75rem; color:#fbbf24; border-color:rgba(251,191,36,0.4);';
+    editBtn.textContent = '技設定';
+    editBtn.onclick = () => openSkillEdit(data);
+    skillsHeader.appendChild(editBtn);
+    const badgesDiv = document.createElement('div');
+    badgesDiv.className = 'party-skills';
+    badgesDiv.innerHTML = equipped.map(sid => {
+        const info = SKILLS.find(s => s.id === sid);
+        return info ? `<span class="party-skill-badge">${info.name}</span>` : '';
+    }).join('') || '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
+    skillsDiv.appendChild(skillsHeader);
+    skillsDiv.appendChild(badgesDiv);
+    partyDetailsGrid.appendChild(skillsDiv);
+
+    // 区切り
+    partyDetailsGrid.appendChild(_partyDivider());
+
+    // えさを与える
+    partyDetailsGrid.appendChild(_renderFoodSection(data, mc));
+
+    // 技を覚えさせる
+    partyDetailsGrid.appendChild(_renderLearnSection(data));
+
+    // 区切り
+    partyDetailsGrid.appendChild(_partyDivider());
+
+    // 隊列移動
+    const orderSection = document.createElement('div');
+    orderSection.className = 'party-order-controls';
+    const orderLabel = document.createElement('span');
+    orderLabel.style.cssText = 'font-size:0.78rem; color:#64748b;';
+    orderLabel.textContent = '隊列を移動';
+    const leftBtn = document.createElement('button');
+    leftBtn.className = 'btn skill-btn';
+    leftBtn.style.cssText = 'padding:4px 12px; font-size:0.8rem;';
+    leftBtn.textContent = '◀ 前へ';
+    leftBtn.disabled = index === 0;
+    leftBtn.onclick = () => {
+        [roster[index - 1], roster[index]] = [roster[index], roster[index - 1]];
+        partySelectedIndex--;
+        renderParty();
+        _showPartyToast(`No.${partySelectedIndex + 1} に移動`);
+    };
+    const rightBtn = document.createElement('button');
+    rightBtn.className = 'btn skill-btn';
+    rightBtn.style.cssText = 'padding:4px 12px; font-size:0.8rem;';
+    rightBtn.textContent = '後へ ▶';
+    rightBtn.disabled = index >= roster.length - 1;
+    rightBtn.onclick = () => {
+        [roster[index], roster[index + 1]] = [roster[index + 1], roster[index]];
+        partySelectedIndex++;
+        renderParty();
+        _showPartyToast(`No.${partySelectedIndex + 1} に移動`);
+    };
+    orderSection.appendChild(leftBtn);
+    orderSection.appendChild(orderLabel);
+    orderSection.appendChild(rightBtn);
+    partyDetailsGrid.appendChild(orderSection);
+
+    // 育成記録
+    const growthHtml = renderGrowthLog(data);
+    if (growthHtml) {
+        const growthDiv = document.createElement('div');
+        growthDiv.innerHTML = growthHtml;
+        partyDetailsGrid.appendChild(growthDiv);
+    }
+}
+
+function _partyDivider() {
+    const d = document.createElement('div');
+    d.style.cssText = 'border-top:1px solid rgba(255,255,255,0.1); margin:2px 0;';
+    return d;
+}
+
+// ---- えさセクション ----
+function _renderFoodSection(data, mc) {
+    const section = document.createElement('div');
+    section.className = 'party-action-section';
+
+    const feedRemaining = 10 - (mc.feed_count || 0);
+    const label = document.createElement('div');
+    label.className = 'party-action-label';
+    label.textContent = `えさを与える（残り${feedRemaining}回）`;
+    section.appendChild(label);
+
+    if (feedRemaining <= 0) {
+        section.innerHTML += '<div style="font-size:0.78rem; color:#64748b;">これ以上食べられない</div>';
+        return section;
+    }
+
+    const foodItems = appState.globalInventory.mapItems;
+    if (foodItems.length === 0) {
+        section.innerHTML += '<div style="font-size:0.78rem; color:#64748b;">えさがない</div>';
+        return section;
+    }
+
+    // 同種まとめ表示
+    const grouped = {};
+    foodItems.forEach(id => {
+        grouped[id] = (grouped[id] || 0) + 1;
+    });
+
+    const grid = document.createElement('div');
+    grid.className = 'party-action-grid';
+
+    Object.entries(grouped).forEach(([id, count]) => {
+        const itemData = FOOD_DATA.find(f => f.id === id);
+        if (!itemData) return;
+        const btn = document.createElement('button');
+        btn.className = 'btn skill-btn party-action-btn';
+        btn.innerHTML = `${itemData.name}<span style="color:#64748b; font-size:0.7em; margin-left:4px;">×${count}</span>`;
+        btn.onclick = () => {
+            const idx = appState.globalInventory.mapItems.indexOf(id);
+            if (idx === -1) return;
+            _directApplyFood(data, mc, idx, itemData);
+        };
+        grid.appendChild(btn);
+    });
+
+    section.appendChild(grid);
+    return section;
+}
+
+// ---- 技を覚えさせるセクション ----
+function _renderLearnSection(data) {
+    const section = document.createElement('div');
+    section.className = 'party-action-section';
+
+    const known = data.known_skills || data.skills;
+    const label = document.createElement('div');
+    label.className = 'party-action-label';
+    label.textContent = `技を覚えさせる（${known.length}/10）`;
+    section.appendChild(label);
+
+    const skillItems = appState.globalInventory.skills;
+    if (skillItems.length === 0) {
+        section.innerHTML += '<div style="font-size:0.78rem; color:#64748b;">覚えさせる技がない</div>';
+        return section;
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'party-action-grid';
+
+    skillItems.forEach((sid, idx) => {
+        const info = SKILLS.find(s => s.id === sid);
+        if (!info) return;
+        const alreadyKnows = known.includes(sid);
+        const full = known.length >= 10;
+
+        const btn = document.createElement('button');
+        btn.className = 'btn skill-btn party-action-btn';
+        btn.textContent = info.name;
+
+        if (alreadyKnows) {
+            btn.style.opacity = '0.4';
+            btn.disabled = true;
+            btn.title = 'すでに覚えている';
+        } else if (full) {
+            btn.style.opacity = '0.4';
+            btn.disabled = true;
+            btn.title = '修得技の上限（10）';
+        } else {
+            btn.onclick = () => _directApplySkill(data, idx, info);
+        }
+        grid.appendChild(btn);
+    });
+
+    section.appendChild(grid);
+    return section;
+}
+
+// ---- 直接適用ロジック ----
+const _STAT_LABEL = { hp:'HP', max_st:'ST', atk:'ATK', def:'DEF', mag:'MAG', spd:'SPD', size:'大きさ', intelligence:'賢さ' };
+
+function _directApplyFood(data, mc, itemIndex, itemData) {
+    if ((data.feed_count || 0) >= 10) { _showPartyToast('もうえさを食べられない！'); return; }
+    if (!data.params) data.params = { size: 0, hardness: 0, weight: 0, intelligence: 0 };
+
+    const changes = [];
+
+    if (itemData.effect.base_stats) {
+        for (const [stat, delta] of Object.entries(itemData.effect.base_stats)) {
+            const before = data.base_stats[stat] || 0;
+            data.base_stats[stat] = before + delta;
+            if (typeof data.logGrowth === 'function') data.logGrowth(itemData.id, stat, before, data.base_stats[stat]);
+            if (delta !== 0) changes.push(`${_STAT_LABEL[stat] || stat}${delta > 0 ? '+' : ''}${delta}`);
+        }
+    }
+    if (itemData.effect.params) {
+        for (const [param, delta] of Object.entries(itemData.effect.params)) {
+            const before = data.params[param] || 0;
+            data.params[param] = before + delta;
+            if (delta !== 0) changes.push(`${_STAT_LABEL[param] || param}${delta > 0 ? '+' : ''}${delta}`);
+        }
+    }
+    data.feed_count = (data.feed_count || 0) + 1;
+
+    if (typeof data.recalculateStats === 'function') {
+        data.recalculateStats();
+        data.current_hp = data.stats.hp;
+    } else {
+        const fresh = new Monster(data);
+        data.stats = fresh.stats;
+        data.current_hp = data.stats.hp;
+    }
+
+    appState.globalInventory.mapItems.splice(itemIndex, 1);
+    const changeSummary = changes.length > 0 ? `  ${changes.join(' ')}` : '';
+    _showPartyToast(`${data.name} が ${itemData.name} を食べた！${changeSummary}`);
+    renderParty();
+}
+
+function _directApplySkill(data, skillIndex, info) {
+    if (!data.known_skills) data.known_skills = [...data.skills];
+    if (data.known_skills.includes(info.id)) { _showPartyToast('すでに覚えている！'); return; }
+    if (data.known_skills.length >= 10) { _showPartyToast('技の上限（10）に達している！'); return; }
+
+    data.known_skills.push(info.id);
+    if (data.skills.length < 4) data.skills.push(info.id);
+    appState.globalInventory.skills.splice(skillIndex, 1);
+
+    _showPartyToast(`${data.name} が ${info.name} を覚えた！`);
+    renderParty();
 }
 
 // ---- 技設定モーダル ----
@@ -420,7 +584,7 @@ function renderSkillEditBody() {
     battleHeader.className = 'skill-section-header';
     battleHeader.innerHTML = `
         <span class="skill-section-title" style="color:#fbbf24;">バトル技 <span style="font-size:0.8em; color:#94a3b8;">(${monster.skills.length}/4)</span></span>
-        <span style="font-size:0.75rem; color:#64748b;">修得技からドラッグしてセット</span>
+        <span style="font-size:0.75rem; color:#64748b;">+セットボタン or ドラッグで追加</span>
     `;
     body.appendChild(battleHeader);
 

@@ -147,6 +147,20 @@ if (_btnAffinity) _btnAffinity.onclick = () => openHelpTab('affinity');
 const _btnMonsters = document.getElementById('btn-monsters-global');
 if (_btnMonsters) _btnMonsters.onclick = () => openEncyclopedia();
 
+const _btnGotoTitle = document.getElementById('btn-goto-title');
+if (_btnGotoTitle) _btnGotoTitle.onclick = () => {
+  if (!confirm('タイトルへ戻りますか？\n（セーブしていない進行状況は失われます）')) return;
+  const active = document.querySelector('.screen.active');
+  if (active) {
+    active.classList.remove('active');
+    active.classList.add('hide');
+  }
+  screenStart.classList.remove('hide');
+  screenStart.classList.add('active');
+  mainHeader.style.display = 'none';
+  if (_floatMenuPanel) { _floatMenuPanel.classList.add('hide'); _btnMenuToggle.textContent = '☰'; }
+};
+
 // ---- フロートメニュー トグル ----
 const _btnMenuToggle = document.getElementById('btn-float-menu-toggle');
 const _floatMenuPanel = document.getElementById('float-menu-panel');
@@ -163,6 +177,39 @@ if (_btnMenuToggle && _floatMenuPanel) {
     }
   });
 }
+
+// ---- サウンドON/OFFトグル ----
+(function() {
+  const btn = document.getElementById('btn-sound-toggle');
+  if (!btn) return;
+  const STORAGE_KEY = 'mrw_sound_muted';
+  let muted = localStorage.getItem(STORAGE_KEY) === '1';
+  let _savedVol = 0.4;
+
+  function applyMute() {
+    if (muted) {
+      _savedVol = getVolume() || 0.4;
+      setVolume(0);
+      btn.textContent = '🔇';
+      btn.classList.add('muted');
+      btn.title = 'サウンドOFF（クリックでON）';
+    } else {
+      setVolume(_savedVol);
+      btn.textContent = '🔊';
+      btn.classList.remove('muted');
+      btn.title = 'サウンドON（クリックでOFF）';
+    }
+  }
+
+  applyMute();
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    muted = !muted;
+    localStorage.setItem(STORAGE_KEY, muted ? '1' : '0');
+    applyMute();
+  });
+})();
 
 // ---- Cork NPC Portraits ----
 function initCorkPortraits() {

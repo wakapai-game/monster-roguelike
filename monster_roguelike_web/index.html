@@ -296,39 +296,33 @@
     </section>
 
     <!-- 画面: パーティ詳細 -->
-    <section id="screen-party" class="screen hide glass-panel" style="padding:30px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+    <section id="screen-party" class="screen hide glass-panel">
+      <div class="party-header">
         <h2>PARTY STATUS</h2>
         <button id="btn-close-party" class="btn skill-btn">閉じる</button>
       </div>
-      <p style="color:#94a3b8; margin-bottom:20px;">仲間の詳細なパラメーターを確認できます。</p>
-      <div id="party-details-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+      <div class="party-body">
+        <div id="party-roster-list" class="party-roster-panel"></div>
+        <div id="party-details-grid" class="party-detail-panel"></div>
       </div>
     </section>
 
-    <!-- 画面: インベントリ -->
+    <!-- 画面: インベントリ（確認のみ） -->
     <section id="screen-inventory" class="screen hide glass-panel">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <h2>INVENTORY</h2>
         <button id="btn-close-inventory" class="btn skill-btn">閉じる</button>
       </div>
-      <p>技をセットしたり、餌を与えてステータスを強化できます。</p>
-      
-      <div class="inv-container" style="display:flex; gap:20px; margin-top:20px;">
-        <div class="inv-list" style="flex:1; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; min-height:200px;">
-          <h3>Skills</h3>
+      <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:16px;">持ち物の確認ができます。使用はPARTY画面から。</p>
+      <div class="inv-container" style="display:flex; gap:20px; margin-top:0;">
+        <div class="inv-list" style="flex:1; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; min-height:120px;">
+          <h3>技 (Skills)</h3>
           <div id="inv-skills-content" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
         </div>
-        <div class="inv-list" style="flex:1; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; min-height:200px;">
-          <h3>Food (Stats)</h3>
+        <div class="inv-list" style="flex:1; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; min-height:120px;">
+          <h3>えさ (Food)</h3>
           <div id="inv-food-content" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
         </div>
-      </div>
-      
-      <div id="inv-target-selection" class="hide" style="margin-top:20px; background:rgba(0,0,0,0.5); padding:15px; border-radius:8px;">
-         <h3 id="inv-target-msg">誰に使いますか？</h3>
-         <div id="inv-roster-grid" class="monster-grid" style="margin-top:10px;"></div>
-         <button id="btn-cancel-use" class="btn skill-btn mt-2">やめる</button>
       </div>
     </section>
 
@@ -521,8 +515,10 @@
       <button id="btn-monsters-global" class="float-menu-item monsters-item" title="ジュウマ図鑑">📖 図鑑</button>
       <button id="btn-affinity-global" class="float-menu-item affinity-item" title="属性相性早見表">⚡ 属性</button>
       <a id="btn-survey-global" href="https://forms.gle/xGsnjxmc4BKs657p8" target="_blank" rel="noopener" class="float-menu-item survey-item">📝 感想</a>
+      <button id="btn-goto-title" class="float-menu-item title-item" title="タイトル画面へ戻る">🏠 タイトルへ</button>
     </div>
     <div id="float-btns-row">
+      <button id="btn-sound-toggle" class="float-circle-btn sound-toggle-btn" title="サウンドON/OFF">🔊</button>
       <button id="btn-float-menu-toggle" class="float-circle-btn menu-toggle-btn" title="メニュー">☰</button>
     </div>
   </div>

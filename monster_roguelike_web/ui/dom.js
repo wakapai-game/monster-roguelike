@@ -44,10 +44,6 @@ export const btnMapInventory = document.getElementById('btn-map-inventory');
 export const btnCloseInventory = document.getElementById('btn-close-inventory');
 export const invSkillsContent = document.getElementById('inv-skills-content');
 export const invFoodContent = document.getElementById('inv-food-content');
-export const invTargetSelection = document.getElementById('inv-target-selection');
-export const invRosterGrid = document.getElementById('inv-roster-grid');
-export const invTargetMsg = document.getElementById('inv-target-msg');
-export const btnCancelUse = document.getElementById('btn-cancel-use');
 
 // Reward UI
 export const btnCollectReward = document.getElementById('btn-collect-reward');
