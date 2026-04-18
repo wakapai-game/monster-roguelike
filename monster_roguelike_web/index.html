@@ -116,7 +116,6 @@
       <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:8px;">
         <button id="btn-begin" class="btn primary-btn pulse-glow start-btn">START GAME</button>
         <button id="btn-sound-test" class="btn skill-btn" style="font-size:0.85rem; letter-spacing:0.05em;">♪ SOUND TEST</button>
-        <a href="test-battle.html" style="font-size:0.8rem; color:#475569; margin-top:4px; text-decoration:none;">⚙ バトルシステムテスト</a>
       </div>
     </section>
 
@@ -153,6 +152,13 @@
     </div>
 
 
+    <!-- 画面0.4: プレゼンテーション画面 -->
+    <section id="screen-presentation" class="screen hide pres-screen">
+      <button id="btn-pres-skip" class="pres-skip-btn">スキップ</button>
+      <div id="pres-slide-container" class="pres-slide-container"></div>
+      <div id="pres-dots" class="pres-dots"></div>
+    </section>
+
     <!-- 画面0.5: ストーリー画面 -->
     <section id="screen-story" class="screen full-center hide glass-panel">
       <div class="story-wrapper">
@@ -180,14 +186,6 @@
         <button id="btn-skip-story" class="btn skill-btn" disabled>NEXT >></button>
         <button id="btn-skip-all-story" class="btn" style="font-size:0.8rem; color:#475569; background:none; border:none;">スキップ</button>
       </div>
-    </section>
-
-    <!-- 画面0.6: 名前入力画面 -->
-    <section id="screen-name" class="screen full-center hide glass-panel">
-      <h2>あなたの名前は？</h2>
-      <p style="color: #94a3b8; margin-bottom: 20px;">コルク：「登録簿に書いといてくれ。行方不明になった時に困る。こっちが。」</p>
-      <input type="text" id="input-player-name" class="modern-input" placeholder="Name" maxlength="12" style="margin-bottom: 20px;">
-      <button id="btn-submit-name" class="btn primary-btn pulse-glow">決定</button>
     </section>
 
     <!-- 画面0.6.5: ジュウマ受け渡しイベント画面 -->
@@ -441,6 +439,8 @@
             <div class="bars">
                <label>HP</label>
                <div class="bar-container hp-bar"><div class="bar-fill hp" id="p2-hp-fill"></div></div>
+               <label>ST</label>
+               <div class="bar-container st-bar"><div class="bar-fill st" id="p2-st-fill"></div></div>
             </div>
           </div>
           <div class="reserve-list" id="p2-reserves"></div>
@@ -463,7 +463,7 @@
           <div id="item-buttons" class="cmd-grid hide" style="margin-top:10px;"></div>
 
           <div id="defend-wrapper" class="hide" style="margin-top:10px;">
-            <button id="btn-defend-action" class="btn" style="width:100%; padding: 10px; background: #fbbf24; color: #1e293b; border: none; font-weight: bold;">🛡 身を守る (Defend) - ST消費半減</button>
+            <button id="btn-defend-action" class="btn" style="width:100%; padding: 10px; background: #fbbf24; color: #1e293b; border: none; font-weight: bold;">🛡 身を守る (Defend) - HP溢れダメージ半減</button>
           </div>
 
           <div id="swap-wrapper" style="margin-top:10px;">
@@ -482,6 +482,7 @@
     <div id="beo-main">VICTORY!</div>
     <div id="beo-line"></div>
     <div id="beo-sub">— BATTLE OVER —</div>
+    <button id="beo-restart-btn" class="hide" onclick="window.location.reload()" style="margin-top:32px; padding:12px 32px; font-size:1rem; font-weight:bold; background:#374151; color:#f1f5f9; border:2px solid #6b7280; border-radius:8px; cursor:pointer; letter-spacing:0.05em;">タイトルへ戻る</button>
   </div>
 
   <!-- バトル開始演出オーバーレイ -->

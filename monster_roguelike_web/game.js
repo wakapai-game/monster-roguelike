@@ -43,6 +43,7 @@ export class Monster {
     }
     this.feed_count = data.feed_count || 0;
     this.growth_log = data.growth_log || [];
+    this.consecutive_count = 0;
 
     this.stats = this.calculateFinalStats();
     this.current_hp = this.stats.hp;

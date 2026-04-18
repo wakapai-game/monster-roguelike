@@ -35,10 +35,18 @@ export function generateRewards() {
        { type: 'food',       data: FOOD_DATA,          label: 'えさ' },
     ];
 
-    // 3候補をランダム生成（未選択はインベントリに追加しない）
+    // 3候補をランダム生成（重複なし、未選択はインベントリに追加しない）
+    const seen = new Set();
     for (let i = 0; i < 3; i++) {
-        const pool = pools[Math.floor(Math.random() * pools.length)];
-        const item = pool.data[Math.floor(Math.random() * pool.data.length)];
+        let pool, item, key;
+        let tries = 0;
+        do {
+            pool = pools[Math.floor(Math.random() * pools.length)];
+            item = pool.data[Math.floor(Math.random() * pool.data.length)];
+            key = `${pool.type}:${item.id}`;
+            tries++;
+        } while (seen.has(key) && tries < 30);
+        seen.add(key);
 
         const box = document.createElement('div');
         box.className = 'reward-box reward-box-selectable';

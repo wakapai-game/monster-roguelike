@@ -58,16 +58,7 @@ const STEPS_CASE3 = {
   }
 };
 
-// 案4以降を実装したらここに追加
-// const STEPS_CASE4 = { ...STEPS_CASE3, 'attack-phase': { ... } };
-
-const STEPS_BY_VARIANT = {
-  'case3': STEPS_CASE3,
-  // 'case4': STEPS_CASE4,
-};
-
-// アクティブバリアントのステップを取得（未定義なら case3 にフォールバック）
-const STEPS = STEPS_BY_VARIANT[BATTLE_SYSTEM_VARIANT] ?? STEPS_CASE3;
+const STEPS = STEPS_CASE3;
 
 // ---- 公開API ----
 

@@ -14,7 +14,6 @@ const DEV_MODE = new URLSearchParams(location.search).has('dev');
 const SCREEN_LABELS = {
   'screen-start':           'スタート',
   'screen-story':           'ストーリー',
-  'screen-name':            '名前入力',
   'screen-starter-event':   'ジュウマ受け取り',
   'screen-tutorial-select': 'チュートリアル選択',
   'screen-egg':             '卵選択',

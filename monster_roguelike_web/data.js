@@ -35,17 +35,27 @@ const MONSTERS_DATA = [
   { id: "m_001", name: "ランタン", main_element: "fire", sub_element: "none", base_stats: {hp: 2000, atk: 40, def: 35, mag: 20, spd: 30, max_st: 150, st_rec: 5}, skills: ["strike", "fireball"] },
   { id: "m_002", name: "マッド", main_element: "water", sub_element: "earth", base_stats: {hp: 2500, atk: 35, def: 100, mag: 15, spd: 26, max_st: 150, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
   { id: "m_003", name: "サニー", main_element: "thunder", sub_element: "wind", base_stats: {hp: 1500, atk: 30, def: 35, mag: 45, spd: 40, max_st: 150, st_rec: 15}, skills: ["strike", "thunder_bolt"] },
-  { id: "m_004", name: "タロ", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 50, def: 60, mag: 5, spd: 30, max_st: 150, st_rec: 0}, skills: ["smash"] },
+  { id: "m_004", name: "タロ", main_element: "earth", sub_element: "none", base_stats: {hp: 3000, atk: 50, def: 60, mag: 5, spd: 30, max_st: 150, st_rec: 0}, skills: ["strike", "smash", "guard_up"] },
   { id: "m_005", name: "ミスト", main_element: "dark", sub_element: "none", base_stats: {hp: 1200, atk: 80, def: 50, mag: 10, spd: 50, max_st: 150, st_rec: 10}, skills: ["strike", "pierce_needle"] },
-  { id: "m_006", name: "あかり", main_element: "light", sub_element: "fire", base_stats: {hp: 2200, atk: 40, def: 45, mag: 30, spd: 20, max_st: 150, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] }
+  { id: "m_006", name: "あかり", main_element: "light", sub_element: "fire", base_stats: {hp: 2200, atk: 40, def: 45, mag: 30, spd: 20, max_st: 150, st_rec: 10}, skills: ["strike", "def_heal_st", "def_shield"] },
+  { id: "m_007", name: "フロスト", main_element: "ice", sub_element: "water", base_stats: {hp: 1800, atk: 35, def: 50, mag: 40, spd: 25, max_st: 150, st_rec: 5}, skills: ["strike", "guard_up", "def_heal_st"] },
+  { id: "m_008", name: "シルフ", main_element: "wind", sub_element: "thunder", base_stats: {hp: 1400, atk: 30, def: 25, mag: 50, spd: 55, max_st: 150, st_rec: 10}, skills: ["strike", "slow", "weaken"] }
 ];
 
 // 敵専用ジュウマデータ（序盤向けにステータス低下・野生化）
 const ENEMY_DATA = [
-  { id: "e_001", name: "ヒカラ", main_element: "fire", sub_element: "none", base_stats: {hp: 700, atk: 25, def: 15, mag: 10, spd: 20, max_st: 100, st_rec: 3}, skills: ["strike", "fireball"] },
-  { id: "e_002", name: "ドロカラ", main_element: "water", sub_element: "earth", base_stats: {hp: 1200, atk: 18, def: 45, mag: 5, spd: 8, max_st: 100, st_rec: 5}, skills: ["strike", "water_gun"] },
-  { id: "e_003", name: "ライカラ", main_element: "thunder", sub_element: "wind", base_stats: {hp: 480, atk: 28, def: 8, mag: 22, spd: 35, max_st: 100, st_rec: 8}, skills: ["strike", "thunder_bolt"] },
-  { id: "e_boss_01", name: "ダイカラ", main_element: "earth", sub_element: "none", base_stats: {hp: 3500, atk: 45, def: 55, mag: 5, spd: 25, max_st: 120, st_rec: 0}, skills: ["smash"] }
+  // ステージ1: 火・水・雷
+  { id: "e_001", name: "ヒカラ",   main_element: "fire",    sub_element: "none",  base_stats: {hp: 700,  atk: 25, def: 15, mag: 10, spd: 20, max_st: 100, st_rec: 3}, skills: ["strike", "fireball"] },
+  { id: "e_002", name: "ドロカラ", main_element: "water",   sub_element: "earth", base_stats: {hp: 1200, atk: 18, def: 45, mag: 5,  spd: 8,  max_st: 100, st_rec: 5}, skills: ["strike", "water_gun", "def_shield"] },
+  { id: "e_003", name: "ライカラ", main_element: "thunder", sub_element: "wind",  base_stats: {hp: 480,  atk: 28, def: 8,  mag: 22, spd: 35, max_st: 100, st_rec: 8}, skills: ["strike", "thunder_bolt"] },
+  // ステージ2: 氷・風
+  { id: "e_004", name: "コオリカラ", main_element: "ice",  sub_element: "water", base_stats: {hp: 900,  atk: 20, def: 30, mag: 30, spd: 18, max_st: 110, st_rec: 4}, skills: ["strike", "def_heal_st", "slow"] },
+  { id: "e_005", name: "カゼカラ",   main_element: "wind", sub_element: "thunder",base_stats: {hp: 600,  atk: 30, def: 10, mag: 35, spd: 45, max_st: 110, st_rec: 6}, skills: ["strike", "weaken", "thunder_bolt"] },
+  // ステージ3: 光・闇
+  { id: "e_006", name: "ヒカリカラ", main_element: "light", sub_element: "fire",  base_stats: {hp: 1000, atk: 32, def: 28, mag: 28, spd: 22, max_st: 120, st_rec: 5}, skills: ["strike", "power_up", "fireball"] },
+  { id: "e_007", name: "クラカラ",   main_element: "dark",  sub_element: "none",  base_stats: {hp: 750,  atk: 40, def: 12, mag: 38, spd: 38, max_st: 120, st_rec: 6}, skills: ["strike", "weaken", "slow"] },
+  // ボス
+  { id: "e_boss_01", name: "ダイカラ", main_element: "earth", sub_element: "none", base_stats: {hp: 3500, atk: 45, def: 55, mag: 5, spd: 25, max_st: 120, st_rec: 0}, skills: ["strike", "smash", "power_up"] }
 ];
 
 // チュートリアル専用敵（ice属性でfireballがバツグン、ST高めでST削り体験用、st_rec:0でブレイクしやすい）
@@ -64,62 +74,62 @@ const BATTLE_ITEMS_DATA = [
 const FOOD_DATA = [
   {
     id: "food_01", name: "たっぷりの肉", type: "food",
-    description: "HP+2 ST+10 攻+1 防+1 大きさ+1 速-1",
-    effect: { base_stats: { hp: 2, max_st: 10, atk: 1, def: 1, spd: -1 }, params: { size: 1 } }
+    description: "HP+80 ST+10 攻+2 防+2 大きさ+1 速-1",
+    effect: { base_stats: { hp: 80, max_st: 10, atk: 2, def: 2, spd: -1 }, params: { size: 1 } }
   },
   {
     id: "food_02", name: "巨大な肉", type: "food",
-    description: "HP+1 ST+20 攻+1 防+1 大きさ+1 速-1",
-    effect: { base_stats: { hp: 1, max_st: 20, atk: 1, def: 1, spd: -1 }, params: { size: 1 } }
+    description: "HP+50 ST+20 攻+2 防+2 大きさ+1 速-1",
+    effect: { base_stats: { hp: 50, max_st: 20, atk: 2, def: 2, spd: -1 }, params: { size: 1 } }
   },
   {
     id: "food_03", name: "戦士の肉", type: "food",
-    description: "HP+1 ST+10 攻+2 防+1 大きさ+1 速-1",
-    effect: { base_stats: { hp: 1, max_st: 10, atk: 2, def: 1, spd: -1 }, params: { size: 1 } }
+    description: "HP+50 ST+10 攻+5 防+2 大きさ+1 速-1",
+    effect: { base_stats: { hp: 50, max_st: 10, atk: 5, def: 2, spd: -1 }, params: { size: 1 } }
   },
   {
     id: "food_04", name: "鎧の肉", type: "food",
-    description: "HP+1 ST+10 攻+1 防+2 大きさ+1 速-1",
-    effect: { base_stats: { hp: 1, max_st: 10, atk: 1, def: 2, spd: -1 }, params: { size: 1 } }
+    description: "HP+50 ST+10 攻+2 防+5 大きさ+1 速-1",
+    effect: { base_stats: { hp: 50, max_st: 10, atk: 2, def: 5, spd: -1 }, params: { size: 1 } }
   },
   {
     id: "food_05", name: "賢者のキノコ", type: "food",
-    description: "魔力+2 速-1 賢さ+1",
-    effect: { base_stats: { mag: 2, spd: -1 }, params: { intelligence: 1 } }
+    description: "魔力+5 速-1 賢さ+1",
+    effect: { base_stats: { mag: 5, spd: -1 }, params: { intelligence: 1 } }
   },
   {
     id: "food_06", name: "軽量フルーツ", type: "food",
-    description: "HP-2 ST-5 攻-1 防-1 大きさ-1 速+1",
-    effect: { base_stats: { hp: -2, max_st: -5, atk: -1, def: -1, spd: 1 }, params: { size: -1 } }
+    description: "HP-50 ST-5 攻-2 防-2 大きさ-1 速+3",
+    effect: { base_stats: { hp: -50, max_st: -5, atk: -2, def: -2, spd: 3 }, params: { size: -1 } }
   },
   {
     id: "food_07", name: "絞りジュース", type: "food",
-    description: "HP-1 ST-10 攻-1 防-1 大きさ-1 速+1",
-    effect: { base_stats: { hp: -1, max_st: -10, atk: -1, def: -1, spd: 1 }, params: { size: -1 } }
+    description: "HP-30 ST-10 攻-2 防-2 大きさ-1 速+2",
+    effect: { base_stats: { hp: -30, max_st: -10, atk: -2, def: -2, spd: 2 }, params: { size: -1 } }
   },
   {
     id: "food_08", name: "研ぎすまし果実", type: "food",
-    description: "HP-1 ST-5 攻-2 防-1 大きさ-1 速+1",
-    effect: { base_stats: { hp: -1, max_st: -5, atk: -2, def: -1, spd: 1 }, params: { size: -1 } }
+    description: "HP-30 ST-5 攻-3 防-2 大きさ-1 速+2",
+    effect: { base_stats: { hp: -30, max_st: -5, atk: -3, def: -2, spd: 2 }, params: { size: -1 } }
   },
   {
     id: "food_09", name: "機動の実", type: "food",
-    description: "HP-1 ST-5 攻-1 防-2 大きさ-1 速+1",
-    effect: { base_stats: { hp: -1, max_st: -5, atk: -1, def: -2, spd: 1 }, params: { size: -1 } }
+    description: "HP-30 ST-5 攻-2 防-3 大きさ-1 速+2",
+    effect: { base_stats: { hp: -30, max_st: -5, atk: -2, def: -3, spd: 2 }, params: { size: -1 } }
   }
 ];
 
 // 卵報酬データ（ステージクリア後の報酬として出現）
 // 受け取ると対応属性のジュウマが1体ロースターに加わる
 const EGG_DATA = [
-  { id: 'egg_fire',    name: '炎の卵',   element: 'fire',    description: '孵化すると炎属性のジュウマが生まれる' },
-  { id: 'egg_water',   name: '水の卵',   element: 'water',   description: '孵化すると水属性のジュウマが生まれる' },
-  { id: 'egg_thunder', name: '雷の卵',   element: 'thunder', description: '孵化すると雷属性のジュウマが生まれる' },
-  { id: 'egg_earth',   name: '土の卵',   element: 'earth',   description: '孵化すると土属性のジュウマが生まれる' },
-  { id: 'egg_ice',     name: '氷の卵',   element: 'ice',     description: '孵化すると氷属性のジュウマが生まれる' },
-  { id: 'egg_wind',    name: '風の卵',   element: 'wind',    description: '孵化すると風属性のジュウマが生まれる' },
-  { id: 'egg_light',   name: '光の卵',   element: 'light',   description: '孵化すると光属性のジュウマが生まれる' },
-  { id: 'egg_dark',    name: '闇の卵',   element: 'dark',    description: '孵化すると闇属性のジュウマが生まれる' },
+  { id: 'egg_fire',    name: 'まだら模様の卵',   element: 'fire',    description: '表面に不規則な斑点が浮かんでいる。触るとほんのり温かい。' },
+  { id: 'egg_water',   name: '青みがかった卵',   element: 'water',   description: 'つるりとした表面が淡い青色に輝いている。' },
+  { id: 'egg_thunder', name: 'ひびの入った卵',   element: 'thunder', description: '細かいひびが走っているが、壊れる気配はない。' },
+  { id: 'egg_earth',   name: 'ごつごつした卵',   element: 'earth',   description: '表面がざらざらしており、岩のように重い。' },
+  { id: 'egg_ice',     name: '白くなめらかな卵', element: 'ice',     description: '陶磁器のような滑らかな白い殻を持つ。' },
+  { id: 'egg_wind',    name: '縞模様の卵',       element: 'wind',    description: '薄い縞模様が走る、軽い卵。持つと少し浮く気がする。' },
+  { id: 'egg_light',   name: 'ぴかぴかした卵',   element: 'light',   description: '光を受けるとまぶしいほど反射する。' },
+  { id: 'egg_dark',    name: '黒ずんだ卵',       element: 'dark',    description: '表面が深い黒で覆われ、光をほとんど反射しない。' },
 ];
 
 export { AFFINITY, SKILLS, MONSTERS_DATA, ENEMY_DATA, BATTLE_ITEMS_DATA, FOOD_DATA, TUTORIAL_ENEMY, EGG_DATA };

@@ -150,6 +150,7 @@ export function updateUI(onlyGauges = false) {
     }
     if (p2) {
       setBar(document.getElementById('p2-hp-fill'), p2.current_hp, p2.stats.hp);
+      setBar(document.getElementById('p2-st-fill'), p2.current_st, p2.stats.max_st);
     }
     return;
   }
@@ -172,10 +173,7 @@ export function updateUI(onlyGauges = false) {
       }
 
       setBar(document.getElementById(`${side}-hp-fill`), activeMonster.current_hp, activeMonster.stats.hp);
-
-      if (side === 'p1') {
-          setBar(document.getElementById('p1-st-fill'), activeMonster.current_st, activeMonster.stats.max_st);
-      }
+      setBar(document.getElementById(`${side}-st-fill`), activeMonster.current_st, activeMonster.stats.max_st);
 
       // バフ/デバフバッジ表示
       const buffContainerId = `${side}-buff-badges`;
@@ -372,11 +370,10 @@ export function handleTurn(player, activeMonster) {
   if (player === 1) {
     showAttackPhase(activeMonster);
   } else {
-    // Enemy Turn - Prompt Defense Phase
+    // Enemy Turn - AI skill selection
     setTimeout(() => {
       const target = appState.timeline.p1_active;
-      const skills = activeMonster.skills;
-      const skillId = skills.length > 0 ? skills[Math.floor(Math.random() * skills.length)] : "strike";
+      const skillId = _selectEnemySkill(activeMonster, target);
       showDefensePhase(target, activeMonster, skillId);
     }, 1000);
   }
@@ -399,6 +396,49 @@ btnTabItems.onclick = () => {
     // チュートリアルフック: アイテムタブを初めて開いたとき
     if (isTutorialActive()) showTutorialStep('item-use', null);
 };
+
+function _selectEnemySkill(attacker, defender) {
+  const skills = attacker.skills;
+  if (!skills || skills.length === 0) return "strike";
+
+  const hpRatio = attacker.current_hp / attacker.stats.hp;
+
+  // HP30%以下: 回復・防御技を優先
+  if (hpRatio < 0.3) {
+    const healSkill = skills.find(id => {
+      const s = appState.engine.getSkill(id);
+      return s && (s.category === 'defense' || s.effects?.some(e => e.type === 'recover_st_direct' || e.type === 'recover_hp'));
+    });
+    if (healSkill) return healSkill;
+  }
+
+  // 攻撃スキルの中からバツグン優先・バフ次点・ランダムフォールバック
+  const attackSkills = skills.filter(id => {
+    const s = appState.engine.getSkill(id);
+    return s && (s.category === 'attack' || s.category === 'trap');
+  });
+  const buffSkills = skills.filter(id => {
+    const s = appState.engine.getSkill(id);
+    return s && s.category === 'support';
+  });
+
+  // バツグン属性スキルを探す
+  const weaknessSkill = attackSkills.find(id => {
+    const s = appState.engine.getSkill(id);
+    const aff = appState.engine.calcAffinity(s.element || 'none', defender);
+    return aff > 1.0;
+  });
+  if (weaknessSkill) return weaknessSkill;
+
+  // HP高め(70%以上)ならバフ技を30%の確率で使う
+  if (hpRatio > 0.7 && buffSkills.length > 0 && Math.random() < 0.3) {
+    return buffSkills[Math.floor(Math.random() * buffSkills.length)];
+  }
+
+  // 攻撃スキルからランダム
+  if (attackSkills.length > 0) return attackSkills[Math.floor(Math.random() * attackSkills.length)];
+  return skills[Math.floor(Math.random() * skills.length)];
+}
 
 export function showAttackPhase(monster) {
   actionPhaseHeader.innerText = "ATTACK PHASE (自分のターン)";
@@ -628,6 +668,19 @@ export function executeAction(playerNum, attacker, defender, skillId) {
     setTimeout(() => resumeLoop(), 200);
     return;
   }
+  // 連続行動カウンタ管理（同じプレイヤーが連続攻撃するほどST消費増）
+  const skillData0 = appState.engine.getSkill(skillId);
+  if (skillData0?.category === 'attack') {
+    if (playerNum === appState._lastAttackPlayer) {
+      attacker.consecutive_count = (attacker.consecutive_count || 0) + 1;
+    } else {
+      attacker.consecutive_count = 1;
+    }
+    appState._lastAttackPlayer = playerNum;
+  } else {
+    attacker.consecutive_count = 0;
+    appState._lastAttackPlayer = null;
+  }
   const result = appState.engine.executeSkill(attacker, defender, skillId);
   const targetSide = playerNum === 1 ? 'p2' : 'p1';
 
@@ -687,24 +740,18 @@ export function executeAction(playerNum, attacker, defender, skillId) {
   });
 }
 
-export function endBattle(isPlayerWin) {
-    updateUI();
-    actionMenu.classList.add('hide');
-
-    const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
-    const isBoss = currentNode?.type === 'boss';
-
+function _showEndOverlay(isPlayerWin, isBoss) {
     const overlay = document.getElementById('battle-end-overlay');
     const mainEl  = document.getElementById('beo-main');
     const subEl   = document.getElementById('beo-sub');
 
     if (overlay && mainEl && subEl) {
-        // 勝利・敗北でテキストと色を切替
-        overlay.classList.remove('beo-win', 'beo-lose', 'beo-active');
+        overlay.classList.remove('beo-win', 'beo-lose', 'beo-active', 'beo-boss');
         if (isPlayerWin) {
             mainEl.textContent = isBoss ? 'STAGE CLEAR!' : 'VICTORY!';
             subEl.textContent  = isBoss ? '— STAGE COMPLETE —' : '— BATTLE OVER —';
             overlay.classList.add('beo-win');
+            if (isBoss) overlay.classList.add('beo-boss');
         } else {
             mainEl.textContent = 'DEFEAT...';
             subEl.textContent  = '— PARTY ANNIHILATED —';
@@ -717,4 +764,50 @@ export function endBattle(isPlayerWin) {
     setTimeout(() => {
         document.dispatchEvent(new CustomEvent('battle-end', { detail: { win: isPlayerWin } }));
     }, 1900);
+}
+
+let _endBattleAbort = null;
+
+export function endBattle(isPlayerWin) {
+    updateUI();
+    actionMenu.classList.add('hide');
+
+    // 前回の endBattle リスナーをキャンセル（二重呼び出し防止）
+    if (_endBattleAbort) { _endBattleAbort.abort(); _endBattleAbort = null; }
+
+    const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
+    const isBoss = currentNode?.type === 'boss';
+
+    if (!isPlayerWin) {
+        _showEndOverlay(false, false);
+        return;
+    }
+
+    // 勝利：オーバーレイで「カラクリを倒した。」を表示してからVICTORY演出
+    const overlay = document.getElementById('battle-end-overlay');
+    const mainEl  = document.getElementById('beo-main');
+    const subEl   = document.getElementById('beo-sub');
+
+    if (overlay && mainEl && subEl) {
+        overlay.classList.remove('beo-win', 'beo-lose', 'beo-active', 'beo-boss');
+        mainEl.textContent = 'カラクリを倒した。';
+        subEl.textContent  = '';
+        overlay.classList.add('beo-pre');
+    }
+
+    let triggered = false;
+    const trigger = () => {
+        if (triggered) return;
+        triggered = true;
+        if (overlay) overlay.classList.remove('beo-pre');
+        _showEndOverlay(true, isBoss);
+    };
+
+    const abort = new AbortController();
+    _endBattleAbort = abort;
+    const timer = setTimeout(trigger, 800);
+    setTimeout(() => {
+        document.addEventListener('touchstart', () => { clearTimeout(timer); trigger(); }, { once: true, passive: true, signal: abort.signal });
+        document.addEventListener('mousedown',  () => { clearTimeout(timer); trigger(); }, { once: true, signal: abort.signal });
+    }, 200);
 }

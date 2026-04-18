@@ -3,11 +3,11 @@ import { Monster, Timeline, BattleEngine } from './game.js';
 import { MapGenerator } from './map.js';
 import { appState } from './state.js';
 import {
-  screenStart, screenStory, screenEgg, screenMap, screenSelection,
-  screenBattle, screenName, screenStarterEvent, screenTutorialSelect, screenHub, screenReward,
+  screenStart, screenPresentation, screenStory, screenEgg, screenMap, screenSelection,
+  screenBattle, screenStarterEvent, screenTutorialSelect, screenHub, screenReward,
   mainHeader, rosterGrid, btnStartBattle, battleLog,
   btnHubInventory, btnMapInventory, btnHubParty, btnMapParty,
-  btnSubmitName, inputPlayerName, starterEventGrid, btnStarterEventProceed,
+  starterEventGrid, btnStarterEventProceed,
   btnStage1, btnStage2, btnStage3, btnCollectReward,
   switchScreen
 } from './ui/dom.js';
@@ -22,6 +22,7 @@ import { generateNPCSprite, generateUIIcon, generateEggSprite } from './ui/sprit
 import { initDevOverlay } from './ui/dev-overlay.js';
 import { initStartScene } from './ui/start-scene.js';
 import { play, stop, setVolume, getVolume, initBgmObserver, TRACKS, screenToBgm } from './ui/bgm.js';
+import { initPresentation } from './ui/presentation.js';
 
 // ---- ボタンアイコン（マップ画面・ハブ画面共通） ----
 [
@@ -308,13 +309,17 @@ function showStoryPage(pageNum) {
 }
 
 document.getElementById('btn-begin').onclick = () => {
-  switchScreen(screenStart, screenStory);
-  showStoryPage(1);
+  switchScreen(screenStart, screenPresentation);
+  initPresentation(() => {
+    switchScreen(screenPresentation, screenStory);
+    showStoryPage(1);
+  });
 };
 
 document.getElementById('btn-skip-all-story').onclick = () => {
   storyPage = 1;
-  switchScreen(screenStory, screenName);
+  grantStarterMonsters();
+  switchScreen(screenStory, screenStarterEvent);
 };
 
 document.getElementById('btn-skip-story').onclick = () => {
@@ -331,14 +336,9 @@ document.getElementById('btn-skip-story').onclick = () => {
     showStoryPage(storyPage);
   } else {
     storyPage = 1;
-    switchScreen(screenStory, screenName);
+    grantStarterMonsters();
+    switchScreen(screenStory, screenStarterEvent);
   }
-};
-
-btnSubmitName.onclick = () => {
-  appState.playerName = inputPlayerName.value.trim() || 'ハンター';
-  grantStarterMonsters();
-  switchScreen(screenName, screenStarterEvent);
 };
 
 btnStarterEventProceed.onclick = () => {
@@ -450,7 +450,15 @@ function confirmBattleSetup() {
   const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
   if (!currentNode) { console.warn('Node not found:', appState.currentNodeId); return; }
   const isBoss = currentNode.type === 'boss';
-  const normalPool = ENEMY_DATA.filter(e => e.id !== 'e_boss_01');
+  // ステージごとに出現する敵プールを切り替え
+  const stage = appState.currentStage || 1;
+  const stageEnemyIds = {
+    1: ['e_001', 'e_002', 'e_003'],
+    2: ['e_001', 'e_002', 'e_003', 'e_004', 'e_005'],
+    3: ['e_002', 'e_003', 'e_004', 'e_005', 'e_006', 'e_007'],
+  };
+  const allowedIds = stageEnemyIds[stage] ?? stageEnemyIds[1];
+  const normalPool = ENEMY_DATA.filter(e => allowedIds.includes(e.id));
   const shuffled = [...normalPool].sort(() => 0.5 - Math.random());
 
   let p2Count = 1;
@@ -467,7 +475,7 @@ function confirmBattleSetup() {
 
   appState.p2Team = pool.map(data => {
     const m = new Monster(JSON.parse(JSON.stringify(data)));
-    const scale = 1.0 + (floor * 0.1);
+    const scale = 1.0 + (floor * 0.25);
     m.stats.hp = Math.floor(m.stats.hp * scale);
     m.stats.atk = Math.floor(m.stats.atk * scale);
     if (isBoss) m.stats.hp *= 2;
@@ -512,7 +520,9 @@ function startTutorialBattle() {
 // ---- Map / Reward Flow ----
 document.addEventListener('battle-end', (e) => {
   if (!e.detail.win) {
-    window.location.reload();
+    setTimeout(() => {
+      document.getElementById('beo-restart-btn')?.classList.remove('hide');
+    }, 1200);
     return;
   }
 

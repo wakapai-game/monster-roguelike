@@ -326,8 +326,8 @@ export class EngineCase3 extends BattleEngineBase {
   }
 
   // ST固定ダメージ + HP溢れダメージ計算
-  // ST_dmg = 10（ヒット固定）+ 10（苦手属性なら追加）
-  // HP_dmg = max(0, effPow*atk - current_st*def)
+  // ST_dmg = 10（ヒット固定）+ 10（弱点属性なら追加）
+  // HP_dmg = max(0, (effPow*atk*aff - current_st*def) / 100) — STが盾、削れるほど溢れが増える
   _calcDamage(attacker, defender, skill, eff) {
     const s_type = skill.type || 'physical';
     const s_elem = skill.element || 'none';
@@ -340,9 +340,9 @@ export class EngineCase3 extends BattleEngineBase {
     const effPow = this.calcEffPow(base_pow, s_elem, attacker);
     const is_weakness = aff > 1.0;
     const st_damage = Math.min(defender.current_st, 10 + (is_weakness ? 10 : 0));
-    const pow_atk = effPow * atk;
+    const pow_atk = effPow * atk * aff;
     const st_def = defender.current_st * def;
-    const hp_damage = Math.max(0, Math.floor(pow_atk - st_def));
+    const hp_damage = Math.max(0, Math.floor((pow_atk - st_def) / 100 * (defender.is_defending ? 0.5 : 1)));
     return {
       st_damage,
       hp_damage,
