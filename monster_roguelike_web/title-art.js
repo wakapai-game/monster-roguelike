@@ -254,11 +254,6 @@ export function initTitleArt(titleCanvas, bgCanvas) {
     drawBitmapText(titleCtx, titleText, titleX, titleY, titlePixel, '#f7c948');
     titleCtx.globalAlpha = 1;
 
-    // Subtitle (no glow)
-    titleCtx.shadowBlur = 0;
-    titleCtx.shadowColor = 'transparent';
-    drawBitmapText(titleCtx, subText, subX, subY, subPixel, '#64748b');
-
     titleRaf = requestAnimationFrame(animateTitle);
   }
   titleRaf = requestAnimationFrame(animateTitle);
