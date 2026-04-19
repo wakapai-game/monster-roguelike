@@ -47,8 +47,10 @@
 - `updateUI(onlyGauges)`: HP/ST/ATBゲージ更新
 
 ### ui/inventory.js
-- `applyItemToMonster(m)`: えさ適用（最大10回チェック、base_stats直接変更）
-- `renderParty()`: パーティ詳細（大きさラベル・賢さランク・えさ回数表示）
+- `_directApplyFood(monster, foodItem)`: えさ適用（最大10回チェック、base_stats直接変更、変動値トースト表示）
+- `_directApplySkill(monster, skillId)`: 技習得（known_skillsに追加）
+- `renderParty()`: パーティ2ペイン描画（ロースターグリッド + 詳細パネル）
+- インベントリ画面は確認専用（使用操作はパーティ画面に一本化）
 
 ### app.js
 - `confirmBattleSetup()`: バトル開始・敵生成
@@ -78,10 +80,11 @@
 3. `(orientation: landscape) and (max-height: 500px)`: スマホ横向き
 
 ## 画面ID一覧
-`screen-start` → `screen-story` → `screen-name` → `screen-starter-event` → `screen-egg` → `screen-hub` → `screen-map` → `screen-selection` → `screen-battle` → `screen-reward`
+メインフロー: `screen-start` → `screen-presentation` → `screen-story` → `screen-starter-event` → `screen-tutorial-select` → `screen-egg` → `screen-hub` → `screen-map` → `screen-selection` → `screen-battle` → `screen-reward`
 
-モーダル系: `screen-encyclopedia`（オーバーレイ）、`screen-party`・`screen-inventory`（サブ画面として切替）
-スタート画面追加モーダル: `screen-roadmap`（将来の実装アイデア一覧）
+オーバーレイ系: `screen-encyclopedia`（図鑑）、`screen-help`（ヘルプ）
+サブ画面: `screen-party`（2ペイン育成）・`screen-inventory`（持ち物確認のみ）
+その他: `screen-sound-test`（BGMサウンドテスト）
 
 ## データ構造（data.js）
 - `MONSTERS_DATA`: モンスター定義（id, name, base_stats, elements, skills）
