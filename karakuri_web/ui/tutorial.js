@@ -1,0 +1,259 @@
+import { appState } from '../state.js';
+import { BATTLE_SYSTEM_VARIANT } from '../game.js';
+
+// ============================================================
+// バリアント別チュートリアルステップ定義
+// バトルシステムを切り替えるときはここに新しいバリアントを追加し、
+// game.js の BATTLE_SYSTEM_VARIANT を変更するだけで切り替わる。
+// ============================================================
+
+const STEPS_CASE3 = {
+  'action-queue': {
+    title: 'ACTION QUEUEとは？',
+    full: 'コルク：「中央の ACTION QUEUE が行動順だ。上にいるやつが次に動く。SPDが高いほど早く回ってくる。読め。それだけだ。」',
+    simple: '💡 ACTION QUEUE: 上にいるほど次に行動します。SPDが高いほど早くなります。',
+    highlight: 'timeline-queue'
+  },
+  'attack-phase': {
+    title: '攻撃フェーズ',
+    full: 'コルク：「スキルを選んで攻撃しろ。敵の ST（スタミナ）を削るんだ。\n\nSTはジュウマの装甲みたいなもんで、残ってるとダメージのほとんどがSTに吸われる。STが低くなるほどHPへのダメージが「溢れ」やすくなる。\n\nとにかくスキルを選んでみろ。」',
+    simple: '💡 スキルで敵STを削ろう！STが低いほどHPへのダメージが溢れやすくなります！',
+    highlight: 'skill-buttons'
+  },
+  'st-chip': {
+    title: 'STを削り続けよう',
+    full: 'コルク：「いい感じだ。STが削れてる。\n\nSTが低くなるほどHPへのダメージが溢れやすくなる。ログの「HP DMG」が増えてきたらSTが落ちてるサインだ。\n\n「バツグン」のスキルはST削りとHP溢れダメージ、両方が強くなる。属性は覚えとけ。」',
+    simple: '💡 STが削れるほどHPへの溢れダメージが増えます。バツグン属性はさらに強力！',
+    highlight: 'p2-active-card'
+  },
+  'defense-phase': {
+    title: '防御フェーズ',
+    full: 'コルク：「敵が来るぞ。選択肢がある。\n\n🛡 身を守る → HPへの溢れダメージを半減\n🔮 スキルタブ → 防御スキルでST回復など\n💊 アイテムタブ → 回復アイテムを使う\n🔄 ジュウマ交代 → ジュウマを交代\n\nどれを選んでもいい。間違えても問題ない。死んだら問題あるが。」',
+    simple: '💡 「身を守る」でHP溢れダメージ半減。スキル・アイテム・交代も選べます！',
+    highlight: 'action-menu'
+  },
+  'item-use': {
+    title: 'アイテムを使う',
+    full: 'コルク：「アイテムタブからバトル中にアイテムが使える。\n\n💊 キズぐすり → HPを50回復\n⚡ スタミナドリンク → STを50回復。STを高く保つとHPへの溢れダメージを防げる。\n\nまあ、練習だ。使ってみろ。」',
+    simple: '💡 スタミナドリンクでSTを回復すればHPへの溢れダメージを軽減できます！',
+    highlight: 'item-buttons'
+  },
+  'swap': {
+    title: '控えと交代する',
+    full: 'コルク：「「ジュウマ交代」で交代できる。\n\nSTが減ったやつを下げて、元気なやつと代われ。控えに回ったジュウマはSTが少し自動回復する。\n\n攻撃でも防御でも交代できる。使いこなせ。」',
+    simple: '💡 「ジュウマ交代」でいつでも交代！控えのジュウマはSTが自動回復します。',
+    highlight: 'swap-wrapper'
+  },
+  'affinity': {
+    title: '属性相性',
+    full: 'コルク：「スキルボタンの「バツグン」バッジを見ろ。\n\nバツグン属性のスキルはSTダメージも、HPへの溢れも両方増える。\n\n右下の「属性」ボタンで相性表をいつでも確認できる。敵の属性に合わせて選べ。それだけで全然違う。」',
+    simple: '💡 バツグン属性のスキルはST削り＆HP溢れダメージ両方アップ！右下「属性」で確認！',
+    highlight: 'skill-buttons'
+  },
+  'reward': {
+    title: '戦利品',
+    full: 'コルク：「勝ったな。3つ報酬が出る。1つもらえ。\n\n⚔️ 技 → インベントリに追加。パーティ画面でジュウマにセットできる\n💊 バトル用アイテム → 次のバトルで使える\n🍖 えさ → ジュウマに与えてステータスを永続強化（最大10回）\n\n1つ選んで「進む」を押せ。問題ない。」',
+    simple: '💡 3つの報酬から1つ選ぼう！クリックして選択し「進む」で受け取り。',
+    highlight: 'reward-boxes'
+  }
+};
+
+const STEPS = STEPS_CASE3;
+
+// ---- 公開API ----
+
+export function initTutorial(mode) {
+  appState.tutorialMode = mode;
+  appState.tutorialShownSteps = new Set();
+}
+
+export function isTutorialActive() {
+  return appState.tutorialMode === 'full' || appState.tutorialMode === 'simple';
+}
+
+export function isTutorialFullMode() {
+  return appState.tutorialMode === 'full';
+}
+
+export function hasShownStep(stepId) {
+  return appState.tutorialShownSteps?.has(stepId) ?? false;
+}
+
+export function markStepShown(stepId) {
+  if (!appState.tutorialShownSteps) appState.tutorialShownSteps = new Set();
+  appState.tutorialShownSteps.add(stepId);
+}
+
+/**
+ * チュートリアルステップを表示する。
+ * フル版: オーバーレイ表示、OKを押したら callback 呼び出し
+ * シンプル版: ヒントバー表示、callback をすぐ呼び出し
+ * 既表示ステップは callback をすぐ呼ぶだけ。
+ */
+export function showTutorialStep(stepId, callback) {
+  if (!isTutorialActive() || hasShownStep(stepId)) {
+    if (callback) callback();
+    return;
+  }
+  markStepShown(stepId);
+
+  const data = STEPS[stepId];
+  if (!data) {
+    if (callback) callback();
+    return;
+  }
+
+  // reward ステップはモード問わず常にオーバーレイ表示（報酬画面ではヒントバーが見えないため）
+  if (appState.tutorialMode === 'full' || stepId === 'reward') {
+    _showFullOverlay(data, callback);
+  } else {
+    _showSimpleHint(data);
+    if (callback) callback();
+  }
+}
+
+function _showFullOverlay(data, callback) {
+  if (appState.loopInterval) {
+    clearInterval(appState.loopInterval);
+    appState.loopInterval = null;
+  }
+
+  const targetEl = data.highlight ? document.getElementById(data.highlight) : null;
+
+  // 二重呼び出し防止ラッパー
+  let safeCalled = false;
+  const safeCallback = () => {
+    if (safeCalled) return;
+    safeCalled = true;
+    if (callback) callback();
+  };
+
+  // 30秒タイムアウト: OKボタンが押されなくてもゲームが凍らないようにする
+  const timeoutId = setTimeout(() => {
+    const overlay = document.getElementById('tutorial-overlay');
+    if (overlay?._enableTimer) clearTimeout(overlay._enableTimer);
+    _removeSpotlight(targetEl);
+    overlay?.classList.add('hide');
+    safeCallback();
+  }, 30000);
+
+  const wrappedCallback = () => {
+    clearTimeout(timeoutId);
+    safeCallback();
+  };
+
+  if (targetEl) {
+    const rect = targetEl.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) {
+      // 要素が非表示 → スポットライトをスキップして直接モーダル表示
+      _showModal(data, wrappedCallback);
+      return;
+    }
+    // フェーズ1: スポットライト — 暗転＋強調表示、クリック待ち
+    _showSpotlight(targetEl, () => {
+      _removeSpotlight(targetEl);
+      _showModal(data, wrappedCallback);
+    });
+  } else {
+    // ハイライト要素なし → 直接モーダル表示
+    _showModal(data, wrappedCallback);
+  }
+}
+
+function _showSpotlight(targetEl, onClickCallback) {
+  const pad = 8;
+  const r = targetEl.getBoundingClientRect();
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+
+  // 4枚の暗転ピースを対象要素の周囲に配置
+  const pieces = [
+    ['tutorial-spotlight-top',    0,            0,           W,                        r.top - pad],
+    ['tutorial-spotlight-bottom', r.bottom+pad, 0,           W,                        H - (r.bottom + pad)],
+    ['tutorial-spotlight-left',   r.top - pad,  0,           r.left - pad,             r.height + 2 * pad],
+    ['tutorial-spotlight-right',  r.top - pad,  r.right+pad, W - (r.right + pad),      r.height + 2 * pad],
+  ];
+  pieces.forEach(([id, top, left, width, height]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.top    = `${top}px`;
+    el.style.left   = `${left}px`;
+    el.style.width  = `${Math.max(0, width)}px`;
+    el.style.height = `${Math.max(0, height)}px`;
+    el.classList.remove('hide');
+  });
+
+  // ラベルを要素の下に表示
+  const label = document.getElementById('tutorial-spotlight-label');
+  if (label) {
+    const labelTop = Math.min(r.bottom + 14, H - 50);
+    label.style.top  = `${labelTop}px`;
+    label.style.left = `${r.left + r.width / 2}px`;
+    label.classList.remove('hide');
+  }
+
+  // 対象要素をパルス強調
+  targetEl.classList.add('tutorial-highlight');
+
+  // クリックキャッチャー: 対象要素の上に透明div → 子要素の誤クリックを防ぎつつクリックを捕捉
+  document.getElementById('tutorial-click-catcher')?.remove();
+  const catcher = document.createElement('div');
+  catcher.id = 'tutorial-click-catcher';
+  catcher.style.cssText = `position:fixed;top:${r.top-pad}px;left:${r.left-pad}px;` +
+    `width:${r.width+2*pad}px;height:${r.height+2*pad}px;` +
+    `z-index:10001;cursor:pointer;border-radius:8px;`;
+  document.body.appendChild(catcher);
+  // 直前のタップ/クリックが引き継がれないよう1フレーム遅延してリスナーを登録
+  requestAnimationFrame(() => {
+    catcher.addEventListener('click', onClickCallback, { once: true });
+  });
+}
+
+function _removeSpotlight(targetEl) {
+  ['tutorial-spotlight-top', 'tutorial-spotlight-bottom',
+   'tutorial-spotlight-left', 'tutorial-spotlight-right',
+   'tutorial-spotlight-label'].forEach(id => {
+    document.getElementById(id)?.classList.add('hide');
+  });
+  document.getElementById('tutorial-click-catcher')?.remove();
+  if (targetEl) targetEl.classList.remove('tutorial-highlight');
+}
+
+function _showModal(data, callback) {
+  const overlay = document.getElementById('tutorial-overlay');
+  document.getElementById('tutorial-overlay-title').textContent = data.title;
+  document.getElementById('tutorial-overlay-body').textContent = data.full;
+  overlay.classList.remove('hide');
+
+  const okBtn = document.getElementById('btn-tutorial-ok');
+  // ghost click 防止: スポットライトのタップ直後に合成クリックがOKボタンに当たらないよう
+  // 350ms間はクリックを無視する
+  okBtn.disabled = true;
+  okBtn.onclick = null;
+  const enableTimer = setTimeout(() => {
+    okBtn.disabled = false;
+    okBtn.onclick = () => {
+      clearTimeout(overlay._enableTimer);
+      overlay.classList.add('hide');
+      if (callback) callback();
+    };
+  }, 350);
+  overlay._enableTimer = enableTimer;
+}
+
+function _showSimpleHint(data) {
+  const hintEl = document.getElementById('tutorial-hint');
+  const textEl = document.getElementById('tutorial-hint-text');
+  if (!hintEl || !textEl) return;
+
+  textEl.textContent = data.simple;
+  hintEl.classList.remove('hide');
+
+  clearTimeout(hintEl._timer);
+  hintEl._timer = setTimeout(() => hintEl.classList.add('hide'), 6000);
+}
+
+export function hideTutorialHint() {
+  document.getElementById('tutorial-hint')?.classList.add('hide');
+}
+

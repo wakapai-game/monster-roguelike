@@ -11,7 +11,7 @@
 2. セッションで決定した設計・世界観・仕様などをメモリファイルに記録・更新する
 
 ## 作業対象ディレクトリ
-`monster_roguelike_web/` がメインコード。`monster_roguelike/` はPython版（参照のみ）。
+`karakuri_web/` がメインコード（現行開発）。`monster_roguelike_web/` は旧版（参照のみ）。`monster_roguelike/` はPython版（参照のみ）。
 
 ## ファイルマップ（変更時に読むファイル）
 

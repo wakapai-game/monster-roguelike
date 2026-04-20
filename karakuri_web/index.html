@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>カラクリ・クエスト</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <canvas id="bg-pixel-canvas"></canvas>
+
+  <main id="app-container">
+    <header class="glass-panel" id="main-header" style="display:none;">
+      <h1>カラクリ・クエスト</h1>
+    </header>
+
+    <!-- 画面0: スタート画面 -->
+    <section id="screen-start" class="screen full-center active">
+      <!-- モンスターシルエット背景 -->
+      <svg class="start-silhouette" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sil-fade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0"/>
+            <stop offset="50%" stop-color="#1e3a8a" stop-opacity="0.1"/>
+            <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0.18"/>
+          </linearGradient>
+        </defs>
+        <!-- 左端：小さいモンスター -->
+        <g opacity="0.13" fill="#60a5fa">
+          <rect x="80" y="340" width="64" height="52" rx="6"/>
+          <rect x="92" y="298" width="40" height="46" rx="6"/>
+          <rect x="68"  y="384" width="16" height="36"/>
+          <rect x="136" y="384" width="16" height="36"/>
+          <circle cx="104" cy="312" r="6" fill="#020617"/>
+          <circle cx="120" cy="312" r="6" fill="#020617"/>
+        </g>
+        <!-- 左寄り：縦長モンスター -->
+        <g opacity="0.10" fill="#818cf8">
+          <rect x="260" y="290" width="52" height="80" rx="8"/>
+          <rect x="272" y="248" width="28" height="46" rx="6"/>
+          <rect x="248" y="360" width="14" height="44"/>
+          <rect x="310" y="360" width="14" height="44"/>
+          <rect x="234" y="308" width="10" height="28" rx="4"/>
+          <circle cx="282" cy="262" r="6" fill="#020617"/>
+          <circle cx="298" cy="262" r="6" fill="#020617"/>
+        </g>
+        <!-- 中央：最大・どっしり -->
+        <g opacity="0.18" fill="#6366f1">
+          <ellipse cx="600" cy="390" rx="72" ry="56"/>
+          <ellipse cx="600" cy="328" rx="52" ry="46"/>
+          <rect x="536" y="434" width="22" height="46" rx="6"/>
+          <rect x="642" y="434" width="22" height="46" rx="6"/>
+          <rect x="518" y="344" width="14" height="36" rx="4"/>
+          <rect x="668" y="344" width="14" height="36" rx="4"/>
+          <circle cx="586" cy="324" r="8" fill="#020617"/>
+          <circle cx="614" cy="324" r="8" fill="#020617"/>
+          <polygon points="582,296 576,268 592,280"/>
+          <polygon points="618,296 624,268 608,280"/>
+        </g>
+        <!-- 右寄り：カラクリ風（四角・アンテナ） -->
+        <g opacity="0.10" fill="#38bdf8">
+          <rect x="840" y="300" width="60" height="70" rx="4"/>
+          <rect x="848" y="262" width="44" height="42" rx="4"/>
+          <rect x="828" y="362" width="14" height="40"/>
+          <rect x="898" y="362" width="14" height="40"/>
+          <rect x="900" y="310" width="12" height="30" rx="3"/>
+          <rect x="862" y="244" width="4" height="20"/>
+          <rect x="874" y="244" width="4" height="20"/>
+          <circle cx="864" cy="244" r="4"/>
+          <circle cx="876" cy="244" r="4"/>
+          <circle cx="862" cy="278" r="5" fill="#020617"/>
+          <circle cx="878" cy="278" r="5" fill="#020617"/>
+        </g>
+        <!-- 右端：小さいモンスター -->
+        <g opacity="0.12" fill="#a78bfa">
+          <rect x="1056" y="350" width="56" height="46" rx="6"/>
+          <rect x="1066" y="312" width="36" height="42" rx="6"/>
+          <rect x="1044" y="388" width="14" height="32"/>
+          <rect x="1108" y="388" width="14" height="32"/>
+          <circle cx="1078" cy="326" r="5" fill="#020617"/>
+          <circle cx="1092" cy="326" r="5" fill="#020617"/>
+        </g>
+        <!-- 地面フェード -->
+        <rect x="0" y="360" width="1200" height="120" fill="url(#sil-fade)"/>
+      </svg>
+
+      <div class="title-container">
+        <h1 class="mega-title mega-title-hidden">カラクリ・クエスト</h1>
+        <p class="subtitle mega-title-hidden">KARAKURI QUEST</p>
+        <canvas id="title-canvas"></canvas>
+      </div>
+      <div class="start-catch">
+        <div class="start-catch-item">
+          <span class="start-catch-reading">育てて</span>
+          <div class="start-catch-line"></div>
+          <span class="start-catch-kanji cg1" data-t="育成">育成</span>
+        </div>
+        <span class="start-catch-sep">・</span>
+        <div class="start-catch-item">
+          <span class="start-catch-reading">組んで</span>
+          <div class="start-catch-line"></div>
+          <span class="start-catch-kanji cg2" data-t="構築">構築</span>
+        </div>
+        <span class="start-catch-sep">・</span>
+        <div class="start-catch-item">
+          <span class="start-catch-reading">戦って</span>
+          <div class="start-catch-line"></div>
+          <span class="start-catch-kanji cg3" data-t="戦闘">戦闘</span>
+        </div>
+      </div>
+      <div class="start-divider"></div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:8px;">
+        <button id="btn-begin" class="btn primary-btn pulse-glow start-btn">START GAME</button>
+        <button id="btn-sound-test" class="btn skill-btn" style="font-size:0.85rem; letter-spacing:0.05em;">♪ SOUND TEST</button>
+      </div>
+    </section>
+
+    <!-- サウンドテスト画面 -->
+    <section id="screen-sound-test" class="screen full-center hide glass-panel">
+      <h2 style="letter-spacing:0.1em;">♪ SOUND TEST</h2>
+      <p style="color:#94a3b8; margin-bottom:8px; font-size:0.85rem;">ゲーム内BGMを試聴できます</p>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+        <span style="color:#64748b; font-size:0.8rem; white-space:nowrap;">VOL</span>
+        <input type="range" id="bgm-volume-slider" min="0" max="100" value="40"
+          style="width:140px; accent-color:#00ff88;">
+        <span id="bgm-volume-label" style="color:#94a3b8; font-size:0.8rem; width:3em; text-align:right;">40%</span>
+      </div>
+      <div id="sound-test-list" style="display:flex; flex-direction:column; gap:8px; width:100%; max-width:420px;"></div>
+      <button id="btn-sound-test-back" class="btn skill-btn" style="margin-top:28px;">← タイトルへ戻る</button>
+    </section>
+
+    <!-- 図鑑モーダル -->
+    <div id="screen-encyclopedia" class="enc-overlay hide">
+      <div class="glass-panel enc-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2>図鑑</h2>
+          <button id="btn-close-encyclopedia" class="btn skill-btn">✕ 閉じる</button>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+          <button class="btn skill-btn active-tab" data-enc-tab="monsters">カラクリ</button>
+          <button class="btn skill-btn inactive-tab" data-enc-tab="enemies">ジュウマ</button>
+          <button class="btn skill-btn inactive-tab" data-enc-tab="skills">技</button>
+          <button class="btn skill-btn inactive-tab" data-enc-tab="items">アイテム</button>
+          <button class="btn skill-btn inactive-tab" data-enc-tab="food">えさ</button>
+        </div>
+        <div id="enc-content" class="enc-content"></div>
+      </div>
+    </div>
+
+
+    <!-- 画面0.4: プレゼンテーション画面 -->
+    <section id="screen-presentation" class="screen hide pres-screen">
+      <button id="btn-pres-skip" class="pres-skip-btn">スキップ</button>
+      <div id="pres-slide-container" class="pres-slide-container"></div>
+      <div id="pres-dots" class="pres-dots"></div>
+    </section>
+
+    <!-- 画面0.5: ストーリー画面 -->
+    <section id="screen-story" class="screen full-center hide glass-panel">
+      <div class="story-wrapper">
+        <div id="story-page-1" class="story-content">
+          <p>クルクル世界は、少しおかしい。</p>
+          <p>空は時々うすむらさき色になるし、道端のポストは独り言を言う。</p>
+          <p>でも、みんなそれを「ふつう」だと思っている。</p>
+        </div>
+        <div id="story-page-2" class="story-content hide">
+          <p>この世界にはジュウマという生き物がいる。</p>
+          <p>見た目はかわいい。でも、なぜか人間に突進してくる。なぜかは誰も知らない。</p>
+          <p>そこで人々はカラクリを作った。ジュウマをやっつけるための、不思議な機械の仲間だ。</p>
+          <p>カラクリを使いこなす者を、クルクル世界ではコワシヤと呼ぶ。</p>
+        </div>
+        <div id="story-page-3" class="story-content hide">
+          <p>ネジ町のギルドを取り仕切るのはコルクだ。無愛想だが、たぶん悪い人ではない。</p>
+          <p style="color:#fbbf24;">コルク：「新顔か。コワシヤとして登録しに来たか？」</p>
+          <p style="color:#94a3b8;">あなた：「そうです。クエストを受けに来ました。」</p>
+          <p style="color:#fbbf24;">コルク：「ジュウマはやっかいだ。カラクリなしじゃ無理だ。まあ、なんとかなる。たぶん。」</p>
+          <p style="color:#fbbf24;">コルク：「問題ない。問題があっても問題ない。」</p>
+        </div>
+      </div>
+      <div class="story-btn-area">
+        <button id="btn-skip-story" class="btn skill-btn" disabled>NEXT >></button>
+        <button id="btn-skip-all-story" class="btn" style="font-size:0.8rem; color:#475569; background:none; border:none;">スキップ</button>
+      </div>
+    </section>
+
+    <!-- 画面0.6.5: カラクリ受け渡しイベント画面 -->
+    <section id="screen-starter-event" class="screen full-center hide glass-panel">
+      <h2>出発のまえに</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px;" id="starter-event-msg">コルク：「カラクリを3体やる。大事にしろ。問題ない。」</p>
+      <div id="starter-event-grid" class="monster-grid" style="margin-bottom: 30px; justify-content: center;"></div>
+      <button id="btn-starter-event-proceed" class="btn primary-btn pulse-glow">ネジ町へ</button>
+    </section>
+
+    <!-- チュートリアル選択画面 -->
+    <section id="screen-tutorial-select" class="screen full-center hide glass-panel">
+      <h2>ギルドの訓練場</h2>
+      <p style="color:#94a3b8; margin-bottom:8px; text-align:center;">コルク：「一応、練習できる場所がある。」</p>
+      <p style="color:#64748b; font-size:0.85rem; margin-bottom:24px; text-align:center;">コルク：「使わなくても死ぬわけじゃない。たぶん。」</p>
+      <div class="tutorial-select-buttons">
+        <button id="btn-tutorial-full" class="btn primary-btn pulse-glow">
+          丁寧に教えてもらう
+          <span style="display:block; font-size:0.75rem; font-weight:normal; color:#bfdbfe; margin-top:4px;">ゲームが止まって説明してくれる</span>
+        </button>
+        <button id="btn-tutorial-simple" class="btn skill-btn">
+          ヒントだけもらう
+          <span style="display:block; font-size:0.75rem; font-weight:normal; color:#94a3b8; margin-top:4px;">やりながら覚えるタイプ向け</span>
+        </button>
+        <button id="btn-tutorial-skip" class="btn skill-btn" style="color:#64748b;">
+          もう行く
+        </button>
+      </div>
+    </section>
+
+    <!-- 画面0.7: 卵選択画面 -->
+    <section id="screen-egg" class="screen full-center hide glass-panel">
+      <h2>卵を選べ</h2>
+      <p style="color: #94a3b8; margin-bottom: 30px;">コルク：「3つある。好きなのを選べ。どれが光るかは俺にもわからん。なんかそういうもんらしい。」</p>
+      
+      <div id="egg-container" class="egg-container"></div>
+      <p id="egg-hatch-text" class="hide" style="margin-top:20px; font-weight:bold; color:#f8fafc;"></p>
+      <button id="btn-egg-proceed" class="btn primary-btn hide mt-2">マップへ進む</button>
+    </section>
+
+    <!-- 画面0.8: ハブ（ステージ選択）画面 -->
+    <section id="screen-hub" class="screen full-center hide glass-panel" style="width: 800px; max-width: 90vw; align-self: center;">
+      <h2>ギルド拠点</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px;">コルク：「準備ができたら出発しろ。準備ができてなくても行け。どうせ慣れる。」</p>
+      
+      <div class="stage-container">
+        <div id="btn-stage-tutorial" class="stage-card stage-card--tutorial">
+           <h3 style="color:#34d399; margin-bottom:10px;">Tutorial</h3>
+           <p style="font-size:1.1rem; font-weight:bold;">訓練場</p>
+           <p style="font-size:0.8rem; color:#94a3b8; margin-top:5px;">バトルの基本を学ぶ</p>
+        </div>
+      </div>
+
+      <div id="hub-nav-btns">
+        <button id="btn-hub-party" class="btn hub-nav-btn active-tab">
+          <canvas id="icon-hub-party" class="map-btn-icon"></canvas>
+          <span>パーティ</span>
+        </button>
+        <button id="btn-hub-inventory" class="btn hub-nav-btn">
+          <canvas id="icon-hub-inventory" class="map-btn-icon"></canvas>
+          <span>持ち物</span>
+        </button>
+        <button id="save-btn" class="btn hub-nav-btn">
+          <canvas id="icon-hub-save" class="map-btn-icon"></canvas>
+          <span>セーブ</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 画面1: マップ画面 -->
+    <section id="screen-map" class="screen hide glass-panel map-screen" style="position:relative;">
+      <h2>探索マップ</h2>
+      <p class="map-desc">道を選べ。戻れない。</p>
+      <div class="map-legend">
+        <span>⚔️ バトル</span>
+        <span>💀 強敵</span>
+        <span>👑 ボス</span>
+        <span>⛺ 休憩</span>
+      </div>
+      <div id="map-container" class="map-container">
+        <svg id="map-lines" class="map-lines"></svg>
+        <div id="map-nodes" class="map-nodes"></div>
+      </div>
+      <div class="map-bottom-btns">
+        <button id="btn-map-party" class="btn skill-btn map-action-btn active-tab">
+          <canvas id="icon-map-party" class="map-btn-icon"></canvas>
+          <span>パーティ</span>
+        </button>
+        <button id="btn-map-inventory" class="btn skill-btn map-action-btn">
+          <canvas id="icon-map-inventory" class="map-btn-icon"></canvas>
+          <span>持ち物</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 画面: パーティ詳細 -->
+    <section id="screen-party" class="screen hide glass-panel">
+      <div class="party-header">
+        <h2>パーティ</h2>
+        <button id="btn-close-party" class="btn skill-btn">閉じる</button>
+      </div>
+      <div class="party-body">
+        <div id="party-roster-list" class="party-roster-panel"></div>
+        <div id="party-details-grid" class="party-detail-panel"></div>
+      </div>
+    </section>
+
+    <!-- 画面: インベントリ（確認のみ） -->
+    <section id="screen-inventory" class="screen hide glass-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>持ち物</h2>
+        <button id="btn-close-inventory" class="btn skill-btn">閉じる</button>
+      </div>
+      <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:16px;">持ち物の確認ができます。使用はPARTY画面から。</p>
+      <div class="inv-container" style="display:flex; gap:20px; margin-top:0;">
+        <div class="inv-list" style="flex:1; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; min-height:120px;">
+          <h3>技 (Skills)</h3>
+          <div id="inv-skills-content" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
+        </div>
+        <div class="inv-list" style="flex:1; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; min-height:120px;">
+          <h3>えさ (Food)</h3>
+          <div id="inv-food-content" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HELPオーバーレイ -->
+    <div id="screen-help" class="help-overlay hide">
+      <div class="help-panel glass-panel">
+        <div class="help-header">
+          <h2 style="font-size:1.3rem;">📖 HELP / ゲームシステム</h2>
+          <button id="btn-close-help" class="btn skill-btn">✕ 閉じる</button>
+        </div>
+        <div class="help-tabs-bar" id="help-tabs-bar">
+          <button class="btn help-tab-btn active-tab"  data-help-tab="battle">バトル</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="st">EN/パージ</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="affinity">属性相性</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="skills">技・アイテム</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="training">育成・強化</button>
+          <button class="btn help-tab-btn inactive-tab" data-help-tab="map">マップ・用語</button>
+        </div>
+        <div class="help-body">
+          <div id="help-content-battle"   class="help-tab-content"></div>
+          <div id="help-content-st"       class="help-tab-content hide"></div>
+          <div id="help-content-affinity" class="help-tab-content hide"></div>
+          <div id="help-content-skills"   class="help-tab-content hide"></div>
+          <div id="help-content-training" class="help-tab-content hide"></div>
+          <div id="help-content-map"      class="help-tab-content hide"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 画面: リザルト報酬 -->
+    <section id="screen-reward" class="screen hide glass-panel full-center">
+      <h2>戦利品</h2>
+      <p id="reward-subtitle">コルク：「3つある。1つもらえ。文句は言うな。」</p>
+      <div id="reward-boxes" style="display:flex; gap:15px; margin:30px 0; flex-wrap:wrap; justify-content:center;">
+      </div>
+      <button id="btn-collect-reward" class="btn primary-btn" disabled>進む</button>
+    </section>
+
+    <!-- 画面2: 選抜画面 -->
+    <section id="screen-selection" class="screen hide glass-panel">
+      <h2>出撃する3体を選べ</h2>
+      <p>コルク：「誰を連れていくかだけ、自分で決めろ。あとは知らん。」</p>
+      <div id="roster-grid" class="monster-grid"></div>
+      <button id="btn-start-battle" class="btn primary-btn" disabled>出発する</button>
+    </section>
+
+    <!-- チュートリアルオーバーレイ（フル版） -->
+    <div id="tutorial-overlay" class="tutorial-overlay hide">
+      <div class="tutorial-overlay-panel glass-panel">
+        <div class="tutorial-overlay-step-badge">TUTORIAL</div>
+        <h3 id="tutorial-overlay-title"></h3>
+        <p id="tutorial-overlay-body"></p>
+        <button id="btn-tutorial-ok" class="btn primary-btn" style="width:100%; margin-top:8px;">OK、わかった！</button>
+      </div>
+    </div>
+
+    <!-- ジュウマ詳細モーダル（バトル中） -->
+    <div id="monster-detail-overlay" class="monster-detail-overlay hide">
+      <div class="monster-detail-panel glass-panel">
+        <div class="monster-detail-header">
+          <div>
+            <h3 id="md-name" style="margin:0 0 6px;"></h3>
+            <span id="md-elem" class="elem-badge"></span>
+          </div>
+          <button id="btn-md-close" class="btn skill-btn">✕ 閉じる</button>
+        </div>
+        <div id="md-stats"></div>
+        <div id="md-skills"></div>
+      </div>
+    </div>
+
+    <!-- 画面3: バトル画面 -->
+    <section id="screen-battle" class="screen hide">
+      <div class="battle-arena">
+        <!-- P1 エリア -->
+        <div class="side-panel p1-side glass-panel">
+          <h3>カラクリ</h3>
+          <div class="active-monster-card" id="p1-active-card">
+            <canvas id="p1-sprite" class="monster-sprite-canvas"></canvas>
+            <div class="card-header">
+              <h4 id="p1-name">-</h4>
+              <span class="elem-badge" id="p1-elem">-</span>
+            </div>
+            <div class="bars">
+              <label>HP</label>
+              <div class="bar-container hp-bar"><div class="bar-fill hp" id="p1-hp-fill"></div></div>
+              <label>EN</label>
+              <div class="bar-container st-bar"><div class="bar-fill st" id="p1-st-fill"></div></div>
+            </div>
+          </div>
+          
+          <div class="reserve-list" id="p1-reserves"></div>
+        </div>
+
+        <!-- キュー＆結果エリア（中央） -->
+        <div class="center-panel glass-panel">
+          <h3>行動順</h3>
+          <div id="timeline-queue" class="timeline-queue">
+            <!-- JSで行動順アイコンが並ぶ -->
+          </div>
+          
+          <!-- トースト通知用エリア -->
+          <div id="toast-container" class="toast-container"></div>
+
+        </div>
+
+        <!-- P2 エリア -->
+        <div class="side-panel p2-side glass-panel">
+          <h3>ジュウマ</h3>
+          <div class="active-monster-card" id="p2-active-card">
+            <canvas id="p2-sprite" class="monster-sprite-canvas p2-sprite"></canvas>
+            <div class="card-header">
+              <h4 id="p2-name">-</h4>
+              <span class="elem-badge" id="p2-elem">-</span>
+            </div>
+            <div class="bars">
+               <label>HP</label>
+               <div class="bar-container hp-bar"><div class="bar-fill hp" id="p2-hp-fill"></div></div>
+               <label>EN</label>
+               <div class="bar-container st-bar"><div class="bar-fill st" id="p2-st-fill"></div></div>
+            </div>
+          </div>
+          <div class="reserve-list" id="p2-reserves"></div>
+        </div>
+
+        <!-- アクションメニュー（防御フェーズ + アイテム） -->
+        <div id="action-menu" class="action-menu hide">
+          <div id="action-phase-header" style="text-align:center; font-weight:bold; margin-bottom:10px; padding:5px; border-radius:5px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6;">防御フェーズ</div>
+
+          <div id="tutorial-hint" class="tutorial-hint hide">
+            <span id="tutorial-hint-text"></span>
+          </div>
+
+          <div class="cmd-tabs" id="action-tabs" style="display:flex; gap:10px; margin-bottom:10px;">
+            <button id="btn-tab-skills" class="btn skill-btn active-tab" style="flex:1;">技</button>
+            <button id="btn-tab-items" class="btn skill-btn inactive-tab" style="flex:1;">アイテム <span id="item-count-badge" style="font-size:0.7em; background:#ef4444; padding:2px 6px; border-radius:10px; margin-left:5px;">0</span></button>
+          </div>
+
+          <div id="skill-buttons" class="cmd-grid"></div>
+          <div id="item-buttons" class="cmd-grid hide" style="margin-top:10px;"></div>
+
+          <div id="defend-wrapper" class="hide" style="margin-top:10px;">
+            <button id="btn-defend-action" class="btn" style="width:100%; padding: 10px; background: #fbbf24; color: #1e293b; border: none; font-weight: bold;">🛡 身を守る (Defend) - HP溢れダメージ半減</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- パーツデッキ（バトル画面下部）-->
+      <div id="parts-deck">
+        <div id="parts-deck-tech-row"></div>
+        <div id="parts-deck-bottom">
+          <div id="parts-deck-stat-opt"></div>
+          <div id="parts-deck-actions">
+            <div id="swap-wrapper">
+              <button id="btn-swap-action" class="btn deck-util-btn">🔄</button>
+              <div id="swap-select-panel" class="hide swap-select-panel"></div>
+            </div>
+            <div id="purge-wrapper" class="hide">
+              <button id="btn-purge-action" class="btn deck-util-btn deck-util-btn--purge">💥</button>
+              <div id="purge-select-panel" class="hide purge-select-panel">
+                <p style="color:#a78bfa; font-size:0.8rem; margin-bottom:8px;">パージするパーツを選択（戦闘中は戻せない）</p>
+                <div id="purge-parts-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- バトル終了演出オーバーレイ -->
+  <div id="battle-end-overlay">
+    <div id="beo-flash"></div>
+    <div id="beo-main">VICTORY!</div>
+    <div id="beo-line"></div>
+    <div id="beo-sub">— BATTLE OVER —</div>
+    <button id="beo-restart-btn" class="hide" onclick="window.location.reload()" style="margin-top:32px; padding:12px 32px; font-size:1rem; font-weight:bold; background:#374151; color:#f1f5f9; border:2px solid #6b7280; border-radius:8px; cursor:pointer; letter-spacing:0.05em;">タイトルへ戻る</button>
+  </div>
+
+  <!-- バトル開始演出オーバーレイ -->
+  <div id="battle-start-overlay">
+    <div id="bso-battle">BATTLE</div>
+    <div id="bso-line"></div>
+    <div id="bso-start">START</div>
+    <div id="bso-flash"></div>
+  </div>
+
+  <!-- 戦利品ツールチップ -->
+  <div id="reward-tooltip" class="reward-tooltip hide"></div>
+
+  <!-- セーブモーダル -->
+  <!-- チュートリアルイベントオーバーレイ -->
+  <div id="tutorial-event-overlay" class="save-modal-overlay hide">
+    <div class="save-modal-panel glass-panel" style="max-width:480px; width:90%;">
+      <h3 id="tutorial-event-title" style="margin-bottom:12px; text-align:center;"></h3>
+      <div id="tutorial-event-npc" style="font-size:0.9rem; color:#cbd5e1; line-height:1.9; margin-bottom:16px;"></div>
+      <div id="tutorial-event-reward" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;"></div>
+      <button id="btn-tutorial-event-close" class="btn btn-primary" style="width:100%;">受け取る</button>
+    </div>
+  </div>
+
+  <!-- チュートリアル導入オーバーレイ -->
+  <div id="tutorial-intro-overlay" class="save-modal-overlay hide">
+    <div class="save-modal-panel glass-panel" style="max-width:480px; text-align:center;">
+      <h3 style="margin-bottom:16px; color:#34d399;">チュートリアルクエスト</h3>
+      <div style="text-align:left; margin-bottom:24px; line-height:2; color:#cbd5e1; font-size:0.9rem;">
+        <p>コルク：「訓練場だ。聞いてるか。」</p>
+        <p>コルク：「おためしジュウマが2体いる。倒し方を覚えろ。」</p>
+        <p>コルク：「最後に少し強いのが出る。まあ問題ない。多分。」</p>
+        <p style="margin-top:12px; color:#94a3b8;">クリアすると STAGE 1 が解放されます。</p>
+      </div>
+      <button id="btn-tutorial-intro-start" class="btn btn-primary" style="width:100%;">出発する →</button>
+    </div>
+  </div>
+
+  <div id="save-modal" class="save-modal-overlay hide">
+    <div class="save-modal-panel glass-panel">
+      <h3>セーブ</h3>
+      <p class="save-modal-msg">コルク：「記録するか？　それとも消すか？　どちらでもいいが。」</p>
+      <div class="save-modal-btns">
+        <button id="save-modal-do" class="btn hub-nav-btn">💾 セーブする</button>
+        <button id="delete-save-btn" class="btn hub-nav-btn hub-nav-btn--danger">🗑 セーブを削除</button>
+        <button id="save-modal-close" class="btn hub-nav-btn hub-nav-btn--muted">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- フロートメニュー -->
+  <div id="float-btns">
+    <div id="float-menu-panel" class="float-menu-panel hide">
+      <button id="btn-help-global" class="float-menu-item help-item" title="ゲームシステムを確認">❓ ヘルプ</button>
+      <button id="btn-monsters-global" class="float-menu-item monsters-item" title="ジュウマ図鑑">📖 図鑑</button>
+      <button id="btn-affinity-global" class="float-menu-item affinity-item" title="属性相性早見表">⚡ 属性</button>
+      <a id="btn-survey-global" href="https://forms.gle/xGsnjxmc4BKs657p8" target="_blank" rel="noopener" class="float-menu-item survey-item">📝 感想</a>
+      <button id="btn-goto-title" class="float-menu-item title-item" title="タイトル画面へ戻る">🏠 タイトルへ</button>
+    </div>
+    <div id="float-btns-row">
+      <button id="btn-sound-toggle" class="float-circle-btn sound-toggle-btn" title="サウンドON/OFF">🔊</button>
+      <button id="btn-float-menu-toggle" class="float-circle-btn menu-toggle-btn" title="メニュー">☰</button>
+    </div>
+  </div>
+
+  <!-- チュートリアルスポットライト（4枚の暗転ピース＋ラベル） -->
+  <div id="tutorial-spotlight-top"    class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-bottom" class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-left"   class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-right"  class="tutorial-spotlight-piece hide"></div>
+  <div id="tutorial-spotlight-label"  class="tutorial-spotlight-label hide">👆 タップして説明を見る</div>
+
+  <!-- ES Modules -->
+  <script type="module" src="app.js"></script>
+  <script type="module">
+    import { initTitleArt } from './title-art.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      const titleCanvas = document.getElementById('title-canvas');
+      const bgCanvas = document.getElementById('bg-pixel-canvas');
+      if (titleCanvas && bgCanvas) {
+        initTitleArt(titleCanvas, bgCanvas);
+      }
+    });
+  </script>
+</body>
+</html>
