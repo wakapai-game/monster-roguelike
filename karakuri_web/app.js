@@ -7,11 +7,10 @@ const Monster  = Karakuri;
 import { MapGenerator, TutorialMapGenerator } from './map.js';
 import { appState } from './state.js';
 import {
-  screenStart, screenPresentation, screenStory, screenEgg, screenMap, screenSelection,
-  screenBattle, screenStarterEvent, screenTutorialSelect, screenHub, screenReward,
+  screenStart, screenPresentation, screenEgg, screenMap, screenSelection,
+  screenBattle, screenHub, screenReward,
   mainHeader, rosterGrid, btnStartBattle, battleLog,
   btnHubInventory, btnMapInventory, btnHubParty, btnMapParty,
-  starterEventGrid, btnStarterEventProceed,
   btnCollectReward,
   switchScreen
 } from './ui/dom.js';
@@ -300,18 +299,6 @@ document.getElementById('delete-save-btn')?.addEventListener('click', () => {
 
 // ---- App Flow ----
 
-
-let storyPage = 1;
-
-function showStoryPage(pageNum) {
-  const btn = document.getElementById('btn-skip-story');
-  btn.disabled = true;
-  btn.classList.remove('pulse-glow');
-  const lines = document.getElementById(`story-page-${pageNum}`).querySelectorAll('p');
-  const totalMs = (0.5 + (lines.length - 1) * 1.5 + 1.0) * 1000;
-  setTimeout(() => { btn.disabled = false; btn.classList.add('pulse-glow'); }, totalMs);
-}
-
 document.getElementById('btn-begin').onclick = () => {
   switchScreen(screenStart, screenPresentation);
   initPresentation(() => {
@@ -325,98 +312,6 @@ document.getElementById('btn-begin').onclick = () => {
     switchScreen(screenPresentation, screenHub);
   });
 };
-
-document.getElementById('btn-skip-all-story').onclick = () => {
-  storyPage = 1;
-  grantStarterMonsters();
-  switchScreen(screenStory, screenStarterEvent);
-};
-
-document.getElementById('btn-skip-story').onclick = () => {
-  if (storyPage < 3) {
-    document.getElementById(`story-page-${storyPage}`).classList.add('hide');
-    storyPage++;
-    const nextPage = document.getElementById(`story-page-${storyPage}`);
-    nextPage.classList.remove('hide');
-    nextPage.querySelectorAll('p').forEach(p => {
-      p.style.animation = 'none';
-      p.offsetHeight;
-      p.style.animation = '';
-    });
-    showStoryPage(storyPage);
-  } else {
-    storyPage = 1;
-    grantStarterMonsters();
-    switchScreen(screenStory, screenStarterEvent);
-  }
-};
-
-btnStarterEventProceed.onclick = () => {
-  switchScreen(screenStarterEvent, screenTutorialSelect);
-};
-
-document.getElementById('btn-tutorial-full').onclick = () => {
-  initTutorial('full');
-  startTutorialBattle();
-};
-document.getElementById('btn-tutorial-simple').onclick = () => {
-  initTutorial('simple');
-  startTutorialBattle();
-};
-document.getElementById('btn-tutorial-skip').onclick = () => {
-  switchScreen(screenTutorialSelect, screenHub);
-};
-
-function grantStarterMonsters() {
-  // チュートリアルクエスト：カラクリ1体（ガタ）を支給
-  const starterId = 'k_001';
-  const baseData = MONSTERS_DATA.find(m => m.id === starterId) || MONSTERS_DATA[0];
-  const starterUnit = new Monster(JSON.parse(JSON.stringify(baseData)));
-  appState.karakuriIdCounter = (appState.karakuriIdCounter || 0) + 1;
-  starterUnit.uid = starterUnit.id + '_' + appState.karakuriIdCounter;
-  const granted = [starterUnit];
-
-  // starter-event 画面をチュートリアルクエスト演出に
-  document.querySelector('#screen-starter-event h2').textContent = 'チュートリアルクエスト';
-  document.getElementById('starter-event-msg').innerHTML =
-    'コルク：「まあ座れ。最初だからカラクリを1体やる。<b>ガタ</b>だ。使い方は自分で覚えろ。問題ない。」';
-  document.getElementById('btn-starter-event-proceed').textContent = 'クエストへ出発する';
-
-  starterEventGrid.innerHTML = '';
-  granted.forEach(unit => {
-    const card = document.createElement('div');
-    card.className = 'roster-card glass-panel';
-    card.style.cssText = 'pointer-events:none; max-width:220px; margin:0 auto;';
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 80; canvas.height = 80;
-    canvas.style.cssText = 'display:block; margin:0 auto 8px; image-rendering:pixelated;';
-    card.appendChild(canvas);
-
-    import('./ui/sprite-generator.js').then(({ generateMonsterSprite }) => {
-      generateMonsterSprite(canvas, unit);
-    });
-
-    card.innerHTML += `
-      <h3 style="text-align:center;">${unit.name}</h3>
-      <p style="font-size:0.8rem; text-align:center; color:#94a3b8; margin:4px 0;">属性：${unit.main_element.toUpperCase()}</p>
-      <p style="font-size:0.75rem; text-align:center; color:#64748b;">${unit.description || ''}</p>
-      <div style="margin-top:8px; display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
-        <span style="font-size:0.75rem; background:rgba(0,0,0,0.5); padding:3px 8px; border-radius:10px;">HP ${unit.base_stats.hp}</span>
-        <span style="font-size:0.75rem; background:rgba(0,0,0,0.5); padding:3px 8px; border-radius:10px;">EN ${unit.base_stats.max_en}</span>
-      </div>
-      <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">
-        ${(unit.tech_parts || []).map(id => `<span style="font-size:0.7rem; background:rgba(59,130,246,0.2); border:1px solid #3b82f6; padding:2px 6px; border-radius:8px;">⚙ ${id.replace('tp_','')}</span>`).join('')}
-      </div>
-    `;
-    starterEventGrid.appendChild(card);
-  });
-
-  initGameSession(granted);
-  appState.hubVisited = true;
-  appState.currentQuestId = 'q_tutorial';
-  updateHubUI();
-}
 
 // ---- Inventory / Party ----
 btnHubInventory.onclick = () => openInventory(screenHub);
@@ -487,7 +382,7 @@ document.addEventListener('tutorial-node-event', (e) => {
     titleEl.textContent = '技パーツ入手';
     npcEl.innerHTML =
       '<p>コルク：「これは技パーツだ。カラクリに装備させると技が使えるようになる。」</p>' +
-      '<p>コルク：「今すぐパーティ画面でカラクリに覚えさせろ。画面右上の「パーティ」ボタンだ。」</p>';
+      '<p>コルク：「パーティ画面でカラクリに装備させろ。右上の「パーティ」ボタンだ。装備したら先へ進める。」</p>';
 
     const parts = [
       { name: 'ファイアボール・ノズル', sub: '技パーツ / 炎属性', color: '#f87171' },
@@ -499,24 +394,6 @@ document.addEventListener('tutorial-node-event', (e) => {
       rewardEl.appendChild(card);
     });
 
-  } else if (type === 'event_equip') {
-    // サイレント通過：ダイアログなしで自動補完チェックのみ実施
-    const karakuri = appState.globalRoster[0];
-    const partId = 'tp_fireball';
-
-    if (karakuri && !karakuri.known_skills?.includes(partId)) {
-      if (!karakuri.skills) karakuri.skills = karakuri.tech_parts || [];
-      if (!karakuri.known_skills) karakuri.known_skills = [...karakuri.skills];
-      karakuri.known_skills.push(partId);
-      if (karakuri.skills.length < 4) karakuri.skills.push(partId);
-      const idx = appState.globalInventory.skills.indexOf(partId);
-      if (idx !== -1) appState.globalInventory.skills.splice(idx, 1);
-    }
-
-    // ダイアログを出さずに即アンロック
-    appState.mapGenerator.unlockNextNodes(nodeId);
-    renderMap(confirmBattleSetup);
-    return; // overlay.classList.remove('hide') をスキップ
   }
 
   overlay.classList.remove('hide');
@@ -547,7 +424,7 @@ document.addEventListener('tutorial-node-event', (e) => {
           'pointer-events:none',
           'z-index:100',
         ].join(';');
-        banner.textContent = '👆 パーティを開いて技を覚えさせよう';
+        banner.textContent = '👆 パーティを開いて技パーツを装備しよう';
         document.body.appendChild(banner);
       }
     } else {
@@ -578,6 +455,7 @@ document.getElementById('btn-stage-tutorial').onclick = () => {
 
 document.getElementById('btn-tutorial-intro-start').onclick = () => {
   document.getElementById('tutorial-intro-overlay').classList.add('hide');
+  initTutorial('full');
   // チュートリアルアイテムを1回だけ付与
   if (!appState.tutorialItemsGiven) {
     appState.globalInventory.battleItems.push('bitem_hp_potion', 'bitem_hp_potion', 'bitem_st_potion');
@@ -708,30 +586,6 @@ function confirmBattleSetup() {
   updateUI();
   playBattleStart(() => {
     toast(`<span class="log-system">【${encounterLabel}】地上が動き出した。</span>`);
-    resumeLoop();
-  });
-}
-
-// ---- Tutorial Battle ----
-function startTutorialBattle(fromScreen = screenTutorialSelect) {
-  switchScreen(fromScreen, screenBattle);
-  mainHeader.style.display = 'block';
-
-  if (battleLog) battleLog.innerHTML = '';
-
-  // チュートリアル用アイテムをインベントリに追加（キズぐすり×2、スタミナドリンク×1）
-  appState.globalInventory.battleItems.push('bitem_hp_potion', 'bitem_hp_potion', 'bitem_st_potion');
-
-  appState.engine = new BattleEngine();
-  appState.p1Team = appState.globalRoster.map(d => new Monster(JSON.parse(JSON.stringify(d))));
-
-  const enemyData = JSON.parse(JSON.stringify(TUTORIAL_ENEMY));
-  appState.p2Team = [new Monster(enemyData)];
-
-  appState.timeline = new Timeline(appState.p1Team, appState.p2Team);
-  updateUI();
-  playBattleStart(() => {
-    toast(`<span class="log-system">コルク：「ダミーが相手だ。負けても問題ない。勝っても特に何もないが。」</span>`);
     resumeLoop();
   });
 }

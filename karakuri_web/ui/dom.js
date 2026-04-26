@@ -1,13 +1,10 @@
 // ---- DOM Elements ----
 export const screenStart = document.getElementById('screen-start');
 export const screenPresentation = document.getElementById('screen-presentation');
-export const screenStory = document.getElementById('screen-story');
 export const screenEgg = document.getElementById('screen-egg');
 export const screenMap = document.getElementById('screen-map');
 export const screenSelection = document.getElementById('screen-selection');
 export const screenBattle = document.getElementById('screen-battle');
-export const screenStarterEvent = document.getElementById('screen-starter-event');
-export const screenTutorialSelect = document.getElementById('screen-tutorial-select');
 export const screenHub = document.getElementById('screen-hub');
 export const screenInventory = document.getElementById('screen-inventory');
 export const screenReward = document.getElementById('screen-reward');
@@ -54,9 +51,6 @@ export const btnMapParty = document.getElementById('btn-map-party');
 export const btnCloseParty = document.getElementById('btn-close-party');
 export const partyDetailsGrid = document.getElementById('party-details-grid');
 
-export const starterEventGrid = document.getElementById('starter-event-grid');
-export const btnStarterEventProceed = document.getElementById('btn-starter-event-proceed');
-
 export const timelineQueue = document.getElementById('timeline-queue');
 export const toastContainer = document.getElementById('toast-container');
 
@@ -70,7 +64,7 @@ export function switchScreen(fromId, toId) {
   toId.classList.remove('hide');
   toId.classList.add('active');
 
-  if (toId !== screenStart && toId !== screenPresentation && toId !== screenStory && toId !== screenEgg && toId !== screenReward && toId !== screenStarterEvent && toId !== screenTutorialSelect && toId !== screenHub) {
+  if (toId !== screenStart && toId !== screenPresentation && toId !== screenEgg && toId !== screenReward && toId !== screenHub) {
     mainHeader.style.display = 'block';
   } else {
     mainHeader.style.display = 'none';

@@ -1,6 +1,6 @@
 import { appState } from '../state.js';
-import { SKILLS, FOOD_DATA } from '../data.js';
-import { Monster } from '../game.js';
+import { SKILLS, TECH_PARTS, FOOD_DATA } from '../data.js';
+import { Karakuri } from '../game.js';
 import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
 import {
   switchScreen,
@@ -38,9 +38,9 @@ export function openParty(fromScreen) {
         requestAnimationFrame(() => {
             const learnSection = document.getElementById('party-learn-section');
             if (!learnSection) return;
-            // 対象スキルのボタンだけを強調（z-index変更なし）
             learnSection.querySelectorAll('.party-action-btn').forEach(btn => {
-                if (!targetSkillId || btn.textContent.trim() === (SKILLS.find(s => s.id === targetSkillId)?.name ?? '')) {
+                const info = TECH_PARTS.find(p => p.id === targetSkillId) || SKILLS.find(s => s.id === targetSkillId);
+                if (!targetSkillId || btn.textContent.trim() === (info?.name ?? '')) {
                     btn.classList.add('tutorial-guide-pulse');
                     document.addEventListener('tutorial-skill-equipped', () => {
                         btn.classList.remove('tutorial-guide-pulse');
@@ -62,18 +62,18 @@ export function renderInventory() {
         invFoodContent.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
     }
 
-    // 技一覧（確認のみ）
+    // 技パーツ一覧（確認のみ）
     appState.globalInventory.skills.forEach(id => {
-        const item = SKILLS.find(s => s.id === id);
+        const item = TECH_PARTS.find(p => p.id === id) || SKILLS.find(s => s.id === id);
         if (!item) return;
         const el = document.createElement('div');
         el.className = 'inv-item-row';
         el.style.cursor = 'default';
-        el.innerHTML = `<span>${item.name}</span><span style="font-size:0.7em; color:#94a3b8;">技</span>`;
+        el.innerHTML = `<span>${item.name}</span><span style="font-size:0.7em; color:#94a3b8;">技パーツ</span>`;
         invSkillsContent.appendChild(el);
     });
 
-    // えさ一覧（同種まとめ・確認のみ）
+    // アイテム一覧（同種まとめ・確認のみ）
     const grouped = {};
     appState.globalInventory.mapItems.forEach(id => { grouped[id] = (grouped[id] || 0) + 1; });
     Object.entries(grouped).forEach(([id, count]) => {
@@ -87,33 +87,6 @@ export function renderInventory() {
     });
 }
 
-function renderGrowthLog(monster) {
-    const log = monster.growth_log;
-    if (!log || log.length === 0) return '';
-    const recent = log.slice(-5).reverse();
-    const rows = recent.map(e => {
-        const date = new Date(e.timestamp);
-        const time = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
-        return `<div style="font-size:0.7rem; color:#94a3b8; padding:2px 0;">${time} | ${e.param}: ${e.before} -> ${e.after}</div>`;
-    }).join('');
-    return `
-        <div style="margin-top:10px; border-top:1px dashed #334155; padding-top:8px;">
-            <div style="font-size:0.85rem; font-weight:bold; color:#cbd5e1; margin-bottom:5px;">育成記録 (Growth Log)</div>
-            ${rows}
-        </div>
-    `;
-}
-
-// ---- Party Screen ----
-
-let partySelectedIndex = 0;
-
-// Karakuri は skills の代わりに tech_parts を使う。inventory.js との互換のため正規化する。
-function _ensureSkills(data) {
-    if (!data.skills) data.skills = data.tech_parts || [];
-    if (!data.known_skills) data.known_skills = [...data.skills];
-}
-
 function _showPartyToast(msg) {
     const t = document.createElement('div');
     t.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(30,41,59,0.95); border:1px solid rgba(255,255,255,0.15); color:#f8fafc; font-size:0.82rem; padding:6px 16px; border-radius:20px; pointer-events:none; z-index:9999; white-space:nowrap; transition:opacity 0.3s;';
@@ -121,6 +94,10 @@ function _showPartyToast(msg) {
     document.body.appendChild(t);
     setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 1800);
 }
+
+// ---- Party Screen ----
+
+let partySelectedIndex = 0;
 
 export function renderParty() {
     const roster = appState.globalRoster;
@@ -141,7 +118,6 @@ function _renderPartyRoster(roster) {
         const data = roster[i];
 
         if (!data) {
-            // 空きスロット
             const empty = document.createElement('div');
             empty.className = 'party-mini-card-empty';
             empty.dataset.slot = i;
@@ -150,16 +126,14 @@ function _renderPartyRoster(roster) {
             continue;
         }
 
-        const mc = (data instanceof Monster) ? data : new Monster(data);
+        const mc = (data instanceof Karakuri) ? data : new Karakuri(data);
         const card = document.createElement('div');
         card.className = `party-mini-card${i === partySelectedIndex ? ' selected' : ''}`;
         card.dataset.slot = i;
         card.draggable = true;
 
-        // タップで選択
         card.onclick = () => { partySelectedIndex = i; renderParty(); };
 
-        // ドラッグ開始
         card.addEventListener('dragstart', (e) => {
             _rosterDragSrc = i;
             e.dataTransfer.effectAllowed = 'move';
@@ -170,7 +144,6 @@ function _renderPartyRoster(roster) {
 
         _setupRosterDropTarget(card, i, roster);
 
-        // スプライト
         try {
             const offscreen = document.createElement('canvas');
             generateMonsterSprite(offscreen, mc);
@@ -179,7 +152,6 @@ function _renderPartyRoster(roster) {
             card.appendChild(img);
         } catch(e) {}
 
-        // 名前 + HPバー
         const info = document.createElement('div');
         info.className = 'party-mini-info';
 
@@ -205,7 +177,6 @@ function _renderPartyRoster(roster) {
         panel.appendChild(card);
     }
 
-    // スワイプで隊列入れ替え（スマホ）
     _initRosterSwipe(panel, roster);
 }
 
@@ -221,16 +192,14 @@ function _setupRosterDropTarget(el, targetIdx, roster) {
         el.style.outline = '';
         if (_rosterDragSrc === -1 || _rosterDragSrc === targetIdx) return;
         const src = _rosterDragSrc;
-        // src と target を入れ替え（空きスロットへのドロップも対応）
         const tmp = roster[src];
-        roster[src] = roster[targetIdx]; // undefined の場合もある
+        roster[src] = roster[targetIdx];
         if (roster[src] === undefined) roster.splice(src, 1);
         if (targetIdx < roster.length) {
             roster[targetIdx] = tmp;
         } else {
             roster.push(tmp);
         }
-        // undefined を詰める
         const cleaned = roster.filter(Boolean);
         roster.length = 0;
         cleaned.forEach(m => roster.push(m));
@@ -256,13 +225,11 @@ function _initRosterSwipe(panel, roster) {
         const dy = e.changedTouches[0].clientY - startY;
         if (Math.abs(dx) < 40 && Math.abs(dy) < 40) { swipeSrcIdx = -1; return; }
 
-        // スワイプ先のカードを特定
         const endEl = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
         const destCard = endEl?.closest('[data-slot]');
         const destIdx = destCard ? parseInt(destCard.dataset.slot) : -1;
 
         if (destIdx >= 0 && destIdx !== swipeSrcIdx) {
-            // 入れ替え
             const a = roster[swipeSrcIdx], b = roster[destIdx];
             if (a) { roster[destIdx] = a; }
             if (b) { roster[swipeSrcIdx] = b; } else { roster.splice(swipeSrcIdx, 1); }
@@ -277,15 +244,14 @@ function _initRosterSwipe(panel, roster) {
     }, { passive: true });
 }
 
-// ---- 選択モンスター詳細（右/下パネル） ----
+// ---- 選択カラクリ詳細（右/下パネル） ----
 function _renderPartyDetail(roster) {
     partyDetailsGrid.innerHTML = '';
     const index = partySelectedIndex;
     const data = roster[index];
     if (!data) return;
 
-    _ensureSkills(data);
-    const mc = (data instanceof Monster) ? data : new Monster(data);
+    const mc = (data instanceof Karakuri) ? data : new Karakuri(data);
 
     // 名前 + 属性バッジ
     const nameRow = document.createElement('div');
@@ -303,31 +269,26 @@ function _renderPartyDetail(roster) {
     }
     partyDetailsGrid.appendChild(nameRow);
 
-    // ステータスグリッド
+    // ステータスグリッド（Karakuri専用: HP/EN/ATK/DEF/MAG/SPD）
     const statsEl = document.createElement('div');
     statsEl.innerHTML = `
         <div class="party-stat-grid">
             <div class="stat-row"><span class="stat-label">HP</span><span class="stat-val">${mc.stats.hp}</span></div>
-            <div class="stat-row"><span class="stat-label">ST</span><span class="stat-val">${mc.stats.max_st}</span></div>
+            <div class="stat-row"><span class="stat-label">EN</span><span class="stat-val">${mc.stats.max_en}</span></div>
             <div class="stat-row"><span class="stat-label">ATK</span><span class="stat-val">${mc.stats.atk}</span></div>
             <div class="stat-row"><span class="stat-label">DEF</span><span class="stat-val">${mc.stats.def}</span></div>
             <div class="stat-row"><span class="stat-label">MAG</span><span class="stat-val">${mc.stats.mag}</span></div>
             <div class="stat-row"><span class="stat-label">SPD</span><span class="stat-val">${mc.stats.spd}</span></div>
         </div>
-        <div class="party-stat-grid party-param-grid">
-            <div class="stat-row"><span class="stat-label">大きさ</span><span class="stat-val" style="color:#fde047;">${typeof mc.getSizeLabel === 'function' ? mc.getSizeLabel() : '-'}</span></div>
-            <div class="stat-row"><span class="stat-label">賢さ</span><span class="stat-val" style="color:#fde047;">${typeof mc.getIntelligenceLevel === 'function' ? 'Lv.' + mc.getIntelligenceLevel() : '-'}</span></div>
-            <div class="stat-row"><span class="stat-label">えさ</span><span class="stat-val" style="color:${(mc.feed_count||0)>=10?'#ef4444':'#94a3b8'};">${mc.feed_count||0}/10</span></div>
-        </div>
     `;
     partyDetailsGrid.appendChild(statsEl);
 
-    // バトル技
+    // 装備中の技パーツ
     const skillsDiv = document.createElement('div');
-    const equipped = data.skills || [];
+    const equipped = data.tech_parts || [];
     const skillsHeader = document.createElement('div');
     skillsHeader.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;';
-    skillsHeader.innerHTML = `<span style="font-size:0.85rem; font-weight:bold; color:#cbd5e1;">バトル技 (${equipped.length}/4)</span>`;
+    skillsHeader.innerHTML = `<span style="font-size:0.85rem; font-weight:bold; color:#cbd5e1;">技パーツ装備 (${equipped.length}/4)</span>`;
     const editBtn = document.createElement('button');
     editBtn.className = 'btn skill-btn';
     editBtn.style.cssText = 'padding:3px 12px; font-size:0.75rem; color:#fbbf24; border-color:rgba(251,191,36,0.4);';
@@ -337,23 +298,18 @@ function _renderPartyDetail(roster) {
     const badgesDiv = document.createElement('div');
     badgesDiv.className = 'party-skills';
     badgesDiv.innerHTML = equipped.map(sid => {
-        const info = SKILLS.find(s => s.id === sid);
+        const info = TECH_PARTS.find(p => p.id === sid) || SKILLS.find(s => s.id === sid);
         return info ? `<span class="party-skill-badge">${info.name}</span>` : '';
     }).join('') || '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
     skillsDiv.appendChild(skillsHeader);
     skillsDiv.appendChild(badgesDiv);
     partyDetailsGrid.appendChild(skillsDiv);
 
-    // 区切り
     partyDetailsGrid.appendChild(_partyDivider());
 
-    // えさを与える
-    partyDetailsGrid.appendChild(_renderFoodSection(data, mc));
+    // インベントリから技パーツを装備
+    partyDetailsGrid.appendChild(_renderEquipSection(data));
 
-    // 技を覚えさせる
-    partyDetailsGrid.appendChild(_renderLearnSection(data));
-
-    // 区切り
     partyDetailsGrid.appendChild(_partyDivider());
 
     // 隊列移動
@@ -388,14 +344,6 @@ function _renderPartyDetail(roster) {
     orderSection.appendChild(orderLabel);
     orderSection.appendChild(rightBtn);
     partyDetailsGrid.appendChild(orderSection);
-
-    // 育成記録
-    const growthHtml = renderGrowthLog(data);
-    if (growthHtml) {
-        const growthDiv = document.createElement('div');
-        growthDiv.innerHTML = growthHtml;
-        partyDetailsGrid.appendChild(growthDiv);
-    }
 }
 
 function _partyDivider() {
@@ -404,71 +352,21 @@ function _partyDivider() {
     return d;
 }
 
-// ---- えさセクション ----
-function _renderFoodSection(data, mc) {
-    const section = document.createElement('div');
-    section.className = 'party-action-section';
-
-    const feedRemaining = 10 - (mc.feed_count || 0);
-    const label = document.createElement('div');
-    label.className = 'party-action-label';
-    label.textContent = `えさを与える（残り${feedRemaining}回）`;
-    section.appendChild(label);
-
-    if (feedRemaining <= 0) {
-        section.innerHTML += '<div style="font-size:0.78rem; color:#64748b;">これ以上食べられない</div>';
-        return section;
-    }
-
-    const foodItems = appState.globalInventory.mapItems;
-    if (foodItems.length === 0) {
-        section.innerHTML += '<div style="font-size:0.78rem; color:#64748b;">えさがない</div>';
-        return section;
-    }
-
-    // 同種まとめ表示
-    const grouped = {};
-    foodItems.forEach(id => {
-        grouped[id] = (grouped[id] || 0) + 1;
-    });
-
-    const grid = document.createElement('div');
-    grid.className = 'party-action-grid';
-
-    Object.entries(grouped).forEach(([id, count]) => {
-        const itemData = FOOD_DATA.find(f => f.id === id);
-        if (!itemData) return;
-        const btn = document.createElement('button');
-        btn.className = 'btn skill-btn party-action-btn';
-        btn.innerHTML = `${itemData.name}<span style="color:#64748b; font-size:0.7em; margin-left:4px;">×${count}</span>`;
-        btn.onclick = () => {
-            const idx = appState.globalInventory.mapItems.indexOf(id);
-            if (idx === -1) return;
-            _directApplyFood(data, mc, idx, itemData);
-        };
-        grid.appendChild(btn);
-    });
-
-    section.appendChild(grid);
-    return section;
-}
-
-// ---- 技を覚えさせるセクション ----
-function _renderLearnSection(data) {
+// ---- インベントリから技パーツを装備するセクション ----
+function _renderEquipSection(data) {
     const section = document.createElement('div');
     section.className = 'party-action-section';
     section.id = 'party-learn-section';
 
-    _ensureSkills(data);
-    const known = data.known_skills;
+    const equipped = data.tech_parts || [];
     const label = document.createElement('div');
     label.className = 'party-action-label';
-    label.textContent = `技を覚えさせる（${known.length}/10）`;
+    label.textContent = `インベントリから装備（${equipped.length}/4）`;
     section.appendChild(label);
 
     const skillItems = appState.globalInventory.skills;
     if (skillItems.length === 0) {
-        section.innerHTML += '<div style="font-size:0.78rem; color:#64748b;">覚えさせる技がない</div>';
+        section.innerHTML += '<div style="font-size:0.78rem; color:#64748b;">装備できる技パーツがない</div>';
         return section;
     }
 
@@ -476,25 +374,25 @@ function _renderLearnSection(data) {
     grid.className = 'party-action-grid';
 
     skillItems.forEach((sid, idx) => {
-        const info = SKILLS.find(s => s.id === sid);
+        const info = TECH_PARTS.find(p => p.id === sid) || SKILLS.find(s => s.id === sid);
         if (!info) return;
-        const alreadyKnows = known.includes(sid);
-        const full = known.length >= 10;
+        const alreadyEquipped = equipped.includes(sid);
+        const full = equipped.length >= 4;
 
         const btn = document.createElement('button');
         btn.className = 'btn skill-btn party-action-btn';
         btn.textContent = info.name;
 
-        if (alreadyKnows) {
+        if (alreadyEquipped) {
             btn.style.opacity = '0.4';
             btn.disabled = true;
-            btn.title = 'すでに覚えている';
+            btn.title = 'すでに装備している';
         } else if (full) {
             btn.style.opacity = '0.4';
             btn.disabled = true;
-            btn.title = '修得技の上限（10）';
+            btn.title = '装備スロットが満杯（最大4）';
         } else {
-            btn.onclick = () => _directApplySkill(data, idx, info);
+            btn.onclick = () => _equipTechPart(data, idx, info);
         }
         grid.appendChild(btn);
     });
@@ -503,59 +401,18 @@ function _renderLearnSection(data) {
     return section;
 }
 
-// ---- 直接適用ロジック ----
-const _STAT_LABEL = { hp:'HP', max_st:'ST', atk:'ATK', def:'DEF', mag:'MAG', spd:'SPD', size:'大きさ', intelligence:'賢さ' };
+// ---- 技パーツ装備ロジック ----
+function _equipTechPart(data, skillIndex, info) {
+    if (!data.tech_parts) data.tech_parts = [];
+    if (data.tech_parts.includes(info.id)) { _showPartyToast('すでに装備している！'); return; }
+    if (data.tech_parts.length >= 4) { _showPartyToast('装備スロットが満杯（最大4）'); return; }
 
-function _directApplyFood(data, mc, itemIndex, itemData) {
-    if ((data.feed_count || 0) >= 10) { _showPartyToast('もうえさを食べられない！'); return; }
-    if (!data.params) data.params = { size: 0, hardness: 0, weight: 0, intelligence: 0 };
-
-    const changes = [];
-
-    if (itemData.effect.base_stats) {
-        for (const [stat, delta] of Object.entries(itemData.effect.base_stats)) {
-            const before = data.base_stats[stat] || 0;
-            data.base_stats[stat] = before + delta;
-            if (typeof data.logGrowth === 'function') data.logGrowth(itemData.id, stat, before, data.base_stats[stat]);
-            if (delta !== 0) changes.push(`${_STAT_LABEL[stat] || stat}${delta > 0 ? '+' : ''}${delta}`);
-        }
-    }
-    if (itemData.effect.params) {
-        for (const [param, delta] of Object.entries(itemData.effect.params)) {
-            const before = data.params[param] || 0;
-            data.params[param] = before + delta;
-            if (delta !== 0) changes.push(`${_STAT_LABEL[param] || param}${delta > 0 ? '+' : ''}${delta}`);
-        }
-    }
-    data.feed_count = (data.feed_count || 0) + 1;
-
-    if (typeof data.recalculateStats === 'function') {
-        data.recalculateStats();
-        data.current_hp = data.stats.hp;
-    } else {
-        const fresh = new Monster(data);
-        data.stats = fresh.stats;
-        data.current_hp = data.stats.hp;
-    }
-
-    appState.globalInventory.mapItems.splice(itemIndex, 1);
-    const changeSummary = changes.length > 0 ? `  ${changes.join(' ')}` : '';
-    _showPartyToast(`${data.name} が ${itemData.name} を食べた！${changeSummary}`);
-    renderParty();
-}
-
-function _directApplySkill(data, skillIndex, info) {
-    _ensureSkills(data);
-    if (data.known_skills.includes(info.id)) { _showPartyToast('すでに覚えている！'); return; }
-    if (data.known_skills.length >= 10) { _showPartyToast('技の上限（10）に達している！'); return; }
-
-    data.known_skills.push(info.id);
-    if (data.skills.length < 4) data.skills.push(info.id);
+    data.tech_parts.push(info.id);
     appState.globalInventory.skills.splice(skillIndex, 1);
 
-    _showPartyToast(`${data.name} が ${info.name} を覚えた！`);
+    _showPartyToast(`${data.name} に ${info.name} を装備！`);
 
-    // チュートリアル：指定スキルを装備したら完了イベントを発火
+    // チュートリアルフック
     const targetSkill = appState.tutorialAwaitEquipSkillId;
     if (appState.tutorialAwaitEquip && (!targetSkill || targetSkill === info.id)) {
         document.dispatchEvent(new CustomEvent('tutorial-skill-equipped', {
@@ -598,7 +455,7 @@ function getOrCreateSkillModal() {
 
 export function openSkillEdit(monster) {
     skillEditMonster = monster;
-    if (!monster.known_skills) monster.known_skills = [...monster.skills];
+    if (!monster.tech_parts) monster.tech_parts = [];
 
     const modal = getOrCreateSkillModal();
     document.getElementById('skill-edit-title').textContent = `${monster.name} の技設定`;
@@ -620,27 +477,28 @@ function renderSkillEditBody() {
     const battleHeader = document.createElement('div');
     battleHeader.className = 'skill-section-header';
     battleHeader.innerHTML = `
-        <span class="skill-section-title" style="color:#fbbf24;">バトル技 <span style="font-size:0.8em; color:#94a3b8;">(${monster.skills.length}/4)</span></span>
-        <span style="font-size:0.75rem; color:#64748b;">+セットボタン or ドラッグで追加</span>
+        <span class="skill-section-title" style="color:#fbbf24;">装備中パーツ <span style="font-size:0.8em; color:#94a3b8;">(${monster.tech_parts.length}/4)</span></span>
+        <span style="font-size:0.75rem; color:#64748b;">ドラッグで並び替え・✕で外す</span>
     `;
     body.appendChild(battleHeader);
 
     const battleZone = document.createElement('div');
     battleZone.className = 'skill-battle-zone';
 
-    // ゾーン自体もドロップ受け付け（空きスロット全体）
     battleZone.addEventListener('dragover', (e) => {
-        if (skillDragSrcZone === 'known') {
+        if (skillDragSrcZone === 'inventory') {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
         }
     });
     battleZone.addEventListener('drop', (e) => {
         e.preventDefault();
-        if (skillDragSrcZone === 'known' && monster.skills.length < 4) {
+        if (skillDragSrcZone === 'inventory' && monster.tech_parts.length < 4) {
             const skillId = e.dataTransfer.getData('skill-id');
-            if (skillId && !monster.skills.includes(skillId)) {
-                monster.skills.push(skillId);
+            if (skillId && !monster.tech_parts.includes(skillId)) {
+                const idx = appState.globalInventory.skills.indexOf(skillId);
+                if (idx !== -1) appState.globalInventory.skills.splice(idx, 1);
+                monster.tech_parts.push(skillId);
                 renderSkillEditBody();
             }
         }
@@ -649,9 +507,9 @@ function renderSkillEditBody() {
     for (let si = 0; si < 4; si++) {
         const slot = document.createElement('div');
 
-        if (si < monster.skills.length) {
-            const sid = monster.skills[si];
-            const info = SKILLS.find(s => s.id === sid);
+        if (si < monster.tech_parts.length) {
+            const sid = monster.tech_parts[si];
+            const info = TECH_PARTS.find(p => p.id === sid) || SKILLS.find(s => s.id === sid);
             if (!info) continue;
 
             slot.className = 'skill-slot skill-slot-filled';
@@ -685,14 +543,16 @@ function renderSkillEditBody() {
                 e.stopPropagation();
                 slot.classList.remove('drag-over');
                 if (skillDragSrcZone === 'equipped' && skillDragSrcIdx !== si) {
-                    const moved = monster.skills.splice(skillDragSrcIdx, 1)[0];
-                    monster.skills.splice(si, 0, moved);
+                    const moved = monster.tech_parts.splice(skillDragSrcIdx, 1)[0];
+                    monster.tech_parts.splice(si, 0, moved);
                     renderSkillEditBody();
-                } else if (skillDragSrcZone === 'known') {
+                } else if (skillDragSrcZone === 'inventory') {
                     const skillId = e.dataTransfer.getData('skill-id');
-                    if (skillId && !monster.skills.includes(skillId)) {
-                        monster.skills.splice(si, 0, skillId);
-                        if (monster.skills.length > 4) monster.skills.pop();
+                    if (skillId && !monster.tech_parts.includes(skillId)) {
+                        const idx = appState.globalInventory.skills.indexOf(skillId);
+                        if (idx !== -1) appState.globalInventory.skills.splice(idx, 1);
+                        monster.tech_parts.splice(si, 0, skillId);
+                        if (monster.tech_parts.length > 4) monster.tech_parts.pop();
                         renderSkillEditBody();
                     }
                 }
@@ -707,11 +567,13 @@ function renderSkillEditBody() {
             removeBtn.style.cssText = 'padding:2px 8px; font-size:0.7rem; color:#ef4444; flex-shrink:0;';
             removeBtn.textContent = '✕外す';
             removeBtn.onclick = () => {
-                if (monster.skills.length <= 1) {
-                    alert('技は最低1つ必要です');
+                if (monster.tech_parts.length <= 1) {
+                    alert('技パーツは最低1つ必要です');
                     return;
                 }
-                monster.skills.splice(si, 1);
+                monster.tech_parts.splice(si, 1);
+                // 外したパーツをインベントリに戻す
+                appState.globalInventory.skills.push(sid);
                 renderSkillEditBody();
             };
 
@@ -722,17 +584,19 @@ function renderSkillEditBody() {
             slot.textContent = `── 空きスロット ${si + 1} ──`;
 
             slot.addEventListener('dragover', (e) => {
-                if (skillDragSrcZone === 'known') { e.preventDefault(); slot.classList.add('drag-over'); }
+                if (skillDragSrcZone === 'inventory') { e.preventDefault(); slot.classList.add('drag-over'); }
             });
             slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
             slot.addEventListener('drop', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 slot.classList.remove('drag-over');
-                if (skillDragSrcZone === 'known') {
+                if (skillDragSrcZone === 'inventory') {
                     const skillId = e.dataTransfer.getData('skill-id');
-                    if (skillId && !monster.skills.includes(skillId) && monster.skills.length < 4) {
-                        monster.skills.push(skillId);
+                    if (skillId && !monster.tech_parts.includes(skillId) && monster.tech_parts.length < 4) {
+                        const idx = appState.globalInventory.skills.indexOf(skillId);
+                        if (idx !== -1) appState.globalInventory.skills.splice(idx, 1);
+                        monster.tech_parts.push(skillId);
                         renderSkillEditBody();
                     }
                 }
@@ -743,109 +607,79 @@ function renderSkillEditBody() {
     }
     body.appendChild(battleZone);
 
-    // ---- 修得技リスト ----
-    const knownHeader = document.createElement('div');
-    knownHeader.className = 'skill-section-header';
-    knownHeader.style.marginTop = '16px';
-    knownHeader.innerHTML = `
-        <span class="skill-section-title" style="color:#94a3b8;">修得技 <span style="font-size:0.8em;">(${monster.known_skills.length}/10)</span></span>
-        <span style="font-size:0.75rem; color:#64748b;">バトル技スロットにドラッグ</span>
+    // ---- インベントリの未装備パーツ ----
+    const invHeader = document.createElement('div');
+    invHeader.className = 'skill-section-header';
+    invHeader.style.marginTop = '16px';
+    invHeader.innerHTML = `
+        <span class="skill-section-title" style="color:#94a3b8;">インベントリ <span style="font-size:0.8em;">(${appState.globalInventory.skills.length}個)</span></span>
+        <span style="font-size:0.75rem; color:#64748b;">上のスロットにドラッグ or +セット</span>
     `;
-    body.appendChild(knownHeader);
+    body.appendChild(invHeader);
 
-    const knownZone = document.createElement('div');
-    knownZone.className = 'skill-known-zone';
+    const invZone = document.createElement('div');
+    invZone.className = 'skill-known-zone';
 
-    // 修得技ゾーンへのドロップ = 外す
-    knownZone.addEventListener('dragover', (e) => {
-        if (skillDragSrcZone === 'equipped') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
-    });
-    knownZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        if (skillDragSrcZone === 'equipped') {
-            if (monster.skills.length <= 1) { alert('技は最低1つ必要です'); return; }
-            monster.skills.splice(skillDragSrcIdx, 1);
-            renderSkillEditBody();
-        }
-    });
-
-    if (monster.known_skills.length === 0) {
+    if (appState.globalInventory.skills.length === 0) {
         const empty = document.createElement('div');
         empty.style.cssText = 'color:#64748b; font-size:0.8rem; padding:12px; text-align:center;';
-        empty.textContent = '修得技がありません';
-        knownZone.appendChild(empty);
+        empty.textContent = '装備できる技パーツがありません';
+        invZone.appendChild(empty);
     }
 
-    monster.known_skills.forEach((sid, ki) => {
-        const info = SKILLS.find(s => s.id === sid);
+    appState.globalInventory.skills.forEach((sid, ki) => {
+        const info = TECH_PARTS.find(p => p.id === sid) || SKILLS.find(s => s.id === sid);
         if (!info) return;
 
-        const isEquipped = monster.skills.includes(sid);
         const row = document.createElement('div');
-        row.className = `skill-known-row${isEquipped ? ' skill-known-equipped' : ''}`;
+        row.className = 'skill-known-row';
+        row.draggable = true;
 
-        if (!isEquipped) {
-            row.draggable = true;
-            row.addEventListener('dragstart', (e) => {
-                skillDragSrcZone = 'known';
-                skillDragSrcIdx = ki;
-                e.dataTransfer.setData('skill-id', sid);
-                e.dataTransfer.setData('text/plain', 'known');
-                e.dataTransfer.effectAllowed = 'move';
-                row.classList.add('dragging');
-            });
-            row.addEventListener('dragend', () => {
-                row.classList.remove('dragging');
-                body.querySelectorAll('.skill-slot, .skill-known-row').forEach(el => el.classList.remove('drag-over'));
-            });
-        }
+        row.addEventListener('dragstart', (e) => {
+            skillDragSrcZone = 'inventory';
+            skillDragSrcIdx = ki;
+            e.dataTransfer.setData('skill-id', sid);
+            e.dataTransfer.setData('text/plain', 'inventory');
+            e.dataTransfer.effectAllowed = 'move';
+            row.classList.add('dragging');
+        });
+        row.addEventListener('dragend', () => {
+            row.classList.remove('dragging');
+            body.querySelectorAll('.skill-slot, .skill-known-row').forEach(el => el.classList.remove('drag-over'));
+        });
 
         const left = document.createElement('div');
         left.style.cssText = 'display:flex; align-items:center; gap:8px;';
 
         const handle = document.createElement('span');
         handle.className = 'party-drag-handle';
-        handle.textContent = isEquipped ? '' : '⠿';
+        handle.textContent = '⠿';
         handle.style.width = '16px';
 
         const nameSpan = document.createElement('span');
-        nameSpan.style.cssText = `font-size:0.85rem; color:${isEquipped ? '#64748b' : '#f8fafc'};`;
+        nameSpan.style.cssText = 'font-size:0.85rem; color:#f8fafc;';
         nameSpan.textContent = info.name;
 
-        if (isEquipped) {
-            const badge = document.createElement('span');
-            badge.style.cssText = 'font-size:0.65rem; color:#3b82f6; background:rgba(59,130,246,0.15); padding:1px 6px; border-radius:4px;';
-            badge.textContent = 'セット中';
-            left.appendChild(handle);
-            left.appendChild(nameSpan);
-            left.appendChild(badge);
-        } else {
-            left.appendChild(handle);
-            left.appendChild(nameSpan);
-        }
+        left.appendChild(handle);
+        left.appendChild(nameSpan);
 
         const actionBtn = document.createElement('button');
         actionBtn.className = 'btn skill-btn';
-        if (isEquipped) {
-            actionBtn.style.cssText = 'padding:3px 10px; font-size:0.7rem; color:#64748b; flex-shrink:0;';
-            actionBtn.textContent = 'セット済';
-            actionBtn.disabled = true;
-        } else {
-            actionBtn.style.cssText = `padding:3px 10px; font-size:0.7rem; color:#10b981; flex-shrink:0; ${monster.skills.length >= 4 ? 'opacity:0.4;' : ''}`;
-            actionBtn.textContent = '+セット';
-            actionBtn.disabled = monster.skills.length >= 4;
-            actionBtn.onclick = () => {
-                if (monster.skills.length < 4) {
-                    monster.skills.push(sid);
-                    renderSkillEditBody();
-                }
-            };
-        }
+        actionBtn.style.cssText = `padding:3px 10px; font-size:0.7rem; color:#10b981; flex-shrink:0; ${monster.tech_parts.length >= 4 ? 'opacity:0.4;' : ''}`;
+        actionBtn.textContent = '+セット';
+        actionBtn.disabled = monster.tech_parts.length >= 4;
+        actionBtn.onclick = () => {
+            if (monster.tech_parts.length < 4) {
+                appState.globalInventory.skills.splice(ki, 1);
+                monster.tech_parts.push(sid);
+                renderSkillEditBody();
+            }
+        };
 
         row.appendChild(left);
         row.appendChild(actionBtn);
-        knownZone.appendChild(row);
+        invZone.appendChild(row);
     });
 
-    body.appendChild(knownZone);
+    body.appendChild(invZone);
 }
