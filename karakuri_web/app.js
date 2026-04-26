@@ -345,9 +345,10 @@ document.addEventListener('tutorial-node-event', (e) => {
   rewardEl.innerHTML = '';
 
   if (type === 'event_story') {
-    // 初めての1体目（ガタ / k_001）を付与
-    const baseData = MONSTERS_DATA.find(m => m.id === 'k_001') || MONSTERS_DATA[0];
-    const newUnit  = new Monster(JSON.parse(JSON.stringify(baseData)));
+    // 初めての1体目（ガタ / k_001）を付与 — チュートリアルで技パーツを装備させるため空で渡す
+    const baseData = JSON.parse(JSON.stringify(MONSTERS_DATA.find(m => m.id === 'k_001') || MONSTERS_DATA[0]));
+    baseData.tech_parts = [];
+    const newUnit  = new Monster(baseData);
     appState.karakuriIdCounter = (appState.karakuriIdCounter || 0) + 1;
     newUnit.uid = newUnit.id + '_' + appState.karakuriIdCounter;
     appState.globalRoster.push(newUnit);
