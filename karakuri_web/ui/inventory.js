@@ -11,6 +11,41 @@ import {
 
 let dragSrcIndex = -1;
 
+// ---- 技パーツ情報ツールチップ ----
+const _techTooltip = document.getElementById('reward-tooltip');
+
+function _buildTechTooltipHtml(info) {
+    const catLabel = { attack: '攻撃', defense: '防御', support: 'サポート' }[info.category] || info.category;
+    const elemLabel = info.element && info.element !== 'none' ? ` / ${info.element.toUpperCase()}` : '';
+    return `<strong>${info.name}</strong>` +
+        `<span style="color:#94a3b8;font-size:0.75rem;">${catLabel}${elemLabel}　EN消費: ${info.cost_en ?? '?'}</span><br>` +
+        (info.description || '');
+}
+
+function _showTechTooltip(el, info) {
+    if (!_techTooltip) return;
+    _techTooltip.innerHTML = _buildTechTooltipHtml(info);
+    const rect = el.getBoundingClientRect();
+    let left = rect.left + rect.width / 2;
+    left = Math.max(120, Math.min(left, window.innerWidth - 120));
+    _techTooltip.style.left = `${left}px`;
+    _techTooltip.style.top = `${rect.top}px`;
+    _techTooltip.classList.remove('hide');
+}
+
+function _hideTechTooltip() {
+    _techTooltip?.classList.add('hide');
+}
+
+function _attachTechTooltip(el, info) {
+    el.style.cursor = 'help';
+    el.addEventListener('mouseenter', () => _showTechTooltip(el, info));
+    el.addEventListener('mouseleave', _hideTechTooltip);
+    // スマホ対応: タップで表示、外タップで非表示
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); _showTechTooltip(el, info); }, { passive: false });
+    el.addEventListener('touchend', () => setTimeout(_hideTechTooltip, 1500));
+}
+
 // 技設定モーダルの状態
 let skillEditModal = null;
 let skillEditMonster = null;
@@ -297,10 +332,19 @@ function _renderPartyDetail(roster) {
     skillsHeader.appendChild(editBtn);
     const badgesDiv = document.createElement('div');
     badgesDiv.className = 'party-skills';
-    badgesDiv.innerHTML = equipped.map(sid => {
-        const info = TECH_PARTS.find(p => p.id === sid) || SKILLS.find(s => s.id === sid);
-        return info ? `<span class="party-skill-badge">${info.name}</span>` : '';
-    }).join('') || '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
+    if (equipped.length === 0) {
+        badgesDiv.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
+    } else {
+        equipped.forEach(sid => {
+            const info = TECH_PARTS.find(p => p.id === sid) || SKILLS.find(s => s.id === sid);
+            if (!info) return;
+            const badge = document.createElement('span');
+            badge.className = 'party-skill-badge';
+            badge.textContent = info.name;
+            _attachTechTooltip(badge, info);
+            badgesDiv.appendChild(badge);
+        });
+    }
     skillsDiv.appendChild(skillsHeader);
     skillsDiv.appendChild(badgesDiv);
     partyDetailsGrid.appendChild(skillsDiv);
@@ -386,14 +430,13 @@ function _renderEquipSection(data) {
         if (alreadyEquipped) {
             btn.style.opacity = '0.4';
             btn.disabled = true;
-            btn.title = 'すでに装備している';
         } else if (full) {
             btn.style.opacity = '0.4';
             btn.disabled = true;
-            btn.title = '装備スロットが満杯（最大4）';
         } else {
             btn.onclick = () => _equipTechPart(data, idx, info);
         }
+        _attachTechTooltip(btn, info);
         grid.appendChild(btn);
     });
 

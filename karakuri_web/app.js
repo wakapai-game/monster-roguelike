@@ -357,7 +357,8 @@ document.addEventListener('tutorial-node-event', (e) => {
     titleEl.textContent = 'カラクリ、入手';
     npcEl.innerHTML =
       '<p>コルク：「お前のカラクリだ。<b>' + newUnit.name + '</b>という。」</p>' +
-      '<p>コルク：「名前はもう決まってる。異議は受け付けない。問題ない。」</p>';
+      '<p>コルク：「名前はもう決まってる。異議は受け付けない。問題ない。」</p>' +
+      '<p>コルク：「今は技パーツがない。丸腰だ。次で調達する。」</p>';
 
     // カラクリカード表示
     const card = document.createElement('div');
@@ -377,21 +378,22 @@ document.addEventListener('tutorial-node-event', (e) => {
 
   } else if (type === 'event_item') {
     // 技パーツを付与
-    const grantedParts = ['tp_fireball'];
+    const grantedParts = ['tp_fireball', 'tp_charge'];
     grantedParts.forEach(id => appState.globalInventory.skills.push(id));
 
     titleEl.textContent = '技パーツ入手';
     npcEl.innerHTML =
-      '<p>コルク：「これは技パーツだ。カラクリに装備させると技が使えるようになる。」</p>' +
-      '<p>コルク：「パーティ画面でカラクリに装備させろ。右上の「パーティ」ボタンだ。装備したら先へ進める。」</p>';
+      '<p>コルク：「技パーツだ。2つある。ガタに装備させれば技が使える。」</p>' +
+      '<p>コルク：「右上の「パーティ」ボタンを押して、ガタに付けてやれ。装備したら先へ進む。」</p>';
 
     const parts = [
-      { name: 'ファイアボール・ノズル', sub: '技パーツ / 炎属性', color: '#f87171' },
+      { name: 'ファイアボール・ノズル', sub: '技パーツ / 炎攻撃', color: '#f87171', icon: '🔥' },
+      { name: 'エネルギー充填ユニット', sub: '技パーツ / EN回復', color: '#60a5fa', icon: '⚡' },
     ];
     parts.forEach(it => {
       const card = document.createElement('div');
       card.style.cssText = 'background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 18px;text-align:center;min-width:140px;';
-      card.innerHTML = `<div style="font-size:1.4rem;margin-bottom:6px;">🔥</div><div style="font-weight:bold;font-size:0.85rem;color:${it.color};margin-bottom:2px;">${it.name}</div><div style="font-size:0.7rem;color:#94a3b8;">${it.sub}</div>`;
+      card.innerHTML = `<div style="font-size:1.4rem;margin-bottom:6px;">${it.icon}</div><div style="font-weight:bold;font-size:0.85rem;color:${it.color};margin-bottom:2px;">${it.name}</div><div style="font-size:0.7rem;color:#94a3b8;">${it.sub}</div>`;
       rewardEl.appendChild(card);
     });
 
@@ -405,7 +407,7 @@ document.addEventListener('tutorial-node-event', (e) => {
     if (type === 'event_item') {
       // ノードはクリアせず、技を装備するまでここで待機
       appState.tutorialAwaitEquip = nodeId;
-      appState.tutorialAwaitEquipSkillId = 'tp_fireball';
+      appState.tutorialAwaitEquipSkillId = null;  // どちらの技パーツを装備してもOK
 
       // パーティボタンをパルスで強調（z-index変更なし・クリック阻害なし）
       if (btnMapParty) {

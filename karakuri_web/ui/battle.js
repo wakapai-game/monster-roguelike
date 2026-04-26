@@ -467,6 +467,16 @@ export function resumeLoop() {
   updatePartsDeck(appState.timeline?.p1_active, 'idle');
 
   // チュートリアル: ACTION QUEUEステップ（フル版は表示後にループ開始）
+  if (isTutorialActive() && !hasShownStep('pre-battle')) {
+    showTutorialStep('pre-battle', () => {
+      if (!hasShownStep('action-queue')) {
+        showTutorialStep('action-queue', () => _startLoop());
+      } else {
+        _startLoop();
+      }
+    });
+    return;
+  }
   if (isTutorialActive() && !hasShownStep('action-queue')) {
     showTutorialStep('action-queue', () => _startLoop());
     return;
@@ -593,9 +603,7 @@ export function showAttackPhase(monster) {
   if (isTutorialActive()) {
     if (!hasShownStep('attack-phase')) {
       showTutorialStep('attack-phase', null);
-    } else if (hasShownStep('st-chip') && !hasShownStep('swap')) {
-      showTutorialStep('swap', null);
-    } else if (hasShownStep('swap') && !hasShownStep('affinity')) {
+    } else if (hasShownStep('attack-phase') && !hasShownStep('affinity')) {
       showTutorialStep('affinity', null);
     }
   }
@@ -680,10 +688,8 @@ export function showDefensePhase(playerTarget, enemyAttacker, enemySkillId) {
 
   // チュートリアルフック（防御フェーズ説明後にアイテム説明も案内）
   if (isTutorialActive()) {
-    if (!hasShownStep('swap') && !hasShownStep('defense-phase')) {
+    if (!hasShownStep('defense-phase')) {
       showTutorialStep('defense-phase', null);
-    } else if (!hasShownStep('swap')) {
-      showTutorialStep('swap', null);
     }
   }
 }
