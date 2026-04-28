@@ -466,20 +466,24 @@ export function resumeLoop() {
   document.getElementById('purge-select-panel')?.classList.add('hide');
   updatePartsDeck(appState.timeline?.p1_active, 'idle');
 
-  // チュートリアル: ACTION QUEUEステップ（フル版は表示後にループ開始）
-  if (isTutorialActive() && !hasShownStep('pre-battle')) {
-    showTutorialStep('pre-battle', () => {
-      if (!hasShownStep('action-queue')) {
-        showTutorialStep('action-queue', () => _startLoop());
-      } else {
-        _startLoop();
-      }
-    });
-    return;
-  }
-  if (isTutorialActive() && !hasShownStep('action-queue')) {
-    showTutorialStep('action-queue', () => _startLoop());
-    return;
+  // チュートリアル: バトル番号に応じた pre-battle ステップ → action-queue（Battle1のみ）
+  if (isTutorialActive()) {
+    const idx = Math.max(0, (appState.tutorialBattleIndex ?? 1) - 1);
+    const preBattleId = idx === 0 ? 'pre-battle-1' : idx === 1 ? 'pre-battle-2' : 'pre-battle-boss';
+    if (!hasShownStep(preBattleId)) {
+      showTutorialStep(preBattleId, () => {
+        if (idx === 0 && !hasShownStep('action-queue')) {
+          showTutorialStep('action-queue', () => _startLoop());
+        } else {
+          _startLoop();
+        }
+      });
+      return;
+    }
+    if (idx === 0 && !hasShownStep('action-queue')) {
+      showTutorialStep('action-queue', () => _startLoop());
+      return;
+    }
   }
   _startLoop();
 }
@@ -599,13 +603,9 @@ export function showAttackPhase(monster) {
   setupSwapButton(1, monster, null, null);
   setupPurgeButton(monster);
 
-  // チュートリアルフック
-  if (isTutorialActive()) {
-    if (!hasShownStep('attack-phase')) {
-      showTutorialStep('attack-phase', null);
-    } else if (hasShownStep('attack-phase') && !hasShownStep('affinity')) {
-      showTutorialStep('affinity', null);
-    }
+  // チュートリアルフック（affinity は event_item ノードで表示するためここでは attack-phase のみ）
+  if (isTutorialActive() && !hasShownStep('attack-phase')) {
+    showTutorialStep('attack-phase', null);
   }
 }
 
@@ -762,6 +762,8 @@ export function setupPurgeButton(monster) {
   purgeWrapper.classList.remove('hide');
   purgePanel.classList.add('hide');
   purgeList.innerHTML = '';
+
+  if (isTutorialActive()) showTutorialStep('purge-intro', null);
 
   btnPurge.onclick = () => {
     const isOpen = !purgePanel.classList.contains('hide');

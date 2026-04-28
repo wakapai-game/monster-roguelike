@@ -1,5 +1,6 @@
-import { KARAKURI_DATA, JUMA_DATA, TUTORIAL_JUMA, TECH_PARTS, MATERIAL_DATA, SYNTHESIS_RECIPES, QUEST_DATA,
-         MONSTERS_DATA, ENEMY_DATA, TUTORIAL_ENEMY, TUTORIAL_BOSS_ENEMY } from './data.js';
+import { KARAKURI_DATA, JUMA_DATA, TUTORIAL_JUMA_1, TUTORIAL_JUMA_2, TUTORIAL_BOSS_JUMA,
+         TECH_PARTS, MATERIAL_DATA, SYNTHESIS_RECIPES, QUEST_DATA,
+         MONSTERS_DATA, ENEMY_DATA } from './data.js';
 import { Karakuri, Timeline, BattleEngine, findTechPart } from './game.js';
 
 const EGG_DATA = [];
@@ -377,20 +378,49 @@ document.addEventListener('tutorial-node-event', (e) => {
     rewardEl.appendChild(card);
 
   } else if (type === 'event_item') {
-    // 技パーツを付与
-    const grantedParts = ['tp_fireball', 'tp_charge'];
+    // 技パーツを付与（水属性 + EN回復 → 次の炎敵に有効）
+    const grantedParts = ['tp_water_gun', 'tp_charge'];
     grantedParts.forEach(id => appState.globalInventory.skills.push(id));
 
-    titleEl.textContent = '技パーツ入手';
+    titleEl.textContent = '属性と技パーツ';
     npcEl.innerHTML =
-      '<p>コルク：「技パーツだ。2つある。ガタに装備させれば技が使える。」</p>' +
-      '<p>コルク：「右上の「パーティ」ボタンを押して、ガタに付けてやれ。装備したら先へ進む。」</p>';
+      '<p>コルク：「攻撃には"属性"がある。相手の弱点を突くと大ダメージになる。」</p>' +
+      '<p>コルク：「炎の相手には水が刺さる。ウォーターガンを持っていけ。EN回復技もある。使え。」</p>' +
+      '<p>コルク：「パーティ画面でガタに装備させろ。装備したら先へ進む。」</p>';
 
     const parts = [
-      { name: 'ファイアボール・ノズル', sub: '技パーツ / 炎攻撃', color: '#f87171', icon: '🔥' },
-      { name: 'エネルギー充填ユニット', sub: '技パーツ / EN回復', color: '#60a5fa', icon: '⚡' },
+      { name: 'ウォーターガン・ノズル', sub: '技パーツ / 水攻撃', color: '#60a5fa', icon: '💧' },
+      { name: 'エネルギー充填ユニット', sub: '技パーツ / EN回復', color: '#a78bfa', icon: '⚡' },
     ];
     parts.forEach(it => {
+      const card = document.createElement('div');
+      card.style.cssText = 'background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 18px;text-align:center;min-width:140px;';
+      card.innerHTML = `<div style="font-size:1.4rem;margin-bottom:6px;">${it.icon}</div><div style="font-weight:bold;font-size:0.85rem;color:${it.color};margin-bottom:2px;">${it.name}</div><div style="font-size:0.7rem;color:#94a3b8;">${it.sub}</div>`;
+      rewardEl.appendChild(card);
+    });
+
+  } else if (type === 'event_stat') {
+    // ステータス強化パーツを直接ガタに装備
+    const gata = appState.globalRoster.find(m => m.id === 'k_001');
+    const statPartsToGive = ['sp_heavy_armor', 'sp_power_core'];
+    if (gata) {
+      statPartsToGive.forEach(id => {
+        if (!gata.stat_parts.includes(id)) gata.stat_parts.push(id);
+      });
+      gata.recalculateStats?.();
+    }
+
+    titleEl.textContent = '機体強化';
+    npcEl.innerHTML =
+      '<p>コルク：「強化パーツをガタに組み込んだ。ボーナスがある代わりにデメリットもある。」</p>' +
+      '<p>コルク：「HPが増えてもSPDが落ちる。ATKが上がればDEFが下がる。そういうもんだ。」</p>' +
+      '<p>コルク：「取捨選択が腕の見せ所だ。」</p>';
+
+    const statParts = [
+      { name: 'ヘビーアーマー',  sub: 'HP+500 DEF+20 / SPD-10', color: '#34d399', icon: '🛡' },
+      { name: 'パワーコア',      sub: 'ATK+20 / DEF-10',         color: '#f87171', icon: '⚙️' },
+    ];
+    statParts.forEach(it => {
       const card = document.createElement('div');
       card.style.cssText = 'background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 18px;text-align:center;min-width:140px;';
       card.innerHTML = `<div style="font-size:1.4rem;margin-bottom:6px;">${it.icon}</div><div style="font-weight:bold;font-size:0.85rem;color:${it.color};margin-bottom:2px;">${it.name}</div><div style="font-size:0.7rem;color:#94a3b8;">${it.sub}</div>`;
@@ -405,31 +435,39 @@ document.addEventListener('tutorial-node-event', (e) => {
     overlay.classList.add('hide');
 
     if (type === 'event_item') {
-      // ノードはクリアせず、技を装備するまでここで待機
-      appState.tutorialAwaitEquip = nodeId;
-      appState.tutorialAwaitEquipSkillId = null;  // どちらの技パーツを装備してもOK
+      // affinity ステップを表示してから技装備待機へ
+      showTutorialStep('affinity', () => {
+        // ノードはクリアせず、技を装備するまでここで待機
+        appState.tutorialAwaitEquip = nodeId;
+        appState.tutorialAwaitEquipSkillId = null;
 
-      // パーティボタンをパルスで強調（z-index変更なし・クリック阻害なし）
-      if (btnMapParty) {
-        btnMapParty.classList.add('tutorial-guide-pulse');
-        // ボタン上部にフローティングバナーを表示（レイアウト非破壊）
-        const r = btnMapParty.getBoundingClientRect();
-        const banner = document.createElement('div');
-        banner.id = 'tutorial-party-banner';
-        banner.style.cssText = [
-          'position:fixed',
-          `top:${r.top - 28}px`,
-          `left:${r.left + r.width / 2}px`,
-          'transform:translateX(-50%)',
-          'font-size:0.72rem',
-          'color:#fbbf24',
-          'white-space:nowrap',
-          'pointer-events:none',
-          'z-index:100',
-        ].join(';');
-        banner.textContent = '👆 パーティを開いて技パーツを装備しよう';
-        document.body.appendChild(banner);
-      }
+        // パーティボタンをパルスで強調
+        if (btnMapParty) {
+          btnMapParty.classList.add('tutorial-guide-pulse');
+          const r = btnMapParty.getBoundingClientRect();
+          const banner = document.createElement('div');
+          banner.id = 'tutorial-party-banner';
+          banner.style.cssText = [
+            'position:fixed',
+            `top:${r.top - 28}px`,
+            `left:${r.left + r.width / 2}px`,
+            'transform:translateX(-50%)',
+            'font-size:0.72rem',
+            'color:#fbbf24',
+            'white-space:nowrap',
+            'pointer-events:none',
+            'z-index:100',
+          ].join(';');
+          banner.textContent = '👆 パーティを開いて技パーツを装備しよう';
+          document.body.appendChild(banner);
+        }
+      });
+    } else if (type === 'event_stat') {
+      // stat-parts-intro ステップを表示してからノードを進める
+      showTutorialStep('stat-parts-intro', () => {
+        appState.mapGenerator.unlockNextNodes(nodeId);
+        renderMap(confirmBattleSetup);
+      });
     } else {
       appState.mapGenerator.unlockNextNodes(nodeId);
       renderMap(confirmBattleSetup);
@@ -465,6 +503,7 @@ document.getElementById('btn-tutorial-intro-start').onclick = () => {
     appState.tutorialItemsGiven = true;
   }
   appState.isTutorialMap = true;
+  appState.tutorialBattleIndex = 0;
   appState.currentStage = 0;
   appState.stageCleared = false;
   appState.currentNodeId = null;
@@ -545,11 +584,15 @@ function confirmBattleSetup() {
   const floor = currentNode.floor || 0;
 
   if (appState.isTutorialMap) {
-    // チュートリアルマップ：固定敵を使用
-    const baseData = isBoss ? TUTORIAL_BOSS_ENEMY : TUTORIAL_ENEMY;
+    // チュートリアルマップ：バトルインデックスで敵を切り替え
+    const idx = appState.tutorialBattleIndex ?? 0;
+    const baseData = idx >= 2 ? TUTORIAL_BOSS_JUMA
+      : idx === 1 ? TUTORIAL_JUMA_2
+      : TUTORIAL_JUMA_1;
     const m = new Monster(JSON.parse(JSON.stringify(baseData)));
     m.current_hp = m.stats.hp;
     appState.p2Team = [m];
+    appState.tutorialBattleIndex = idx + 1;
   } else {
     // 通常クエスト：クエストごとの敵プール
     const stage = appState.currentStage || 1;

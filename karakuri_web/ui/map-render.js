@@ -110,7 +110,7 @@ export function handleNodeClick(node, onBattleStart) {
   if (node.state !== 'available') return;
   appState.currentNodeId = node.id;
 
-  if (node.type === 'event_story' || node.type === 'event_item' || node.type === 'event_equip') {
+  if (node.type === 'event_story' || node.type === 'event_item' || node.type === 'event_equip' || node.type === 'event_stat') {
     document.dispatchEvent(new CustomEvent('tutorial-node-event', {
       detail: { nodeId: node.id, type: node.type }
     }));
@@ -193,6 +193,7 @@ export function renderMap(onBattleStart) {
     if (node.type === 'event_story') icon = "📜";
     if (node.type === 'event_item')  icon = "📦";
     if (node.type === 'event_equip') icon = "⚙️";
+    if (node.type === 'event_stat')  icon = "🔩";
     el.innerText = icon;
 
     if (node.state === 'available') {

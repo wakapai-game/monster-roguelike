@@ -1,11 +1,13 @@
 export class TutorialMapGenerator {
   constructor() {
-    this.totalFloors = 4;
+    this.totalFloors = 6;
     this.nodes = [
       { id: 'f0_n0', floor: 0, x: 0.5, type: 'event_story', next: ['f1_n0'], state: 'available' },
-      { id: 'f1_n0', floor: 1, x: 0.5, type: 'event_item',  next: ['f2_n0'], state: 'hidden'    },
-      { id: 'f2_n0', floor: 2, x: 0.5, type: 'battle',      next: ['f3_n0'], state: 'hidden'    },
-      { id: 'f3_n0', floor: 3, x: 0.5, type: 'boss',        next: [],        state: 'hidden'    },
+      { id: 'f1_n0', floor: 1, x: 0.2, type: 'battle',      next: ['f2_n0'], state: 'hidden'    },
+      { id: 'f2_n0', floor: 2, x: 0.8, type: 'event_item',  next: ['f3_n0'], state: 'hidden'    },
+      { id: 'f3_n0', floor: 3, x: 0.2, type: 'battle',      next: ['f4_n0'], state: 'hidden'    },
+      { id: 'f4_n0', floor: 4, x: 0.8, type: 'event_stat',  next: ['f5_n0'], state: 'hidden'    },
+      { id: 'f5_n0', floor: 5, x: 0.2, type: 'boss',        next: [],        state: 'hidden'    },
     ];
   }
   generate() {}
