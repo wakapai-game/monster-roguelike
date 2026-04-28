@@ -3,26 +3,28 @@
 
 // 5x7 bitmap font definitions (each char is an array of 7 rows, each row is 5 bits)
 const FONT = {
-  A: [0b01110,0b10001,0b10001,0b11111,0b10001,0b10001,0b10001],
-  B: [0b11110,0b10001,0b10001,0b11110,0b10001,0b10001,0b11110],
+  // 7x9 bold glyphs for BILGAMATA (bit6=col0 … bit0=col6)
+  A: [0b0001000,0b0011100,0b0110110,0b1100011,0b1111111,0b1100011,0b1100011,0b1100011,0b1100011],
+  B: [0b0111110,0b1100011,0b1100011,0b1111110,0b1100011,0b1100011,0b1100011,0b1100011,0b0111110],
+  G: [0b0111110,0b1100011,0b1100000,0b1100000,0b1100111,0b1100011,0b1100011,0b1100011,0b0111110],
+  I: [0b1111111,0b1111111,0b0011100,0b0011100,0b0011100,0b0011100,0b0011100,0b1111111,0b1111111],
+  L: [0b1100000,0b1100000,0b1100000,0b1100000,0b1100000,0b1100000,0b1100000,0b1111111,0b1111111],
+  M: [0b1100011,0b1110111,0b1111111,0b1101011,0b1100011,0b1100011,0b1100011,0b1100011,0b1100011],
+  T: [0b1111111,0b1111111,0b0011100,0b0011100,0b0011100,0b0011100,0b0011100,0b0011100,0b0011100],
+  // 5x7 fallback glyphs for other characters
   C: [0b01110,0b10001,0b10000,0b10000,0b10000,0b10001,0b01110],
   D: [0b11110,0b10001,0b10001,0b10001,0b10001,0b10001,0b11110],
   E: [0b11111,0b10000,0b10000,0b11110,0b10000,0b10000,0b11111],
   F: [0b11111,0b10000,0b10000,0b11110,0b10000,0b10000,0b10000],
-  G: [0b01110,0b10001,0b10000,0b10111,0b10001,0b10001,0b01110],
   H: [0b10001,0b10001,0b10001,0b11111,0b10001,0b10001,0b10001],
-  I: [0b11100,0b01000,0b01000,0b01000,0b01000,0b01000,0b11100],
   J: [0b00111,0b00010,0b00010,0b00010,0b00010,0b10010,0b01100],
   K: [0b10001,0b10010,0b10100,0b11000,0b10100,0b10010,0b10001],
-  L: [0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b11111],
-  M: [0b10001,0b11011,0b10101,0b10101,0b10001,0b10001,0b10001],
   N: [0b10001,0b11001,0b10101,0b10011,0b10001,0b10001,0b10001],
   O: [0b01110,0b10001,0b10001,0b10001,0b10001,0b10001,0b01110],
   P: [0b11110,0b10001,0b10001,0b11110,0b10000,0b10000,0b10000],
   Q: [0b01110,0b10001,0b10001,0b10001,0b10101,0b10010,0b01101],
   R: [0b11110,0b10001,0b10001,0b11110,0b10100,0b10010,0b10001],
   S: [0b01110,0b10001,0b10000,0b01110,0b00001,0b10001,0b01110],
-  T: [0b11111,0b00100,0b00100,0b00100,0b00100,0b00100,0b00100],
   U: [0b10001,0b10001,0b10001,0b10001,0b10001,0b10001,0b01110],
   V: [0b10001,0b10001,0b10001,0b10001,0b01010,0b01010,0b00100],
   W: [0b10001,0b10001,0b10001,0b10101,0b10101,0b11011,0b10001],
@@ -32,38 +34,39 @@ const FONT = {
   ' ': [0b00000,0b00000,0b00000,0b00000,0b00000,0b00000,0b00000],
 };
 
+// Bold glyphs are 7x9; others are 5x7
+const BOLD_CHARS = new Set(['A','B','G','I','L','M','T']);
+const BOLD_W = 7, BOLD_H = 9;
+const STD_W = 5, STD_H = 7;
+
 function drawBitmapText(ctx, text, x, y, pixelSize, color) {
   ctx.fillStyle = color;
-  const charWidth = 5;
-  const charHeight = 7;
-  const spacing = 1; // 1 pixel gap between chars
+  const spacing = 1;
   let cx = x;
   for (const ch of text) {
     const glyph = FONT[ch] || FONT[' '];
-    for (let row = 0; row < charHeight; row++) {
-      for (let col = 0; col < charWidth; col++) {
-        if (glyph[row] & (1 << (charWidth - 1 - col))) {
-          ctx.fillRect(
-            cx + col * pixelSize,
-            y + row * pixelSize,
-            pixelSize,
-            pixelSize
-          );
+    const cw = BOLD_CHARS.has(ch) ? BOLD_W : STD_W;
+    const ch_h = BOLD_CHARS.has(ch) ? BOLD_H : STD_H;
+    for (let row = 0; row < ch_h; row++) {
+      for (let col = 0; col < cw; col++) {
+        if (glyph[row] & (1 << (cw - 1 - col))) {
+          ctx.fillRect(cx + col * pixelSize, y + row * pixelSize, pixelSize, pixelSize);
         }
       }
     }
-    cx += (charWidth + spacing) * pixelSize;
+    cx += (cw + spacing) * pixelSize;
   }
 }
 
 function measureBitmapText(text, pixelSize) {
-  const charWidth = 5;
   const spacing = 1;
-  const totalChars = text.length;
-  return {
-    width: totalChars * (charWidth + spacing) * pixelSize - spacing * pixelSize,
-    height: 7 * pixelSize,
-  };
+  let width = 0;
+  for (const ch of text) {
+    const cw = BOLD_CHARS.has(ch) ? BOLD_W : STD_W;
+    width += (cw + spacing) * pixelSize;
+  }
+  width -= spacing * pixelSize;
+  return { width, height: BOLD_H * pixelSize };
 }
 
 // --- Background scene generation ---
@@ -220,11 +223,11 @@ export function initTitleArt(titleCanvas, bgCanvas) {
   titleCtx.imageSmoothingEnabled = false;
 
   // --- Title canvas setup ---
-  const titleText = 'MONSTER ROGUE';
-  const titlePixel = 4;
+  const titleText = 'BILGAMATA';
+  const titlePixel = 7;
 
   const titleMeasure = measureBitmapText(titleText, titlePixel);
-  const padding = 16;
+  const padding = 20;
   const cw = titleMeasure.width + padding * 2;
   const ch = titleMeasure.height + padding * 2;
   titleCanvas.width = cw;
@@ -240,19 +243,27 @@ export function initTitleArt(titleCanvas, bgCanvas) {
     const t = time / 1000;
     titleCtx.clearRect(0, 0, cw, ch);
 
-    // Glow effect
-    const glowSize = 8 + 17 * ((Math.sin(t * 1.2) + 1) / 2);
+    // Blue outline: draw in 8 directions offset by 2px
+    titleCtx.shadowBlur = 0;
+    const offsets = [[-2,-2],[-2,0],[-2,2],[0,-2],[0,2],[2,-2],[2,0],[2,2]];
+    for (const [ox, oy] of offsets) {
+      drawBitmapText(titleCtx, titleText, titleX + ox, titleY + oy, titlePixel, '#1a6fd4');
+    }
+
+    // Orange fill with pulsing glow
+    const glowSize = 6 + 12 * ((Math.sin(t * 1.2) + 1) / 2);
     titleCtx.shadowBlur = glowSize;
     titleCtx.shadowColor = '#ff6b35';
-    drawBitmapText(titleCtx, titleText, titleX, titleY, titlePixel, '#ff6b35');
+    drawBitmapText(titleCtx, titleText, titleX, titleY, titlePixel, '#ff8c00');
 
-    // Second pass with gold for shimmer
-    const goldAlpha = 0.3 + 0.3 * ((Math.sin(t * 1.8 + 1) + 1) / 2);
+    // Gold shimmer pass
+    const goldAlpha = 0.35 + 0.3 * ((Math.sin(t * 1.8 + 1) + 1) / 2);
     titleCtx.globalAlpha = goldAlpha;
-    titleCtx.shadowBlur = glowSize * 0.6;
+    titleCtx.shadowBlur = glowSize * 0.5;
     titleCtx.shadowColor = '#f7c948';
     drawBitmapText(titleCtx, titleText, titleX, titleY, titlePixel, '#f7c948');
     titleCtx.globalAlpha = 1;
+    titleCtx.shadowBlur = 0;
 
     titleRaf = requestAnimationFrame(animateTitle);
   }

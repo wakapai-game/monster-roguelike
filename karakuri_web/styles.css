@@ -1448,6 +1448,13 @@ header h1 {
 }
 
 .title-container { margin-bottom: 12px; }
+.title-ruby {
+  text-align: center;
+  font-size: 0.9rem;
+  letter-spacing: 0.25em;
+  color: #94a3b8;
+  margin: 4px 0 0;
+}
 .mega-title {
   font-size: 4rem;
   font-weight: 800;
@@ -1532,6 +1539,7 @@ header h1 {
   color: #334155;
   position: relative;
   display: inline-block;
+  opacity: 0;
 }
 .start-catch-kanji::before,
 .start-catch-kanji::after {
@@ -1545,16 +1553,39 @@ header h1 {
 .start-catch-kanji::before { color: #ff6b35; }
 .start-catch-kanji::after  { color: #38bdf8; }
 
-/* 各単語を独立タイミングでグリッチ */
-.cg1 { animation: sc-glitch 3.5s steps(1) 0.0s infinite; }
-.cg1::before { animation: sc-glitch-r 3.5s steps(1) 0.0s infinite; }
-.cg1::after  { animation: sc-glitch-b 3.5s steps(1) 0.0s infinite; }
-.cg2 { animation: sc-glitch 5.2s steps(1) 1.3s infinite; }
-.cg2::before { animation: sc-glitch-r 5.2s steps(1) 1.3s infinite; }
-.cg2::after  { animation: sc-glitch-b 5.2s steps(1) 1.3s infinite; }
-.cg3 { animation: sc-glitch 4.1s steps(1) 2.7s infinite; }
-.cg3::before { animation: sc-glitch-r 4.1s steps(1) 2.7s infinite; }
-.cg3::after  { animation: sc-glitch-b 4.1s steps(1) 2.7s infinite; }
+@keyframes sc-lighton {
+  0%   { opacity: 0; color: #94a3b8; text-shadow: none; }
+  10%  { opacity: 1; color: #ffffff; text-shadow: 0 0 20px #fff, 0 0 40px #38bdf8; }
+  22%  { opacity: 1; color: #94a3b8; text-shadow: none; }
+  75%  { opacity: 1; color: #94a3b8; text-shadow: none; }
+  85%  { opacity: 0; text-shadow: none; }
+  100% { opacity: 0; text-shadow: none; }
+}
+
+/* 各単語を順次点灯ループ → グリッチ継続 */
+.cg1 {
+  animation:
+    sc-lighton 8s ease-out 0s infinite,
+    sc-glitch  3.5s steps(1) 0s infinite;
+}
+.cg1::before { animation: sc-glitch-r 3.5s steps(1) 0s infinite; }
+.cg1::after  { animation: sc-glitch-b 3.5s steps(1) 0s infinite; }
+
+.cg2 {
+  animation:
+    sc-lighton 8s ease-out 0.7s infinite,
+    sc-glitch  5.2s steps(1) 0.7s infinite;
+}
+.cg2::before { animation: sc-glitch-r 5.2s steps(1) 0.7s infinite; }
+.cg2::after  { animation: sc-glitch-b 5.2s steps(1) 0.7s infinite; }
+
+.cg3 {
+  animation:
+    sc-lighton 8s ease-out 1.4s infinite,
+    sc-glitch  4.1s steps(1) 1.4s infinite;
+}
+.cg3::before { animation: sc-glitch-r 4.1s steps(1) 1.4s infinite; }
+.cg3::after  { animation: sc-glitch-b 4.1s steps(1) 1.4s infinite; }
 
 @keyframes sc-glitch {
   0%,86%,100% { transform: none; }
