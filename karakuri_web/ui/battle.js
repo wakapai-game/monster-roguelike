@@ -746,7 +746,7 @@ export function setupSwapButton(phaseType, currentMonster, enemyAttacker, enemyS
     }
 }
 
-// ─── パーツパージUI ──────────────────────────────────────────────────
+// ─── ギアパージUI ──────────────────────────────────────────────────
 export function setupPurgeButton(monster) {
   const purgeWrapper = document.getElementById('purge-wrapper');
   const btnPurge     = document.getElementById('btn-purge-action');
@@ -754,7 +754,7 @@ export function setupPurgeButton(monster) {
   const purgeList    = document.getElementById('purge-parts-list');
   if (!purgeWrapper || !btnPurge || !purgePanel || !purgeList) return;
 
-  // パージ可能なパーツがあれば表示
+  // パージ可能なギアがあれば表示
   if (!monster.hasPurgeable || !monster.hasPurgeable()) {
     purgeWrapper.classList.add('hide');
     return;
@@ -763,7 +763,10 @@ export function setupPurgeButton(monster) {
   purgePanel.classList.add('hide');
   purgeList.innerHTML = '';
 
-  if (isTutorialActive()) showTutorialStep('purge-intro', null);
+  if (isTutorialActive()) {
+    const tIdx = Math.max(0, (appState.tutorialBattleIndex ?? 1) - 1);
+    if (tIdx >= 2) showTutorialStep('purge-intro', null);
+  }
 
   btnPurge.onclick = () => {
     const isOpen = !purgePanel.classList.contains('hide');
@@ -794,21 +797,21 @@ function _buildPurgeList(monster, purgeList, purgePanel) {
   };
 
   if (active.tech.length === 0 && active.stats.length === 0 && !active.option) {
-    purgeList.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">パージできるパーツがありません。</span>';
+    purgeList.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">パージできるギアがありません。</span>';
     return;
   }
 
   active.tech.forEach(id => {
     const p = findTechPart(id);
-    if (p) addPurgeBtn(p.name, id, 'tech', `技パーツ / EN:${p.cost_en||p.cost_st}`);
+    if (p) addPurgeBtn(p.name, id, 'tech', `ワザギア / EN:${p.cost_en||p.cost_st}`);
   });
   active.stats.forEach(id => {
     const p = findStatPart(id);
-    if (p) addPurgeBtn(p.name, id, 'stat', `強化パーツ / ${p.description}`);
+    if (p) addPurgeBtn(p.name, id, 'stat', `ボディギア / ${p.description}`);
   });
   if (active.option) {
     const p = findOptionPart(active.option);
-    if (p) addPurgeBtn(p.name, active.option, 'option', `オプションパーツ / ${p.description}`);
+    if (p) addPurgeBtn(p.name, active.option, 'option', `コアギア / ${p.description}`);
   }
 }
 
@@ -891,7 +894,7 @@ export function executeAction(playerNum, attacker, defender, skillId) {
       if (pe.guarded) {
         toast(`<span style="color:#a78bfa;">⚡ ${attacker.name} のパージガードが発動！ EN+${pe.recovered_en}</span>`);
       } else if (pe.shutdown) {
-        toast(`<span style="color:#ef4444;">💥 ${attacker.name} は全パーツを失い、シャットダウン状態に！</span>`);
+        toast(`<span style="color:#ef4444;">💥 ${attacker.name} は全ギアを失い、シャットダウン状態に！</span>`);
       } else if (pe.purged) {
         const partName = _getPartName(pe.partId);
         toast(`<span style="color:#c4b5fd;">💥 ${attacker.name} の EN切れ！ ${partName} が自動パージ → EN+${pe.recovered_en}</span>`);
@@ -902,7 +905,7 @@ export function executeAction(playerNum, attacker, defender, skillId) {
       if (pe.guarded) {
         toast(`<span style="color:#a78bfa;">⚡ ${defender.name} のパージガードが発動！ EN+${pe.recovered_en}</span>`);
       } else if (pe.shutdown) {
-        toast(`<span style="color:#ef4444;">💥 ${defender.name} は全パーツを失い、シャットダウン状態に！</span>`);
+        toast(`<span style="color:#ef4444;">💥 ${defender.name} は全ギアを失い、シャットダウン状態に！</span>`);
       } else if (pe.purged) {
         const partName = _getPartName(pe.partId);
         toast(`<span style="color:#c4b5fd;">💥 ${defender.name} の EN切れ！ ${partName} が自動パージ → EN+${pe.recovered_en}</span>`);
@@ -985,14 +988,14 @@ export function endBattle(isPlayerWin) {
         return;
     }
 
-    // 勝利：オーバーレイで「カラクリを倒した。」を表示してからVICTORY演出
+    // 勝利：オーバーレイで「ジュウマを倒した。」を表示してからVICTORY演出
     const overlay = document.getElementById('battle-end-overlay');
     const mainEl  = document.getElementById('beo-main');
     const subEl   = document.getElementById('beo-sub');
 
     if (overlay && mainEl && subEl) {
         overlay.classList.remove('beo-win', 'beo-lose', 'beo-active', 'beo-boss');
-        mainEl.textContent = 'カラクリを倒した。';
+        mainEl.textContent = 'ジュウマを倒した。';
         subEl.textContent  = '';
         overlay.classList.add('beo-pre');
     }

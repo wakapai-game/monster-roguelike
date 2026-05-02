@@ -2,7 +2,7 @@ import { MONSTERS_DATA, SKILLS } from '../data.js';
 
 // ---- HELP System ----
 
-const FLOAT_BTNS = ['btn-help-global', 'btn-affinity-global', 'btn-monsters-global'];
+const FLOAT_BTNS = ['btn-help-global', 'btn-affinity-global', 'btn-monsters-global', 'btn-glossary-global'];
 
 export function openHelp() {
   document.getElementById('screen-help').classList.remove('hide');
@@ -52,19 +52,19 @@ function buildBattleContent() {
   return `
 <div class="help-section">
   <h3 class="help-h3">⚙️ バトルの基本フロー</h3>
-  <p class="help-p">バトルは <b>ATB（Active Time Battle）</b> 方式です。カラクリとジュウマの <b>スピード(SPD)</b> に応じてゲージが自動で溜まり、ゲージが 100 に達したときに行動します。</p>
-  <p class="help-p">自分のカラクリがゲージ満タン → <b>攻撃フェーズ</b>（パーツデッキからTECH技を選ぶ）<br>
+  <p class="help-p">バトルは <b>ATB（Active Time Battle）</b> 方式です。ビルガマタとジュウマの <b>スピード(SPD)</b> に応じてゲージが自動で溜まり、ゲージが 100 に達したときに行動します。</p>
+  <p class="help-p">自分のビルガマタがゲージ満タン → <b>攻撃フェーズ</b>（ギアデッキからTECH技を選ぶ）<br>
   敵ジュウマがゲージ満タン → <b>防御フェーズ</b>（敵の攻撃に対応する）</p>
 </div>
 
 <div class="help-section">
-  <h3 class="help-h3">🔵 攻撃フェーズ — パーツデッキで操作</h3>
-  <p class="help-p">画面下部のパーツデッキに装備中の <b>TECHパーツ（青カード）</b> が表示されます。光っているカードをタップ/クリックして技を使います。</p>
+  <h3 class="help-h3">🔵 攻撃フェーズ — ギアデッキで操作</h3>
+  <p class="help-p">画面下部のギアデッキに装備中の <b>ワザギア（青カード）</b> が表示されます。光っているカードをタップ/クリックして技を使います。</p>
   <ul class="help-list">
     <li><b>◎ バツグン</b>：カードの右上に赤バッジ → 特に有効な属性</li>
     <li><b>△ いまいち</b>：カードの右上に灰バッジ → 効果が半減</li>
-    <li><b>🔄（交代）</b>：デッキ右のボタンで控えカラクリに交代できる</li>
-    <li><b>💥（パージ）</b>：デッキ右のボタンで手動パーツパージができる</li>
+    <li><b>🔄（交代）</b>：デッキ右のボタンで控えビルガマタに交代できる</li>
+    <li><b>💥（パージ）</b>：デッキ右のボタンで手動ギアパージができる</li>
   </ul>
 </div>
 
@@ -75,7 +75,7 @@ function buildBattleContent() {
     <li><b>身を守る</b>：HP へのダメージを 50% 軽減する</li>
     <li><b>防御スキル</b>（技タブ）：セットしている防御系技で対応</li>
     <li><b>アイテム</b>（アイテムタブ）：バトルアイテムを使用</li>
-    <li><b>交代</b>：控えのカラクリに交代。交代後のカラクリが攻撃を受ける</li>
+    <li><b>交代</b>：控えのビルガマタに交代。交代後のビルガマタが攻撃を受ける</li>
   </ul>
 </div>
 
@@ -88,7 +88,7 @@ function buildBattleContent() {
   <h3 class="help-h3">⚠️ 勝敗条件</h3>
   <ul class="help-list">
     <li><b>勝利</b>：敵ジュウマをすべて倒す → 報酬獲得</li>
-    <li><b>敗北</b>：パーティのカラクリが全員HP0 → セーブデータから再開可能</li>
+    <li><b>敗北</b>：パーティのビルガマタが全員HP0 → セーブデータから再開可能</li>
   </ul>
 </div>
 `;
@@ -101,7 +101,7 @@ function buildSTContent() {
   return `
 <div class="help-section">
   <h3 class="help-h3">🔋 EN（エネルギー）とは</h3>
-  <p class="help-p">EN はカラクリの <b>エネルギー兼防御壁</b> です。EN が高いほど HP へのダメージが届きにくくなります。</p>
+  <p class="help-p">EN はビルガマタの <b>エネルギー兼防御壁</b> です。EN が高いほど HP へのダメージが届きにくくなります。</p>
   <p class="help-p">青いバーが EN です。攻撃を受けるたびに EN が削られ、EN が 0 になると <b>パージ</b> が発生します。</p>
   <div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:8px 12px; font-family:monospace; font-size:0.82rem; margin:8px 0;">
     EN ダメージ = 10（弱点属性なら +10）<br>
@@ -116,28 +116,28 @@ function buildSTContent() {
 
 <div class="help-section">
   <h3 class="help-h3">💥 パージとは</h3>
-  <p class="help-p">EN が 0 になると自動で <b>パーツが1つ射出（パージ）</b> されます。射出されるパーツはランダムです。</p>
+  <p class="help-p">EN が 0 になると自動で <b>ギアが1つ射出（パージ）</b> されます。射出されるギアはランダムです。</p>
   <ul class="help-list">
     <li>パージが起きると <b>EN が最大値の40%</b> 回復して戦闘継続できる</li>
-    <li>TECHパーツがパージされると、その技が使えなくなる</li>
-    <li>STATパーツがパージされると、そのステータス強化が失われる</li>
-    <li>全パーツがなくなると <b>シャットダウン状態（3ターン行動不能）</b> になる</li>
+    <li>ワザギアがパージされると、その技が使えなくなる</li>
+    <li>ボディギアがパージされると、そのステータス強化が失われる</li>
+    <li>全ギアがなくなると <b>シャットダウン状態（3ターン行動不能）</b> になる</li>
   </ul>
 </div>
 
 <div class="help-section">
   <h3 class="help-h3">🛡 パージガード</h3>
-  <p class="help-p">オプションパーツ「パージガード」を装備していると、最初のパージ発生時に <b>パーツ射出をキャンセル</b> してEN30%を回復します。1回だけ有効。</p>
+  <p class="help-p">コアギア「パージガード」を装備していると、最初のパージ発生時に <b>ギア射出をキャンセル</b> してEN30%を回復します。1回だけ有効。</p>
 </div>
 
 <div class="help-section">
   <h3 class="help-h3">♻️ 手動パージ</h3>
-  <p class="help-p">デッキ右の 💥 ボタンで任意のタイミングで手動パージができます。弱いパーツを捨ててEN回復するトレードオフ戦略として使えます。</p>
+  <p class="help-p">デッキ右の 💥 ボタンで任意のタイミングで手動パージができます。弱いギアを捨ててEN回復するトレードオフ戦略として使えます。</p>
 </div>
 
 <div class="help-section">
   <h3 class="help-h3">♻️ 控えのEN自動回復</h3>
-  <p class="help-p">バトル中、控えに下がっているカラクリは <b>1行動ごとに最大ENの5%</b> を自動回復します。ENが減ったカラクリを控えに下げて回復させましょう。</p>
+  <p class="help-p">バトル中、控えに下がっているビルガマタは <b>1行動ごとに最大ENの5%</b> を自動回復します。ENが減ったビルガマタを控えに下げて回復させましょう。</p>
 </div>
 `;
 }
@@ -213,50 +213,27 @@ function buildAffinityContent() {
 // タブ4: 技・アイテム
 // ============================
 function buildSkillsContent() {
-  const skills = [
-    { name:'たいあたり',      elem:'無', type:'物理', cost:10, power:'ST 50',   effect:'STダメージ',                            category:'攻撃' },
-    { name:'ファイアボール',  elem:'炎', type:'魔法', cost:15, power:'ST 80',   effect:'STダメージ',                            category:'攻撃' },
-    { name:'みずでっぽう',    elem:'水', type:'魔法', cost:15, power:'ST 80',   effect:'STダメージ',                            category:'攻撃' },
-    { name:'フルスイング',    elem:'無', type:'物理', cost:20, power:'ST 120',  effect:'STダメージ＋敵のゲージを20遅らせる',      category:'攻撃' },
-    { name:'どくばり（貫通）',elem:'無', type:'貫通', cost:30, power:'HP 20',   effect:'STを無視して直接HPダメージ（防御で半減）', category:'攻撃' },
-    { name:'じらい（罠）',    elem:'炎', type:'罠',   cost:25, power:'—',       effect:'罠を設置（実装予定）',                    category:'攻撃' },
-    { name:'シールド張',      elem:'無', type:'バフ', cost:15, power:'—',       effect:'防御力強化（実装予定）',                  category:'防御' },
-    { name:'深呼吸',          elem:'無', type:'回復', cost:10, power:'ST+40',   effect:'自身のSTを40直接回復（ブレイク解除可能）', category:'防御' },
-  ];
-
-  const atk = skills.filter(s => s.category === '攻撃');
-  const def = skills.filter(s => s.category === '防御');
-
-  const renderSkillCard = s => `
-<div class="help-card">
-  <div class="help-card-title">${s.name}</div>
-  <div class="help-card-meta">${s.category} ／ ${s.elem}属性 ／ ${s.type} ／ STコスト ${s.cost}</div>
-  <div>威力: <b>${s.power}</b></div>
-  <div style="font-size:0.8rem; color:#94a3b8; margin-top:2px;">${s.effect}</div>
-</div>`;
-
   const items = [
-    { name:'キズぐすり',        cost:'—', effect:'味方のHPを 50 回復。防御フェーズのアイテムタブから使用' },
-    { name:'スタミナドリンク',  cost:'—', effect:'味方のSTを 50 直接回復。ブレイク中でも使用でき、STが回復するとブレイク解除される' },
-    { name:'バクダン',          cost:'—', effect:'敵のHPに 30 の防御無視ダメージ。STを無視して直接削る' },
+    { name:'キズぐすり',       effect:'味方のHPを 50 回復。防御フェーズのアイテムタブから使用' },
+    { name:'エネルギードリンク',effect:'味方のENを 50 直接回復。パージ直前の緊急手段として有効' },
+    { name:'バクダン',          effect:'敵のHPに 30 の防御無視ダメージ。ENを無視して直接削る' },
   ];
 
   return `
 <div class="help-section">
-  <h3 class="help-h3">⚔️ 攻撃系スキル</h3>
-  <p class="help-p">攻撃フェーズで使用。主にSTダメージを与えてブレイクを狙う。</p>
-  <div class="help-cards">${atk.map(renderSkillCard).join('')}</div>
-</div>
-
-<div class="help-section">
-  <h3 class="help-h3">🛡️ 防御系スキル</h3>
-  <p class="help-p">防御フェーズ（スキルタブ）または交代後に使用。</p>
-  <div class="help-cards">${def.map(renderSkillCard).join('')}</div>
+  <h3 class="help-h3">🔧 ワザギア</h3>
+  <p class="help-p">ビルガマタが使う技は <b>ワザギア</b> として管理されています。バトルで使える技は各ビルガマタ最大 <b>4つ</b>（装備しているワザギアの数に依存）。</p>
+  <p class="help-p">ワザギアの詳細はパーティ画面で確認できます。</p>
+  <ul class="help-list">
+    <li>ギアには攻撃系・防御系・サポート系がある</li>
+    <li>各ギアには <b>ENコスト</b> があり、ENを消費して使用する</li>
+    <li>ギアがパージされると、その技が使えなくなる</li>
+  </ul>
 </div>
 
 <div class="help-section">
   <h3 class="help-h3">💊 バトルアイテム</h3>
-  <p class="help-p">防御フェーズの「アイテム」タブから使用。インベントリで補充できる（報酬やマップで入手）。</p>
+  <p class="help-p">防御フェーズの「アイテム」タブから使用。報酬やマップで入手できる。</p>
   <div class="help-cards">
     ${items.map(it => `
     <div class="help-card">
@@ -265,16 +242,6 @@ function buildSkillsContent() {
     </div>`).join('')}
   </div>
 </div>
-
-<div class="help-section">
-  <h3 class="help-h3">📝 技のセット方法</h3>
-  <ul class="help-list">
-    <li>バトルで使える技は各ジュウマ最大 <b>4つ</b> まで設定できる</li>
-    <li>インベントリ画面 → パーティ → ジュウマカードの「技設定」ボタンから編集</li>
-    <li>修得している技（known_skills）からバトル用の技をドラッグ&ドロップでセット・入れ替え可能</li>
-    <li>新しい技はバトルの報酬で入手できる</li>
-  </ul>
-</div>
 `;
 }
 
@@ -282,74 +249,32 @@ function buildSkillsContent() {
 // タブ5: 育成・強化
 // ============================
 function buildTrainingContent() {
-  const foodBulk = [
-    { name:'たっぷりの肉', effects:'HP+2 ST+10 ATK+1 DEF+1 SPD-1 大きさ+1' },
-    { name:'巨大な肉',     effects:'HP+1 ST+20 ATK+1 DEF+1 SPD-1 大きさ+1' },
-    { name:'戦士の肉',     effects:'HP+1 ST+10 ATK+2 DEF+1 SPD-1 大きさ+1' },
-    { name:'鎧の肉',       effects:'HP+1 ST+10 ATK+1 DEF+2 SPD-1 大きさ+1' },
-  ];
-  const foodLight = [
-    { name:'軽量フルーツ',   effects:'HP-2 ST-5 ATK-1 DEF-1 SPD+1 大きさ-1' },
-    { name:'絞りジュース',   effects:'HP-1 ST-10 ATK-1 DEF-1 SPD+1 大きさ-1' },
-    { name:'研ぎすまし果実', effects:'HP-1 ST-5 ATK-2 DEF-1 SPD+1 大きさ-1' },
-    { name:'機動の実',       effects:'HP-1 ST-5 ATK-1 DEF-2 SPD+1 大きさ-1' },
-  ];
-  const foodSpecial = [
-    { name:'賢者のキノコ', effects:'MAG+2 SPD-1 賢さ+1' },
-  ];
-
-  const renderFood = f => `
-<div class="help-card">
-  <div class="help-card-title">${f.name}</div>
-  <div style="font-size:0.8rem; color:#94a3b8;">${f.effects}</div>
-</div>`;
-
   return `
 <div class="help-section">
-  <h3 class="help-h3">🍖 えさ（ステータス強化）</h3>
-  <p class="help-p">えさをジュウマに与えるとベースステータスが直接変化します。1体のジュウマに与えられるえさの回数は <b>最大10回</b> まで（feed_count で管理）。</p>
-  <p class="help-p">えさはインベントリ画面 → パーティ → ジュウマカードから与えられます。バトルの報酬でも入手可能。</p>
-</div>
-
-<div class="help-section">
-  <h3 class="help-h3">🥩 大型化えさ（HPとST重視・SPD低下）</h3>
-  <div class="help-cards">${foodBulk.map(renderFood).join('')}</div>
-</div>
-
-<div class="help-section">
-  <h3 class="help-h3">🍎 軽量化えさ（SPD重視・HP/ST低下）</h3>
-  <div class="help-cards">${foodLight.map(renderFood).join('')}</div>
-</div>
-
-<div class="help-section">
-  <h3 class="help-h3">🍄 特殊えさ</h3>
-  <div class="help-cards">${foodSpecial.map(renderFood).join('')}</div>
-</div>
-
-<div class="help-section">
-  <h3 class="help-h3">📏 大きさ（size）パラメータ</h3>
-  <p class="help-p">えさの種類によって「大きさ」パラメータが変化します。大きさはステータスにも影響します。</p>
+  <h3 class="help-h3">🔩 ギアによる強化</h3>
+  <p class="help-p">ビルガマタはギアを装備することでステータスが強化されます。ギアにはTECH（技）・STAT（ステータス）・OPTION（特殊効果）の3種類があります。</p>
   <ul class="help-list">
-    <li>size +1 ごと → <b>HP+5 / ST+2 / SPD-0.2</b></li>
-    <li>size -1 ごと → <b>HP-5 / ST-2 / SPD+0.2</b></li>
-    <li>大きさラベル：SS（-10以下）→ S（-5以下）→ <b>M（0以上）</b> → L（+5以上）→ LL（+10以上）</li>
+    <li><b>ワザギア</b>：バトルで使用する技。装備すると攻撃・防御・サポート技が使えるようになる</li>
+    <li><b>ボディギア</b>：HP・EN・ATK・DEF・MAG・SPDなどを直接強化する</li>
+    <li><b>コアギア</b>：パージガードなど特殊効果を付与する</li>
   </ul>
+  <p class="help-p">ギアの装備・確認はパーティ画面から行えます。</p>
 </div>
 
 <div class="help-section">
-  <h3 class="help-h3">🧠 賢さ（intelligence）パラメータ</h3>
-  <p class="help-p">賢者のキノコで増加します。賢さが上がると MAG が上がり SPD も少し上がりますが、HP が下がります。</p>
+  <h3 class="help-h3">💥 パージとギア管理</h3>
+  <p class="help-p">バトル中にENが0になるとパージが発生し、装備ギアが1つランダムに射出されます。失ったギアはバトル後には戻りますが、そのバトル中は使えなくなります。</p>
   <ul class="help-list">
-    <li>intelligence +1 ごと → <b>HP-2 / MAG+1 / SPD+0.5</b></li>
-    <li>賢さレベル：Lv.1（0〜3）/ Lv.2（4〜7）/ Lv.3（8〜11）/ Lv.4（12〜15）/ Lv.5（16以上）</li>
+    <li>重要なギアを守りたいときは「パージガード」オプションが有効</li>
+    <li>手動パージで弱いギアを意図的に捨て、ENを回復する戦略もある</li>
   </ul>
 </div>
 
 <div class="help-section">
   <h3 class="help-h3">📦 パーティ管理</h3>
   <ul class="help-list">
-    <li>バトルに出撃できるジュウマは <b>3体</b>（ハブ画面で選択）</li>
-    <li>所持しているジュウマは何体でも倉庫に保管できる</li>
+    <li>バトルに出撃できるビルガマタは <b>3体</b>（ハブ画面で選択）</li>
+    <li>所持しているビルガマタは何体でも倉庫に保管できる</li>
     <li>クエストクリア後の卵で仲間が増える</li>
   </ul>
 </div>
@@ -362,20 +287,18 @@ function buildTrainingContent() {
 function buildMapContent() {
   const glossary = [
     { term:'HP',           def:'ヒットポイント。0になるとそのジュウマは戦闘不能になる。' },
-    { term:'ST（スタミナ）', def:'ジュウマの装甲。ST が残っている間は攻撃の多くを吸収する。0でブレイク。' },
-    { term:'ATK（攻撃力）', def:'物理スキルのSTダメージ計算に使用。ATK÷相手DEFで倍率が決まる。' },
-    { term:'DEF（防御力）', def:'相手の物理スキルによるSTダメージを軽減する。' },
+    { term:'EN（エネルギー）', def:'ビルガマタのエネルギー兼防御壁。ENが高いほどHPへのダメージが届きにくくなる。0でパージ発生。' },
+    { term:'ATK（攻撃力）', def:'物理スキルのENダメージ計算に使用。ATK÷相手DEFで倍率が決まる。' },
+    { term:'DEF（防御力）', def:'相手の物理スキルによるENダメージを軽減する。' },
     { term:'MAG（魔力）',   def:'魔法スキルの攻撃・防御に使用。攻撃側MAG÷防御側MAGで倍率が決まる。' },
     { term:'SPD（スピード）',def:'ATBゲージの溜まる速さ。SPDが高いほど先に行動できる。' },
-    { term:'ST回復（st_rec）',def:'控えに入っているジュウマの自動ST回復量（1行動ごと）。基本は最大STの5%。' },
-    { term:'ブレイク',      def:'STが0になった状態。カードが赤く点滅。この間HPに直接大ダメージが入る。' },
+    { term:'EN回復（en_rec）',def:'控えに入っているビルガマタの自動EN回復量（1行動ごと）。基本は最大ENの5%。' },
+    { term:'パージ',        def:'ENが0になった状態。ギアが1つランダムに射出され、ENが40%回復して戦闘継続。' },
     { term:'ACTION QUEUE', def:'次に行動するジュウマの予測順番リスト。最大6ターン先まで表示。' },
-    { term:'バツグン',      def:'属性相性が有利な場合のSTダメージ倍率（×2）。' },
-    { term:'いまいち',      def:'属性相性が不利な場合のSTダメージ倍率（×0.5）。' },
+    { term:'バツグン',      def:'属性相性が有利な場合のENダメージ倍率（×2）。' },
+    { term:'いまいち',      def:'属性相性が不利な場合のENダメージ倍率（×0.5）。' },
     { term:'ゲージ',        def:'ATBゲージ。SPDで増加し100になると行動。行動後100減算される。' },
-    { term:'えさ',          def:'インベントリ内のアイテム。ジュウマに与えてステータスを強化する（最大10回）。' },
-    { term:'大きさ',        def:'えさで変化するパラメータ。大きくなるとHP・STが上がりSPDが下がる。' },
-    { term:'賢さ',          def:'賢者のキノコで上がるパラメータ。MAGが上がりHPが下がる。' },
+
     { term:'一致ボーナス',  def:'ジュウマのメイン/サブ属性とスキル属性が同じとき、スキル威力が×1.5になる。' },
   ];
 
@@ -428,6 +351,84 @@ function buildMapContent() {
   </div>
 </div>
 `;
+}
+
+// ============================
+// 用語集オーバーレイ（独立）
+// ============================
+export function openGlossary() {
+  document.getElementById('screen-glossary').classList.remove('hide');
+  FLOAT_BTNS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+}
+
+export function closeGlossary() {
+  document.getElementById('screen-glossary').classList.add('hide');
+  FLOAT_BTNS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
+}
+
+export function initGlossary() {
+  document.getElementById('glossary-content').innerHTML = buildGlossaryContent();
+  document.getElementById('btn-close-glossary').onclick = closeGlossary;
+}
+
+function buildGlossaryContent() {
+  const sections = [
+    {
+      title: '⚙️ ステータス',
+      terms: [
+        { term: 'HP',              def: 'ヒットポイント。0になるとそのビルガマタは戦闘不能になる。' },
+        { term: 'EN（エネルギー）', def: 'ビルガマタのエネルギー兼防御壁。ENが高いほどHPへのダメージが届きにくい。0でパージ発生。' },
+        { term: 'ATK（攻撃力）',   def: '物理技のENダメージ計算に使用。高いほど相手のENを削りやすい。' },
+        { term: 'DEF（防御力）',   def: '相手の物理技によるENダメージを軽減する。' },
+        { term: 'MAG（魔力）',     def: '魔法技の攻撃・防御に使用。攻撃側MAG÷防御側MAGで倍率が決まる。' },
+        { term: 'SPD（スピード）', def: 'ATBゲージの溜まる速さ。高いほど先に行動できる。' },
+      ]
+    },
+    {
+      title: '⚡ バトルシステム',
+      terms: [
+        { term: 'ATBゲージ',       def: 'SPDで増加し100になると行動できる。行動後100減算される。' },
+        { term: 'パージ',          def: 'ENが0になった状態。ギアが1つランダム射出され、ENが約40%回復して戦闘継続。' },
+        { term: 'ACTION QUEUE',    def: '次に行動するビルガマタ/ジュウマの予測順リスト。最大6ターン先まで表示。' },
+        { term: 'バツグン',        def: '属性相性が有利な場合のENダメージ倍率（×2.0）。' },
+        { term: 'いまいち',        def: '属性相性が不利な場合のENダメージ倍率（×0.5）。' },
+        { term: '一致ボーナス',    def: 'ビルガマタのメイン/サブ属性とスキル属性が同じとき、スキル威力が×1.5になる。' },
+        { term: 'EN回復',          def: '控えにいるビルガマタの自動EN回復。毎行動ごとに最大ENの5%回復する。' },
+      ]
+    },
+    {
+      title: '🔧 ギア・スロット',
+      terms: [
+        { term: 'ギア',       def: 'ビルガマタに装備する部品の総称。スロットにセットして能力を付与する。' },
+        { term: 'スロット',   def: 'ビルガマタが持つギアの装備枠。全部で10スロット。ワザ×4・ボディ×4・コア×1・（未解放×1）。' },
+        { term: 'ワザギア',   def: 'バトルで使う技。スロットにセットするとギアデッキに表示される。最大4スロット。' },
+        { term: 'ボディギア', def: 'ステータスを変化させるギア。ボーナスとペナルティがセットになっている。最大4スロット。' },
+        { term: 'コアギア',   def: '特殊パッシブ効果を持つギア。1スロットのみ装備可能。' },
+        { term: 'ギアデッキ', def: 'バトル画面下部に表示されるワザギアの一覧。光っているカードを選んで技を使う。' },
+        { term: 'ギアパージ', def: '手動でギアを1つ取り外してENを回復する行動。攻撃フェーズ中に実行できる。' },
+      ]
+    },
+    {
+      title: '🌍 世界観',
+      terms: [
+        { term: 'ビルガマタ',    def: 'プレイヤーが操る機械生命体。ギアをスロットにセットして戦う。' },
+        { term: 'ジュウマ',      def: '地上に生息する野生の機械生物。戦闘の相手となる。' },
+        { term: 'ビルガウィーラー',def: 'ビルガマタを使いこなせる者の総称。レンジャー・ハンターなど役割ごとに呼称が分かれる。' },
+      ]
+    },
+  ];
+
+  return sections.map(s => `
+<div class="help-section">
+  <h3 class="help-h3">${s.title}</h3>
+  <div class="help-glossary">
+    ${s.terms.map(g => `
+    <div class="help-glossary-item">
+      <div class="help-glossary-term">${g.term}</div>
+      <div class="help-glossary-def">${g.def}</div>
+    </div>`).join('')}
+  </div>
+</div>`).join('');
 }
 
 // ============================

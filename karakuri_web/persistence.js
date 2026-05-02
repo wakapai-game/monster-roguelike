@@ -6,11 +6,23 @@ const SERIALIZABLE_FIELDS = [
   'currentNodeId', 'monsterIdCounter'
 ];
 
+function serializeRoster(roster) {
+  if (!Array.isArray(roster)) return roster;
+  return roster.map(k => {
+    const obj = { ...k };
+    if (k.purged_tech  instanceof Set) obj.purged_tech  = [...k.purged_tech];
+    if (k.purged_stats instanceof Set) obj.purged_stats = [...k.purged_stats];
+    return obj;
+  });
+}
+
 export function saveGame(appState) {
   const data = { version: 1, savedAt: new Date().toISOString() };
   for (const key of SERIALIZABLE_FIELDS) {
     if (key === 'monsterIdCounter') {
       data[key] = appState.monsterIdCounter;
+    } else if (key === 'globalRoster') {
+      data[key] = serializeRoster(appState[key]);
     } else {
       data[key] = appState[key];
     }

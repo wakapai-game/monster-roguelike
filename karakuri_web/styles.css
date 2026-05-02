@@ -2762,6 +2762,7 @@ header h1 {
 .help-item      { border-color: rgba(96, 165, 250, 0.5); }
 .monsters-item  { border-color: rgba(168, 85, 247, 0.5); }
 .affinity-item  { border-color: rgba(16, 185, 129, 0.5); }
+.glossary-item  { border-color: rgba(251, 146, 60, 0.5); color: #fb923c; }
 .survey-item    { border-color: rgba(148, 163, 184, 0.4); }
 .title-item     { border-color: rgba(251, 191, 36, 0.4); color: #fbbf24; }
 

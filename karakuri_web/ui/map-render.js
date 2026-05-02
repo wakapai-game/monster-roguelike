@@ -34,6 +34,7 @@ export function generateRewards() {
        { type: 'battleItem', data: BATTLE_ITEMS_DATA,  label: 'バトルアイテム' },
        { type: 'food',       data: FOOD_DATA,          label: 'えさ' },
     ];
+    const validPools = pools.filter(p => p.data.length > 0);
 
     // 3候補をランダム生成（重複なし、未選択はインベントリに追加しない）
     const seen = new Set();
@@ -41,7 +42,7 @@ export function generateRewards() {
         let pool, item, key;
         let tries = 0;
         do {
-            pool = pools[Math.floor(Math.random() * pools.length)];
+            pool = validPools[Math.floor(Math.random() * validPools.length)];
             item = pool.data[Math.floor(Math.random() * pool.data.length)];
             key = `${pool.type}:${item.id}`;
             tries++;

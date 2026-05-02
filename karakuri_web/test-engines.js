@@ -78,6 +78,20 @@ export class BattleEngineBase {
       result.buffs_applied.push({ who: eff.target, stat: eff.stat, mult: eff.mult });
       return true;
     }
+    if (eff.type === 'add_status') {
+      const STATUS_MAP = {
+        'buff_def_50': { stat: 'def', mult: 1.5, target: 'self', turns: 2 }
+      };
+      const mapped = STATUS_MAP[eff.status];
+      if (mapped) {
+        const target = mapped.target === 'enemy' ? defender : attacker;
+        if (!target.buffs) target.buffs = {};
+        target.buffs[mapped.stat] = { mult: mapped.mult, turns: mapped.turns };
+        if (!result.buffs_applied) result.buffs_applied = [];
+        result.buffs_applied.push({ who: mapped.target, stat: mapped.stat, mult: mapped.mult });
+      }
+      return true;
+    }
     return false;
   }
 }
@@ -467,7 +481,7 @@ export class EngineCase4 extends EngineCase3 {
 }
 
 // ============================================================
-// KarakuriEngine: カラクリ新ゲーム用エンジン
+// KarakuriEngine: ビルガマタ新ゲーム用エンジン
 //   - STをENに置き換え（旧互換のためcurrent_stもcurrent_enに同期）
 //   - EN=0で autoPurge() を呼び出す
 //   - damage_en エフェクトタイプを処理

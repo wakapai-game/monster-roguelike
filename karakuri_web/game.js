@@ -28,9 +28,9 @@ export class Karakuri {
     this.stat_parts  = (data.stat_parts  || []).slice(0, 5);
     this.option_part = data.option_part  || null;
 
-    this.purged_tech       = new Set();
-    this.purged_stats      = new Set();
-    this.purged_option     = false;
+    this.purged_tech       = new Set(Array.isArray(data.purged_tech)  ? data.purged_tech  : []);
+    this.purged_stats      = new Set(Array.isArray(data.purged_stats) ? data.purged_stats : []);
+    this.purged_option     = data.purged_option ?? false;
     this.purge_guard_count = 0;
 
     this.stats          = this.calculateFinalStats();

@@ -1,5 +1,5 @@
 // sprite-generator.js
-// プロシージャル ピクセルアート生成（ジュウマ：有機的 / カラクリ：機械的）
+// プロシージャル ピクセルアート生成（ジュウマ：有機的 / ビルガマタ：機械的）
 
 export const ELEMENT_PALETTES = {
   fire:    { outline:'#450a0a', dark:'#991b1b', mid:'#ef4444', light:'#fca5a5', glow:'#fbbf24' },
@@ -199,7 +199,7 @@ function drawOrganic(ctx, element, seed, sizeParam = 0) {
     }
   }
 
-  // ── パーツ追加（属性とIDに基づくバリエーション） ──
+  // ── ギア追加（属性とIDに基づくバリエーション） ──
 
   // 角・耳
   const partSeed = rng.int(0, 99);
@@ -389,7 +389,7 @@ function drawOrganic(ctx, element, seed, sizeParam = 0) {
   bufToCanvas(buf, ctx, W, H);
 }
 
-// ─── カラクリ（機械的・幾何学的） ────────────────────────────
+// ─── ビルガマタ（機械的・幾何学的） ────────────────────────────
 
 function drawMechanical(ctx, element, seed) {
   const W = 32, H = 32;
@@ -531,7 +531,7 @@ function drawMechanical(ctx, element, seed) {
 // ─── 公開 API ────────────────────────────────────────────────
 
 /**
- * モンスター/カラクリのスプライトを canvas に描画する
+ * モンスター/ビルガマタのスプライトを canvas に描画する
  * @param {HTMLCanvasElement} canvas
  * @param {{ id: string, main_element: string, params?: { size?: number } }} monsterData
  */

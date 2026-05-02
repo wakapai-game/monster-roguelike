@@ -61,7 +61,7 @@
           <polygon points="582,296 576,268 592,280"/>
           <polygon points="618,296 624,268 608,280"/>
         </g>
-        <!-- 右寄り：カラクリ風（四角・アンテナ） -->
+        <!-- 右寄り：ビルガマタ風（四角・アンテナ） -->
         <g opacity="0.10" fill="#38bdf8">
           <rect x="840" y="300" width="60" height="70" rx="4"/>
           <rect x="848" y="262" width="44" height="42" rx="4"/>
@@ -135,6 +135,17 @@
     </section>
 
     <!-- 図鑑モーダル -->
+    <!-- 用語集オーバーレイ -->
+    <div id="screen-glossary" class="help-overlay hide">
+      <div class="glass-panel help-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2>📚 用語集</h2>
+          <button id="btn-close-glossary" class="btn skill-btn">✕ 閉じる</button>
+        </div>
+        <div id="glossary-content" class="help-tab-content" style="overflow-y:auto; max-height:calc(100% - 60px);"></div>
+      </div>
+    </div>
+
     <div id="screen-encyclopedia" class="enc-overlay hide">
       <div class="glass-panel enc-panel">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -142,11 +153,10 @@
           <button id="btn-close-encyclopedia" class="btn skill-btn">✕ 閉じる</button>
         </div>
         <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
-          <button class="btn skill-btn active-tab" data-enc-tab="monsters">カラクリ</button>
+          <button class="btn skill-btn active-tab" data-enc-tab="monsters">ビルガマタ</button>
           <button class="btn skill-btn inactive-tab" data-enc-tab="enemies">ジュウマ</button>
           <button class="btn skill-btn inactive-tab" data-enc-tab="skills">技</button>
           <button class="btn skill-btn inactive-tab" data-enc-tab="items">アイテム</button>
-          <button class="btn skill-btn inactive-tab" data-enc-tab="food">えさ</button>
         </div>
         <div id="enc-content" class="enc-content"></div>
       </div>
@@ -309,7 +319,7 @@
       </div>
     </div>
 
-    <!-- ジュウマ詳細モーダル（バトル中） -->
+    <!-- ビルガマタ詳細モーダル（バトル中） -->
     <div id="monster-detail-overlay" class="monster-detail-overlay hide">
       <div class="monster-detail-panel glass-panel">
         <div class="monster-detail-header">
@@ -329,7 +339,7 @@
       <div class="battle-arena">
         <!-- P1 エリア -->
         <div class="side-panel p1-side glass-panel">
-          <h3>カラクリ</h3>
+          <h3>ビルガマタ</h3>
           <div class="active-monster-card" id="p1-active-card">
             <canvas id="p1-sprite" class="monster-sprite-canvas"></canvas>
             <div class="card-header">
@@ -401,7 +411,7 @@
 
       </div>
 
-      <!-- パーツデッキ（バトル画面下部）-->
+      <!-- ギアデッキ（バトル画面下部）-->
       <div id="parts-deck">
         <div id="parts-deck-tech-row"></div>
         <div id="parts-deck-bottom">
@@ -414,7 +424,7 @@
             <div id="purge-wrapper" class="hide">
               <button id="btn-purge-action" class="btn deck-util-btn deck-util-btn--purge">💥</button>
               <div id="purge-select-panel" class="hide purge-select-panel">
-                <p style="color:#a78bfa; font-size:0.8rem; margin-bottom:8px;">パージするパーツを選択（戦闘中は戻せない）</p>
+                <p style="color:#a78bfa; font-size:0.8rem; margin-bottom:8px;">パージするギアを選択（戦闘中は戻せない）</p>
                 <div id="purge-parts-list"></div>
               </div>
             </div>
@@ -488,6 +498,7 @@
       <button id="btn-help-global" class="float-menu-item help-item" title="ゲームシステムを確認">❓ ヘルプ</button>
       <button id="btn-monsters-global" class="float-menu-item monsters-item" title="ジュウマ図鑑">📖 図鑑</button>
       <button id="btn-affinity-global" class="float-menu-item affinity-item" title="属性相性早見表">⚡ 属性</button>
+      <button id="btn-glossary-global" class="float-menu-item glossary-item" title="用語・世界観用語集">📚 用語集</button>
       <a id="btn-survey-global" href="https://forms.gle/xGsnjxmc4BKs657p8" target="_blank" rel="noopener" class="float-menu-item survey-item">📝 感想</a>
       <button id="btn-goto-title" class="float-menu-item title-item" title="タイトル画面へ戻る">🏠 タイトルへ</button>
     </div>

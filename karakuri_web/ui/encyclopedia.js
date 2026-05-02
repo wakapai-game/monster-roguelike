@@ -1,4 +1,4 @@
-import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA, TUTORIAL_ENEMY } from '../data.js';
+import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, TUTORIAL_ENEMY } from '../data.js';
 import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
 
 const overlay = document.getElementById('screen-encyclopedia');
@@ -33,8 +33,6 @@ function renderTab(tab) {
     renderSkills();
   } else if (tab === 'items') {
     renderItems();
-  } else if (tab === 'food') {
-    renderFood();
   }
 }
 
@@ -103,7 +101,7 @@ function renderSkills() {
       <div class="enc-card-header">
         <span class="enc-badge" style="background:${color};">${s.category.toUpperCase()}</span>
         <strong>${s.name}</strong>
-        <span style="margin-left:auto; color:#94a3b8; font-size:0.85rem;">ST コスト: ${s.cost_st}</span>
+        <span style="margin-left:auto; color:#94a3b8; font-size:0.85rem;">EN コスト: ${s.cost_en || s.cost_st}</span>
       </div>
       <div class="enc-skill-type-row" style="font-size:0.85rem; color:#cbd5e1; margin-top:6px;">
         タイプ: ${s.type}
@@ -134,17 +132,3 @@ function renderItems() {
   });
 }
 
-function renderFood() {
-  FOOD_DATA.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'enc-card';
-    card.innerHTML = `
-      <div class="enc-card-header">
-        <span class="enc-badge" style="background:#10b981;">えさ</span>
-        <strong>${item.name}</strong>
-      </div>
-      <div style="font-size:0.85rem; color:#94a3b8; margin-top:6px;">${item.description}</div>
-    `;
-    content.appendChild(card);
-  });
-}

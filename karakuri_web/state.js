@@ -14,15 +14,15 @@ export const appState = {
   currentQuestId: null,       // 受注中クエストID
   completedQuests: [],        // クリア済みクエストIDリスト
 
-  // カラクリ管理
-  globalRoster: [],           // 手持ちカラクリ（最大6体）
-  garage: [],                 // ガレージ（保管中カラクリ）
+  // ビルガマタ管理
+  globalRoster: [],           // 手持ちビルガマタ（最大6体）
+  garage: [],                 // ガレージ（保管中ビルガマタ）
 
   // インベントリ
   globalInventory: {
-    techParts:    [],         // 技パーツ在庫 [{ id, count }]
-    statParts:    [],         // 強化パーツ在庫 [{ id, count }]
-    optionParts:  [],         // オプションパーツ在庫 [{ id, count }]
+    techParts:    [],         // ワザギア在庫 [{ id, count }]
+    statParts:    [],         // ボディギア在庫 [{ id, count }]
+    optionParts:  [],         // コアギア在庫 [{ id, count }]
     battleItems:  [],         // バトルアイテム在庫 [{ id, count }]
     materials:    [],         // 素材在庫 [{ id, count }]
     // 旧互換

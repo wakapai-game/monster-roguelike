@@ -11,7 +11,7 @@ import {
 
 let dragSrcIndex = -1;
 
-// ---- 技パーツ情報ツールチップ ----
+// ---- ワザギア情報ツールチップ ----
 const _techTooltip = document.getElementById('reward-tooltip');
 
 function _buildTechTooltipHtml(info) {
@@ -97,14 +97,14 @@ export function renderInventory() {
         invFoodContent.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
     }
 
-    // 技パーツ一覧（確認のみ）
+    // ワザギア一覧（確認のみ）
     appState.globalInventory.skills.forEach(id => {
         const item = TECH_PARTS.find(p => p.id === id) || SKILLS.find(s => s.id === id);
         if (!item) return;
         const el = document.createElement('div');
         el.className = 'inv-item-row';
         el.style.cursor = 'default';
-        el.innerHTML = `<span>${item.name}</span><span style="font-size:0.7em; color:#94a3b8;">技パーツ</span>`;
+        el.innerHTML = `<span>${item.name}</span><span style="font-size:0.7em; color:#94a3b8;">ワザギア</span>`;
         invSkillsContent.appendChild(el);
     });
 
@@ -279,7 +279,7 @@ function _initRosterSwipe(panel, roster) {
     }, { passive: true });
 }
 
-// ---- 選択カラクリ詳細（右/下パネル） ----
+// ---- 選択ビルガマタ詳細（右/下パネル） ----
 function _renderPartyDetail(roster) {
     partyDetailsGrid.innerHTML = '';
     const index = partySelectedIndex;
@@ -318,12 +318,12 @@ function _renderPartyDetail(roster) {
     `;
     partyDetailsGrid.appendChild(statsEl);
 
-    // 装備中の技パーツ
+    // 装備中のワザギア
     const skillsDiv = document.createElement('div');
     const equipped = data.tech_parts || [];
     const skillsHeader = document.createElement('div');
     skillsHeader.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;';
-    skillsHeader.innerHTML = `<span style="font-size:0.85rem; font-weight:bold; color:#cbd5e1;">技パーツ装備 (${equipped.length}/4)</span>`;
+    skillsHeader.innerHTML = `<span style="font-size:0.85rem; font-weight:bold; color:#cbd5e1;">ワザギア装備 (${equipped.length}/4)</span>`;
     const editBtn = document.createElement('button');
     editBtn.className = 'btn skill-btn';
     editBtn.style.cssText = 'padding:3px 12px; font-size:0.75rem; color:#fbbf24; border-color:rgba(251,191,36,0.4);';
@@ -351,7 +351,7 @@ function _renderPartyDetail(roster) {
 
     partyDetailsGrid.appendChild(_partyDivider());
 
-    // インベントリから技パーツを装備
+    // インベントリからワザギアを装備
     partyDetailsGrid.appendChild(_renderEquipSection(data));
 
     partyDetailsGrid.appendChild(_partyDivider());
@@ -396,7 +396,7 @@ function _partyDivider() {
     return d;
 }
 
-// ---- インベントリから技パーツを装備するセクション ----
+// ---- インベントリからワザギアを装備するセクション ----
 function _renderEquipSection(data) {
     const section = document.createElement('div');
     section.className = 'party-action-section';
@@ -410,7 +410,7 @@ function _renderEquipSection(data) {
 
     const skillItems = appState.globalInventory.skills;
     if (skillItems.length === 0) {
-        section.innerHTML += '<div style="font-size:0.78rem; color:#64748b;">装備できる技パーツがない</div>';
+        section.innerHTML += '<div style="font-size:0.78rem; color:#64748b;">装備できるワザギアがない</div>';
         return section;
     }
 
@@ -444,7 +444,7 @@ function _renderEquipSection(data) {
     return section;
 }
 
-// ---- 技パーツ装備ロジック ----
+// ---- ワザギア装備ロジック ----
 function _equipTechPart(data, skillIndex, info) {
     if (!data.tech_parts) data.tech_parts = [];
     if (data.tech_parts.includes(info.id)) { _showPartyToast('すでに装備している！'); return; }
@@ -520,7 +520,7 @@ function renderSkillEditBody() {
     const battleHeader = document.createElement('div');
     battleHeader.className = 'skill-section-header';
     battleHeader.innerHTML = `
-        <span class="skill-section-title" style="color:#fbbf24;">装備中パーツ <span style="font-size:0.8em; color:#94a3b8;">(${monster.tech_parts.length}/4)</span></span>
+        <span class="skill-section-title" style="color:#fbbf24;">装備中ギア <span style="font-size:0.8em; color:#94a3b8;">(${monster.tech_parts.length}/4)</span></span>
         <span style="font-size:0.75rem; color:#64748b;">ドラッグで並び替え・✕で外す</span>
     `;
     body.appendChild(battleHeader);
@@ -611,11 +611,11 @@ function renderSkillEditBody() {
             removeBtn.textContent = '✕外す';
             removeBtn.onclick = () => {
                 if (monster.tech_parts.length <= 1) {
-                    alert('技パーツは最低1つ必要です');
+                    alert('ワザギアは最低1つ必要です');
                     return;
                 }
                 monster.tech_parts.splice(si, 1);
-                // 外したパーツをインベントリに戻す
+                // 外したギアをインベントリに戻す
                 appState.globalInventory.skills.push(sid);
                 renderSkillEditBody();
             };
@@ -650,7 +650,7 @@ function renderSkillEditBody() {
     }
     body.appendChild(battleZone);
 
-    // ---- インベントリの未装備パーツ ----
+    // ---- インベントリの未装備ギア ----
     const invHeader = document.createElement('div');
     invHeader.className = 'skill-section-header';
     invHeader.style.marginTop = '16px';
@@ -666,7 +666,7 @@ function renderSkillEditBody() {
     if (appState.globalInventory.skills.length === 0) {
         const empty = document.createElement('div');
         empty.style.cssText = 'color:#64748b; font-size:0.8rem; padding:12px; text-align:center;';
-        empty.textContent = '装備できる技パーツがありません';
+        empty.textContent = '装備できるワザギアがありません';
         invZone.appendChild(empty);
     }
 

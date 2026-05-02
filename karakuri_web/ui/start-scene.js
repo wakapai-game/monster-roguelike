@@ -1,7 +1,7 @@
 /**
  * start-scene.js
  * スタート画面のモンスターパレードアニメーション
- * - ジュウマ（MONSTERS_DATA）とカラクリ（ENEMY_DATA）が登場
+ * - ジュウマ（MONSTERS_DATA）とビルガマタ（ENEMY_DATA）が登場
  * - 属性・spd・種別ごとに異なる動き
  * - screen-start が非表示になると自動停止
  */
@@ -18,12 +18,12 @@ const SPRITE_PX = 32 * PIXEL_SCALE;
  * 属性・種別ごとの Behavior を返す
  * @param {string} element
  * @param {number} spd  base_stats.spd
- * @param {boolean} isEnemy  カラクリかどうか
+ * @param {boolean} isEnemy  ビルガマタかどうか
  */
 function makeBehavior(element, spd, isEnemy) {
   const norm = Math.max(0.3, spd / 35); // spd=35 → 1.0 基準
 
-  // ---- カラクリ：カクカク歩き（歩く→止まる→歩く）----
+  // ---- ビルガマタ：カクカク歩き（歩く→止まる→歩く）----
   if (isEnemy) {
     const mult = norm * 0.55;
     return {

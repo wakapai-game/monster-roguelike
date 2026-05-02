@@ -21,7 +21,7 @@ import { renderMap, generateRewards, collectPendingReward } from './ui/map-rende
 import { toast, updateUI, resumeLoop, playBattleStart } from './ui/battle.js';
 import { openEncyclopedia } from './ui/encyclopedia.js';
 import { saveGame, loadGame, deleteSave } from './persistence.js';
-import { openHelp, openHelpTab, initHelp } from './ui/help.js';
+import { openHelp, openHelpTab, initHelp, openGlossary, initGlossary } from './ui/help.js';
 import { generateNPCSprite, generateUIIcon, generateEggSprite } from './ui/sprite-generator.js';
 import { initDevOverlay } from './ui/dev-overlay.js';
 import { initStartScene } from './ui/start-scene.js';
@@ -145,12 +145,15 @@ document.addEventListener('click', () => {
 
 // ---- Help System ----
 initHelp();
+initGlossary();
 const _btnHelp = document.getElementById('btn-help-global');
 if (_btnHelp) _btnHelp.onclick = openHelp;
 const _btnAffinity = document.getElementById('btn-affinity-global');
 if (_btnAffinity) _btnAffinity.onclick = () => openHelpTab('affinity');
 const _btnMonsters = document.getElementById('btn-monsters-global');
 if (_btnMonsters) _btnMonsters.onclick = () => openEncyclopedia();
+const _btnGlossary = document.getElementById('btn-glossary-global');
+if (_btnGlossary) _btnGlossary.onclick = openGlossary;
 
 const _btnGotoTitle = document.getElementById('btn-goto-title');
 if (_btnGotoTitle) _btnGotoTitle.onclick = () => {
@@ -277,7 +280,7 @@ document.getElementById('delete-save-btn')?.addEventListener('click', () => {
 (function restoreSave() {
   const data = loadGame();
   if (!data) return;
-  appState.playerName = data.playerName || 'ハンター';
+  appState.playerName = data.playerName || 'ビルガウィーラー';
   appState.unlockedStages = data.unlockedStages ?? 0;
   appState.currentStage = data.currentStage || 1;
   appState.hubVisited = data.hubVisited || false;
@@ -303,7 +306,7 @@ document.getElementById('delete-save-btn')?.addEventListener('click', () => {
 document.getElementById('btn-begin').onclick = () => {
   switchScreen(screenStart, screenPresentation);
   initPresentation(() => {
-    // カラクリはチュートリアルマップで入手するので、ここでは空セッションのみ初期化
+    // ビルガマタはチュートリアルマップで入手するので、ここでは空セッションのみ初期化
     appState.globalRoster = [];
     appState.hubVisited = true;
     appState.currentQuestId = 'q_tutorial';
@@ -346,7 +349,7 @@ document.addEventListener('tutorial-node-event', (e) => {
   rewardEl.innerHTML = '';
 
   if (type === 'event_story') {
-    // 初めての1体目（ガタ / k_001）を付与 — チュートリアルで技パーツを装備させるため空で渡す
+    // 初めての1体目（ガタ / k_001）を付与 — チュートリアルでワザギアを装備させるため空で渡す
     const baseData = JSON.parse(JSON.stringify(MONSTERS_DATA.find(m => m.id === 'k_001') || MONSTERS_DATA[0]));
     baseData.tech_parts = [];
     const newUnit  = new Monster(baseData);
@@ -355,13 +358,13 @@ document.addEventListener('tutorial-node-event', (e) => {
     appState.globalRoster.push(newUnit);
     appendRosterUI([newUnit]);
 
-    titleEl.textContent = 'カラクリ、入手';
+    titleEl.textContent = 'ビルガマタ、入手';
     npcEl.innerHTML =
-      '<p>コルク：「お前のカラクリだ。<b>' + newUnit.name + '</b>という。」</p>' +
+      '<p>コルク：「お前のビルガマタだ。<b>' + newUnit.name + '</b>という。」</p>' +
       '<p>コルク：「名前はもう決まってる。異議は受け付けない。問題ない。」</p>' +
-      '<p>コルク：「今は技パーツがない。丸腰だ。次で調達する。」</p>';
+      '<p>コルク：「今はワザギアがない。丸腰だ。次で調達する。」</p>';
 
-    // カラクリカード表示
+    // ビルガマタカード表示
     const card = document.createElement('div');
     card.style.cssText = 'background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 16px;text-align:center;min-width:120px;';
     const canvas = document.createElement('canvas');
@@ -378,19 +381,22 @@ document.addEventListener('tutorial-node-event', (e) => {
     rewardEl.appendChild(card);
 
   } else if (type === 'event_item') {
-    // 技パーツを付与（水属性 + EN回復 → 次の炎敵に有効）
-    const grantedParts = ['tp_water_gun', 'tp_charge'];
-    grantedParts.forEach(id => appState.globalInventory.skills.push(id));
+    // ワザギアを付与（水属性 + EN回復 → 次の炎敵に有効）
+    if (!appState.tutorialSkillsGiven) {
+      const grantedParts = ['tp_water_gun', 'tp_charge'];
+      grantedParts.forEach(id => appState.globalInventory.skills.push(id));
+      appState.tutorialSkillsGiven = true;
+    }
 
-    titleEl.textContent = '属性と技パーツ';
+    titleEl.textContent = '属性とワザギア';
     npcEl.innerHTML =
       '<p>コルク：「攻撃には"属性"がある。相手の弱点を突くと大ダメージになる。」</p>' +
       '<p>コルク：「炎の相手には水が刺さる。ウォーターガンを持っていけ。EN回復技もある。使え。」</p>' +
       '<p>コルク：「パーティ画面でガタに装備させろ。装備したら先へ進む。」</p>';
 
     const parts = [
-      { name: 'ウォーターガン・ノズル', sub: '技パーツ / 水攻撃', color: '#60a5fa', icon: '💧' },
-      { name: 'エネルギー充填ユニット', sub: '技パーツ / EN回復', color: '#a78bfa', icon: '⚡' },
+      { name: 'ウォーターガン・ノズル', sub: 'ワザギア / 水攻撃', color: '#60a5fa', icon: '💧' },
+      { name: 'エネルギー充填ユニット', sub: 'ワザギア / EN回復', color: '#a78bfa', icon: '⚡' },
     ];
     parts.forEach(it => {
       const card = document.createElement('div');
@@ -400,7 +406,7 @@ document.addEventListener('tutorial-node-event', (e) => {
     });
 
   } else if (type === 'event_stat') {
-    // ステータス強化パーツを直接ガタに装備
+    // ステータスボディギアを直接ガタに装備
     const gata = appState.globalRoster.find(m => m.id === 'k_001');
     const statPartsToGive = ['sp_heavy_armor', 'sp_power_core'];
     if (gata) {
@@ -412,7 +418,7 @@ document.addEventListener('tutorial-node-event', (e) => {
 
     titleEl.textContent = '機体強化';
     npcEl.innerHTML =
-      '<p>コルク：「強化パーツをガタに組み込んだ。ボーナスがある代わりにデメリットもある。」</p>' +
+      '<p>コルク：「ボディギアをガタに組み込んだ。ボーナスがある代わりにデメリットもある。」</p>' +
       '<p>コルク：「HPが増えてもSPDが落ちる。ATKが上がればDEFが下がる。そういうもんだ。」</p>' +
       '<p>コルク：「取捨選択が腕の見せ所だ。」</p>';
 
@@ -458,7 +464,7 @@ document.addEventListener('tutorial-node-event', (e) => {
             'pointer-events:none',
             'z-index:100',
           ].join(';');
-          banner.textContent = '👆 パーティを開いて技パーツを装備しよう';
+          banner.textContent = '👆 パーティを開いてワザギアを装備しよう';
           document.body.appendChild(banner);
         }
       });
@@ -499,7 +505,7 @@ document.getElementById('btn-tutorial-intro-start').onclick = () => {
   initTutorial('full');
   // チュートリアルアイテムを1回だけ付与
   if (!appState.tutorialItemsGiven) {
-    appState.globalInventory.battleItems.push('bitem_hp_potion', 'bitem_hp_potion', 'bitem_st_potion');
+    appState.globalInventory.battleItems.push('bitem_hp_potion', 'bitem_hp_potion', 'bitem_en_potion');
     appState.tutorialItemsGiven = true;
   }
   appState.isTutorialMap = true;
@@ -573,10 +579,10 @@ function confirmBattleSetup() {
   if (battleLog) battleLog.innerHTML = '';
 
   appState.engine = new BattleEngine();
-  const rosterOrder = appState.globalRoster.map(m => m.id);
+  const rosterOrder = appState.globalRoster.map(m => m.uid || m.id);
   appState.p1Team = [...appState.selectedIds]
     .sort((a, b) => rosterOrder.indexOf(a) - rosterOrder.indexOf(b))
-    .map(id => new Monster(JSON.parse(JSON.stringify(appState.globalRoster.find(m => m.id === id)))));
+    .map(id => new Monster(JSON.parse(JSON.stringify(appState.globalRoster.find(m => m.uid === id || m.id === id)))));
 
   const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
   if (!currentNode) { console.warn('Node not found:', appState.currentNodeId); return; }
@@ -645,7 +651,27 @@ document.addEventListener('battle-end', (e) => {
     return;
   }
 
-  // チュートリアル終了：報酬画面を経由して拠点へ
+  // チュートリアルマップ（isTutorialMap）は tutorialMode より優先
+  if (appState.isTutorialMap) {
+    appState.mapGenerator.unlockNextNodes(appState.currentNodeId);
+    renderMap(confirmBattleSetup);
+    const currentNode = appState.mapGenerator.getNodes().find(n => n.id === appState.currentNodeId);
+    const isFinalFloor = currentNode && currentNode.floor === appState.mapGenerator.totalFloors - 1;
+
+    if (isFinalFloor) {
+      // チュートリアルマップクリア → STAGE 1 解放
+      appState.isTutorialMap = false;
+      appState.unlockedStages = Math.max(appState.unlockedStages, 1);
+      appState.tutorialMapCleared = true;
+    } else if (appState.tutorialMode && appState.tutorialMode !== 'none') {
+      setTimeout(() => showTutorialStep('reward', null), 300);
+    }
+    generateRewards();
+    switchScreen(screenBattle, screenReward);
+    return;
+  }
+
+  // スタータークエスト等の tutorialMode（isTutorialMap でない）
   if (appState.tutorialMode && appState.tutorialMode !== 'none') {
     appState.tutorialReward = true;
     generateRewards();
@@ -654,23 +680,14 @@ document.addEventListener('battle-end', (e) => {
     return;
   }
 
+  // 通常バトル終了
   appState.mapGenerator.unlockNextNodes(appState.currentNodeId);
   renderMap(confirmBattleSetup);
 
   const currentNode = appState.mapGenerator.getNodes().find(n => n.id === appState.currentNodeId);
   const isFinalFloor = currentNode && currentNode.floor === appState.mapGenerator.totalFloors - 1;
 
-  if (appState.isTutorialMap && isFinalFloor) {
-    // チュートリアルマップクリア → STAGE 1 解放
-    appState.isTutorialMap = false;
-    appState.unlockedStages = Math.max(appState.unlockedStages, 1);
-    appState.tutorialMapCleared = true;
-    generateRewards();
-    switchScreen(screenBattle, screenReward);
-    return;
-  }
-
-  if (!appState.isTutorialMap && isFinalFloor) {
+  if (isFinalFloor) {
     appState.stageCleared = true;
     appState.unlockedStages = Math.max(appState.unlockedStages, appState.currentStage + 1);
   }
@@ -718,9 +735,10 @@ function initGameSession(initialParty) {
 
 function appendRosterUI(newMonsters) {
   newMonsters.forEach(data => {
+    const cardKey = data.uid || data.id;
     const card = document.createElement('div');
     card.className = 'roster-card glass-panel';
-    card.dataset.id = data.id;
+    card.dataset.id = cardKey;
     card.innerHTML = `
       <h3>${data.name}</h3>
       <p style="font-size: 0.8rem; margin-top: 5px; color: #94a3b8;">Elem: ${data.main_element.toUpperCase()}</p>
@@ -729,22 +747,23 @@ function appendRosterUI(newMonsters) {
         <span style="font-size: 0.75rem; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 10px;">EN ${data.base_stats.max_en || data.base_stats.max_st}</span>
       </div>
     `;
-    card.onclick = () => toggleRosterSelection(card, data.id);
+    card.onclick = () => toggleRosterSelection(card, cardKey);
     rosterGrid.appendChild(card);
   });
 }
 
 function toggleRosterSelection(card, id) {
+  const maxParty = Math.min(3, appState.globalRoster.length);
   if (appState.selectedIds.includes(id)) {
     appState.selectedIds = appState.selectedIds.filter(i => i !== id);
     card.classList.remove('selected');
   } else {
-    if (appState.selectedIds.length < 3) {
+    if (appState.selectedIds.length < maxParty) {
       appState.selectedIds.push(id);
       card.classList.add('selected');
     }
   }
-  btnStartBattle.disabled = appState.selectedIds.length !== 3;
+  btnStartBattle.disabled = appState.selectedIds.length !== maxParty;
 }
 
 // ---- Egg Selection ----

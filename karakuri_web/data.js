@@ -1,17 +1,17 @@
 // 8属性の相性表
 const AFFINITY = {
-  "fire":    { "fire": 1.0, "water": 0.5, "ice": 2.0, "thunder": 1.0, "earth": 1.0, "wind": 2.0, "light": 1.0, "dark": 1.0 },
-  "water":   { "fire": 2.0, "water": 1.0, "ice": 1.0, "thunder": 0.5, "earth": 2.0, "wind": 1.0, "light": 1.0, "dark": 1.0 },
-  "ice":     { "fire": 0.5, "water": 1.0, "ice": 1.0, "thunder": 1.0, "earth": 2.0, "wind": 2.0, "light": 1.0, "dark": 1.0 },
-  "thunder": { "fire": 1.0, "water": 2.0, "ice": 2.0, "thunder": 1.0, "earth": 0.5, "wind": 1.0, "light": 1.0, "dark": 1.0 },
-  "earth":   { "fire": 2.0, "water": 0.5, "ice": 0.5, "thunder": 2.0, "earth": 1.0, "wind": 1.0, "light": 1.0, "dark": 1.0 },
-  "wind":    { "fire": 0.5, "water": 2.0, "ice": 0.5, "thunder": 2.0, "earth": 1.0, "wind": 1.0, "light": 1.0, "dark": 1.0 },
-  "light":   { "fire": 1.0, "water": 1.0, "ice": 1.0, "thunder": 1.0, "earth": 1.0, "wind": 1.0, "light": 1.0, "dark": 2.0 },
-  "dark":    { "fire": 1.0, "water": 1.0, "ice": 1.0, "thunder": 1.0, "earth": 1.0, "wind": 1.0, "light": 2.0, "dark": 1.0 },
+  "fire":    { "fire": 1.0, "water": 0.5, "ice": 2.0, "thunder": 1.0, "earth": 1.0, "wind": 2.0, "light": 1.0, "dark": 1.0, "none": 1.0 },
+  "water":   { "fire": 2.0, "water": 1.0, "ice": 1.0, "thunder": 0.5, "earth": 2.0, "wind": 1.0, "light": 1.0, "dark": 1.0, "none": 1.0 },
+  "ice":     { "fire": 0.5, "water": 1.0, "ice": 1.0, "thunder": 1.0, "earth": 2.0, "wind": 2.0, "light": 1.0, "dark": 1.0, "none": 1.0 },
+  "thunder": { "fire": 1.0, "water": 2.0, "ice": 2.0, "thunder": 1.0, "earth": 0.5, "wind": 1.0, "light": 1.0, "dark": 1.0, "none": 1.0 },
+  "earth":   { "fire": 2.0, "water": 0.5, "ice": 0.5, "thunder": 2.0, "earth": 1.0, "wind": 1.0, "light": 1.0, "dark": 1.0, "none": 1.0 },
+  "wind":    { "fire": 0.5, "water": 2.0, "ice": 0.5, "thunder": 2.0, "earth": 1.0, "wind": 1.0, "light": 1.0, "dark": 1.0, "none": 1.0 },
+  "light":   { "fire": 1.0, "water": 1.0, "ice": 1.0, "thunder": 1.0, "earth": 1.0, "wind": 1.0, "light": 1.0, "dark": 2.0, "none": 1.0 },
+  "dark":    { "fire": 1.0, "water": 1.0, "ice": 1.0, "thunder": 1.0, "earth": 1.0, "wind": 1.0, "light": 2.0, "dark": 1.0, "none": 1.0 },
   "none":    { "fire": 1.0, "water": 1.0, "ice": 1.0, "thunder": 1.0, "earth": 1.0, "wind": 1.0, "light": 1.0, "dark": 1.0, "none": 1.0 }
 };
 
-// ─── 技パーツ（スキル）定義 ───────────────────────────────────────────
+// ─── ワザギア（スキル）定義 ───────────────────────────────────────────
 const TECH_PARTS = [
   { id: "tp_strike",       name: "タイアタリ・ユニット",    element: "none",    category: "attack",  type: "physical", cost_en: 10, effects: [{ type: "damage_en", base_power: 50 }],   description: "基本物理攻撃ユニット。敵のENを削る。" },
   { id: "tp_fireball",     name: "ファイアボール・ノズル",  element: "fire",    category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   description: "炎属性の魔法砲。弱点の敵に大ダメージ。" },
@@ -29,7 +29,7 @@ const TECH_PARTS = [
   { id: "tp_wind_blade",   name: "ウィンドブレード・ファン",element: "wind",    category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   description: "風属性の回転刃。" },
 ];
 
-// ─── 強化パーツ（ステータス変動・デメリットあり）───────────────────────
+// ─── ボディギア（ステータス変動・デメリットあり）───────────────────────
 const STAT_PARTS = [
   { id: "sp_heavy_armor",   name: "ヘビーアーマー",    description: "HP+500 DEF+20 SPD-10",  bonus: { hp: 500, def: 20 },      penalty: { spd: -10 } },
   { id: "sp_power_core",    name: "パワーコア",        description: "ATK+20 DEF-10",          bonus: { atk: 20 },               penalty: { def: -10 } },
@@ -41,7 +41,7 @@ const STAT_PARTS = [
   { id: "sp_bulk_frame",    name: "バルクフレーム",    description: "HP+300 DEF+10 SPD-8",    bonus: { hp: 300, def: 10 },      penalty: { spd: -8 } },
 ];
 
-// ─── オプションパーツ（特殊パッシブ×1スロット）──────────────────────────
+// ─── コアギア（特殊パッシブ×1スロット）──────────────────────────
 const OPTION_PARTS = [
   { id: "op_auto_repair",  name: "自動修復ユニット",    description: "毎ターンHP+30回復",         effect: { type: "regen_hp", value: 30 } },
   { id: "op_float",        name: "浮遊ブースター",      description: "地属性ダメージを無効",       effect: { type: "immune_element", element: "earth" } },
@@ -51,16 +51,16 @@ const OPTION_PARTS = [
   { id: "op_en_absorb",    name: "エネルギー吸収",      description: "攻撃命中時にEN+5回復",       effect: { type: "on_hit_en_recover", value: 5 } },
 ];
 
-// ─── カラクリボディデータ（味方ユニット本体）──────────────────────────────
+// ─── ビルガマタボディデータ（味方ユニット本体）──────────────────────────────
 const KARAKURI_DATA = [
   { id: "k_001", name: "ガタ",   main_element: "fire",    sub_element: "none",    description: "ネジ町の工房で作られた標準型。なぜかいつも不機嫌そうな顔をしている。",         base_stats: { hp: 1800, atk: 40, def: 35, mag: 20, spd: 30, max_en: 150, en_rec: 5 },  default_tech: ["tp_strike", "tp_fireball"] },
   { id: "k_002", name: "ドボン", main_element: "water",   sub_element: "earth",   description: "ずんぐりとした重装型。よく転ぶが気にしていない様子。",                         base_stats: { hp: 2500, atk: 35, def: 100, mag: 15, spd: 20, max_en: 150, en_rec: 5 }, default_tech: ["tp_strike", "tp_water_gun", "tp_shield"] },
-  { id: "k_003", name: "ピリカ", main_element: "thunder", sub_element: "wind",    description: "高速型の小型カラクリ。頭のアンテナが常にビリビリしている。",                   base_stats: { hp: 1400, atk: 30, def: 30, mag: 45, spd: 45, max_en: 150, en_rec: 15 }, default_tech: ["tp_strike", "tp_thunder_bolt"] },
+  { id: "k_003", name: "ピリカ", main_element: "thunder", sub_element: "wind",    description: "高速型の小型ビルガマタ。頭のアンテナが常にビリビリしている。",                   base_stats: { hp: 1400, atk: 30, def: 30, mag: 45, spd: 45, max_en: 150, en_rec: 15 }, default_tech: ["tp_strike", "tp_thunder_bolt"] },
   { id: "k_004", name: "ゴロタ", main_element: "earth",   sub_element: "none",    description: "岩のように頑丈な重量型。動くたびに床がへこむ。",                               base_stats: { hp: 3000, atk: 50, def: 60, mag: 5,  spd: 20, max_en: 150, en_rec: 0 },  default_tech: ["tp_strike", "tp_smash", "tp_guard_up"] },
   { id: "k_005", name: "クロミ", main_element: "dark",    sub_element: "none",    description: "影のように動く暗殺型。何かをずっとつぶやいている。",                             base_stats: { hp: 1200, atk: 80, def: 50, mag: 10, spd: 50, max_en: 150, en_rec: 10 }, default_tech: ["tp_strike", "tp_pierce"] },
   { id: "k_006", name: "ピカリ", main_element: "light",   sub_element: "fire",    description: "ぴかぴか光るサポート型。眩しすぎて仲間からも嫌がられている。",                   base_stats: { hp: 2200, atk: 40, def: 45, mag: 30, spd: 20, max_en: 150, en_rec: 10 }, default_tech: ["tp_strike", "tp_charge", "tp_shield"] },
   { id: "k_007", name: "コゴリ", main_element: "ice",     sub_element: "water",   description: "触れるとひんやりする耐久型。いつも少し眠そう。",                                 base_stats: { hp: 1800, atk: 35, def: 50, mag: 40, spd: 25, max_en: 150, en_rec: 5 },  default_tech: ["tp_strike", "tp_guard_up", "tp_charge"] },
-  { id: "k_008", name: "フワリ", main_element: "wind",    sub_element: "thunder", description: "なぜか常に少し浮いている謎のカラクリ。重力を舐めている。",                       base_stats: { hp: 1400, atk: 30, def: 25, mag: 50, spd: 55, max_en: 150, en_rec: 10 }, default_tech: ["tp_strike", "tp_slow", "tp_weaken"] },
+  { id: "k_008", name: "フワリ", main_element: "wind",    sub_element: "thunder", description: "なぜか常に少し浮いている謎のビルガマタ。重力を舐めている。",                       base_stats: { hp: 1400, atk: 30, def: 25, mag: 50, spd: 55, max_en: 150, en_rec: 10 }, default_tech: ["tp_strike", "tp_slow", "tp_weaken"] },
 ];
 
 // ─── ジュウマデータ（敵）────────────────────────────────────────────────
@@ -139,8 +139,8 @@ const SYNTHESIS_RECIPES = [
 
 // ─── バトルアイテム ────────────────────────────────────────────────────
 const BATTLE_ITEMS_DATA = [
-  { id: "bitem_hp_potion", name: "修理キット",   type: "item_battle", description: "カラクリのHPを500回復",   effect: { type: "recover_hp", value: 500 } },
-  { id: "bitem_en_potion", name: "エネルギー缶", type: "item_battle", description: "カラクリのENを50回復",    effect: { type: "recover_en_direct", value: 50 } },
+  { id: "bitem_hp_potion", name: "修理キット",   type: "item_battle", description: "ビルガマタのHPを500回復",   effect: { type: "recover_hp", value: 500 } },
+  { id: "bitem_en_potion", name: "エネルギー缶", type: "item_battle", description: "ビルガマタのENを50回復",    effect: { type: "recover_en_direct", value: 50 } },
   { id: "bitem_bomb",      name: "バクダン",      type: "item_battle", description: "敵に30の防御無視ダメージ",effect: { type: "damage_hp_direct", value: 30 } }
 ];
 
@@ -172,7 +172,7 @@ const ENEMY_DATA     = JUMA_DATA;
 const TUTORIAL_ENEMY      = TUTORIAL_JUMA;
 const TUTORIAL_BOSS_ENEMY = TUTORIAL_BOSS_JUMA;
 const SKILLS         = TECH_PARTS;
-const FOOD_DATA      = [];  // えさシステム廃止（パーツ合成に移行）
+const FOOD_DATA      = [];  // えさシステム廃止（ギア合成に移行）
 
 export {
   AFFINITY, TECH_PARTS, STAT_PARTS, OPTION_PARTS,
