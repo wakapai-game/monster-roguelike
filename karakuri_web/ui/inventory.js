@@ -1,12 +1,13 @@
 import { appState } from '../state.js';
-import { SKILLS, TECH_PARTS, FOOD_DATA } from '../data.js';
+import { SKILLS, TECH_PARTS, STAT_PARTS, FOOD_DATA } from '../data.js';
 import { Karakuri } from '../game.js';
 import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
 import {
   switchScreen,
   screenInventory, screenParty, screenHub,
   invSkillsContent, invFoodContent,
-  partyDetailsGrid, btnCloseInventory, btnCloseParty
+  partyDetailsGrid, btnCloseInventory, btnCloseParty,
+  btnMapParty
 } from './dom.js';
 
 let dragSrcIndex = -1;
@@ -18,7 +19,7 @@ function _buildTechTooltipHtml(info) {
     const catLabel = { attack: '攻撃', defense: '防御', support: 'サポート' }[info.category] || info.category;
     const elemLabel = info.element && info.element !== 'none' ? ` / ${info.element.toUpperCase()}` : '';
     return `<strong>${info.name}</strong>` +
-        `<span style="color:#94a3b8;font-size:0.75rem;">${catLabel}${elemLabel}　EN消費: ${info.cost_en ?? '?'}</span><br>` +
+        `<span style="color:#94a3b8;font-size:0.75rem;">${catLabel}${elemLabel}${info.cost_en != null ? `　EN消費: ${info.cost_en}` : ''}</span><br>` +
         (info.description || '');
 }
 
@@ -66,6 +67,13 @@ export function openParty(fromScreen) {
     partySelectedIndex = 0;
     renderParty();
     switchScreen(fromScreen, screenParty);
+
+    // チュートリアル：ボディギア確認待ち中ならパルスとバナーをクリア
+    if (appState.tutorialAwaitStatView) {
+        appState.tutorialAwaitStatView = false;
+        btnMapParty?.classList.remove('tutorial-guide-pulse');
+        document.getElementById('tutorial-stat-banner')?.remove();
+    }
 
     // チュートリアル：技装備待ち中なら対象ボタンをパルス強調
     if (appState.tutorialAwaitEquip) {
@@ -135,6 +143,7 @@ function _showPartyToast(msg) {
 let partySelectedIndex = 0;
 
 export function renderParty() {
+    _hideTechTooltip();
     const roster = appState.globalRoster;
     partySelectedIndex = Math.max(0, Math.min(partySelectedIndex, roster.length - 1));
     _renderPartyRoster(roster);
@@ -349,6 +358,38 @@ function _renderPartyDetail(roster) {
     skillsDiv.appendChild(badgesDiv);
     partyDetailsGrid.appendChild(skillsDiv);
 
+    // 装備中のボディギア（stat_parts）
+    const statDiv = document.createElement('div');
+    const equippedStat = data.stat_parts || [];
+    const statHeader = document.createElement('div');
+    statHeader.style.cssText = 'font-size:0.85rem; font-weight:bold; color:#34d399; margin-bottom:6px;';
+    statHeader.textContent = `ボディギア (${equippedStat.length}/5)`;
+    const statBadgesDiv = document.createElement('div');
+    statBadgesDiv.className = 'party-skills';
+    if (equippedStat.length === 0) {
+        statBadgesDiv.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">なし</span>';
+    } else {
+        equippedStat.forEach(sid => {
+            const sinfo = STAT_PARTS.find(p => p.id === sid);
+            if (!sinfo) return;
+            const sbadge = document.createElement('span');
+            sbadge.className = 'party-skill-badge';
+            sbadge.style.borderColor = 'rgba(52,211,153,0.4)';
+            sbadge.textContent = sinfo.name;
+            _attachTechTooltip(sbadge, {
+                name: sinfo.name,
+                category: 'ボディギア',
+                element: null,
+                cost_en: null,
+                description: sinfo.description
+            });
+            statBadgesDiv.appendChild(sbadge);
+        });
+    }
+    statDiv.appendChild(statHeader);
+    statDiv.appendChild(statBadgesDiv);
+    partyDetailsGrid.appendChild(statDiv);
+
     partyDetailsGrid.appendChild(_partyDivider());
 
     // インベントリからワザギアを装備
@@ -512,6 +553,7 @@ function closeSkillEdit() {
 }
 
 function renderSkillEditBody() {
+    _hideTechTooltip();
     const monster = skillEditMonster;
     const body = document.getElementById('skill-edit-body');
     body.innerHTML = '';

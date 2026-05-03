@@ -500,6 +500,12 @@ export function handleTurn(player, activeMonster) {
     setTimeout(() => {
       const target = appState.timeline.p1_active;
       const skillId = _selectEnemySkill(activeMonster, target);
+      if (!skillId) {
+        appState.timeline.onActionCompleted(2);
+        updateUI();
+        setTimeout(() => resumeLoop(), 200);
+        return;
+      }
       showDefensePhase(target, activeMonster, skillId);
     }, 400);
   }
@@ -525,7 +531,7 @@ btnTabItems.onclick = () => {
 
 function _selectEnemySkill(attacker, defender) {
   const skills = attacker.skills;
-  if (!skills || skills.length === 0) return "strike";
+  if (!skills || skills.length === 0) return null;
 
   const hpRatio = attacker.current_hp / attacker.stats.hp;
 

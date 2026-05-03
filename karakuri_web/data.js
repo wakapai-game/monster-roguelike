@@ -79,7 +79,7 @@ const JUMA_DATA = [
 const TUTORIAL_JUMA_1 = {
   id: "j_tutorial_1", name: "おためしジュウマ",
   main_element: "none", sub_element: "none",
-  base_stats: { hp: 400, atk: 8, def: 5, mag: 15, spd: 5, max_en: 30, en_rec: 0 },
+  base_stats: { hp: 120, atk: 8, def: 5, mag: 15, spd: 5, max_en: 30, en_rec: 0 },
   tech: ["tp_strike"], drop: null
 };
 
@@ -87,7 +87,7 @@ const TUTORIAL_JUMA_1 = {
 const TUTORIAL_JUMA_2 = {
   id: "j_tutorial_2", name: "かぜのジュウマ",
   main_element: "wind", sub_element: "none",
-  base_stats: { hp: 500, atk: 22, def: 5, mag: 80, spd: 22, max_en: 80, en_rec: 0 },
+  base_stats: { hp: 200, atk: 22, def: 5, mag: 80, spd: 22, max_en: 80, en_rec: 0 },
   tech: ["tp_strike", "tp_wind_blade"], drop: null
 };
 

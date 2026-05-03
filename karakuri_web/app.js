@@ -513,10 +513,31 @@ document.addEventListener('tutorial-node-event', (e) => {
         }
       });
     } else if (type === 'event_stat') {
-      // stat-parts-intro ステップを表示してからノードを進める
+      // stat-parts-intro ステップを表示してからノードを進める（非ブロッキング）
       showTutorialStep('stat-parts-intro', () => {
         appState.mapGenerator.unlockNextNodes(nodeId);
         renderMap(confirmBattleSetup);
+        // パーティボタンをパルスで強調してボディギア確認を促す
+        if (btnMapParty) {
+          btnMapParty.classList.add('tutorial-guide-pulse');
+          const r = btnMapParty.getBoundingClientRect();
+          const banner = document.createElement('div');
+          banner.id = 'tutorial-stat-banner';
+          banner.style.cssText = [
+            'position:fixed',
+            `top:${r.top - 28}px`,
+            `left:${r.left + r.width / 2}px`,
+            'transform:translateX(-50%)',
+            'font-size:0.72rem',
+            'color:#34d399',
+            'white-space:nowrap',
+            'pointer-events:none',
+            'z-index:100',
+          ].join(';');
+          banner.textContent = '👆 パーティを開いてボディギアを確認しよう';
+          document.body.appendChild(banner);
+          appState.tutorialAwaitStatView = true;
+        }
       });
     } else {
       appState.mapGenerator.unlockNextNodes(nodeId);
