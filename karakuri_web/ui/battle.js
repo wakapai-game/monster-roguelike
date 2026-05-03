@@ -1,6 +1,7 @@
 import { appState } from '../state.js';
 import { BATTLE_ITEMS_DATA, TECH_PARTS, STAT_PARTS, OPTION_PARTS } from '../data.js';
 import { findTechPart, findStatPart, findOptionPart } from '../game.js';
+import { renderGearDeck } from './gear-deck.js';
 
 function _getPartName(partId) {
   return (findTechPart(partId) || findStatPart(partId) || findOptionPart(partId))?.name || partId;
@@ -29,7 +30,7 @@ export function playBattleStart(onDone) {
   setTimeout(() => {
     overlay.classList.remove('bso-active');
     onDone?.();
-  }, 1650);
+  }, 1150);
 }
 
 // ---- UI Rendering Helpers ----
@@ -229,61 +230,49 @@ export function updatePartsDeck(monster, mode = 'idle') {
   const techRow    = document.getElementById('parts-deck-tech-row');
   const statOptRow = document.getElementById('parts-deck-stat-opt');
   if (!techRow || !statOptRow) return;
-  techRow.innerHTML = '';
   statOptRow.innerHTML = '';
 
-  if (!monster) return;
+  if (!monster) {
+    if (techRow._gdCleanup) { techRow._gdCleanup(); techRow._gdCleanup = null; }
+    techRow.innerHTML = '';
+    return;
+  }
 
-  // ── TECH カード（大・攻撃ボタン） ──
+  // ── TECH カード（GearHandDeck animated） ──
+  const techCards = [];
   for (let i = 0; i < 4; i++) {
-    const partId  = monster.tech_parts[i];
-    const card    = document.createElement('div');
-    const isPurged = partId && monster.purged_tech.has(partId);
+    const partId = monster.tech_parts[i];
+    if (!partId) continue;
+    const skill    = findTechPart(partId);
+    if (!skill) continue;
+    const isPurged = !!monster.purged_tech.has(partId);
 
-    if (!partId) {
-      card.className = 'part-card-tech slot-empty';
-      card.innerHTML = `<span class="tech-badge">TECH</span><span style="font-size:1rem;opacity:0.3;">—</span>`;
-    } else {
-      const skill = findTechPart(partId);
-      const icon  = skill ? (ELEM_ICON[skill.element] || CAT_ICON[skill.category] || '⚙️') : '⚙️';
-      const cost  = skill?.cost_en ?? skill?.cost_st ?? 0;
-      const desc  = skill?.description || '';
-      const tooltip = skill ? `${skill.name}\n${desc ? desc + '\n' : ''}EN: ${cost}` : partId;
-
-      card.className = `part-card-tech${isPurged ? ' purged' : ''}`;
-
-      // 相性バッジ（attack フェーズのみ）
-      let affHTML = '';
-      if (mode === 'attack' && !isPurged && skill && (skill.category === 'attack' || skill.category === 'trap')) {
-        const defender = appState.timeline?.p2_active;
-        if (defender) {
-          const aff = appState.engine?.calcAffinity(skill.element || 'none', defender);
-          if (aff > 1)      affHTML = '<span class="tech-affinity tech-aff-strong">◎</span>';
-          else if (aff < 1) affHTML = '<span class="tech-affinity tech-aff-weak">△</span>';
-        }
-      }
-
-      const shortName = skill ? (skill.name.length > 5 ? skill.name.slice(0, 4) + '…' : skill.name) : '';
-      card.innerHTML = `
-        <span class="tech-badge">TECH</span>
-        <span class="tech-icon">${icon}</span>
-        <span class="tech-name">${shortName}</span>
-        ${cost > 0 ? `<span class="tech-cost">EN:${cost}</span>` : ''}
-        ${affHTML}
-      `;
-      card.dataset.tooltip = tooltip;
-
-      if (mode === 'attack' && !isPurged) {
-        card.classList.add('interactive');
-        card.onclick = () => {
-          actionMenu.classList.add('hide');
-          updatePartsDeck(monster, 'idle');
-          executeAction(1, monster, appState.timeline.p2_active, partId);
-        };
+    let affinity = null;
+    if (mode === 'attack' && !isPurged && (skill.category === 'attack' || skill.category === 'trap')) {
+      const defender = appState.timeline?.p2_active;
+      if (defender) {
+        const aff = appState.engine?.calcAffinity(skill.element || 'none', defender);
+        if (aff > 1) affinity = 'strong';
+        else if (aff < 1) affinity = 'weak';
       }
     }
-    techRow.appendChild(card);
+
+    techCards.push({
+      id:       partId,
+      name:     skill.name,
+      elem:     skill.element || 'none',
+      en:       skill.cost_en ?? skill.cost_st ?? 0,
+      desc:     skill.description || '',
+      isPurged,
+      affinity,
+    });
   }
+
+  renderGearDeck(techRow, techCards, mode, (partId) => {
+    actionMenu.classList.add('hide');
+    updatePartsDeck(monster, 'idle');
+    executeAction(1, monster, appState.timeline.p2_active, partId);
+  });
 
   // ── STAT カード（小・情報表示） ──
   for (let i = 0; i < 5; i++) {
@@ -438,6 +427,7 @@ function renderEnemyRoster() {
   container.innerHTML = '';
   appState.p2Team.forEach(m => {
     const isActive = appState.timeline?.p2_active?.id === m.id;
+    if (isActive) return;
     const isDead = m.current_hp <= 0;
     const hpPct = Math.max(0, Math.round((m.current_hp / m.stats.hp) * 100));
 
@@ -505,12 +495,13 @@ export function handleTurn(player, activeMonster) {
   if (player === 1) {
     showAttackPhase(activeMonster);
   } else {
-    // Enemy Turn - AI skill selection
+    // Enemy Turn: immediately lock player input, then show defense UI
+    actionMenu.classList.add('hide');
     setTimeout(() => {
       const target = appState.timeline.p1_active;
       const skillId = _selectEnemySkill(activeMonster, target);
       showDefensePhase(target, activeMonster, skillId);
-    }, 1000);
+    }, 400);
   }
 }
 
@@ -578,6 +569,12 @@ function _selectEnemySkill(attacker, defender) {
 export function showAttackPhase(monster) {
   // デッキのTECHカードをアタックボタンとして活性化
   updatePartsDeck(monster, 'attack');
+
+  // ヘッダーを攻撃フェーズ表示にリセット
+  actionPhaseHeader.innerHTML = `<span style="color:#93c5fd; font-size:1.1em;">⚔ 攻撃フェーズ — 技を選べ！</span>`;
+  actionPhaseHeader.style.background = "rgba(59, 130, 246, 0.2)";
+  actionPhaseHeader.style.borderColor = "#3b82f6";
+  actionPhaseHeader.style.color = "white";
 
   // action-menu はアイテムのみ（スキルボタン不要）
   actionTabs.style.display = 'flex';
@@ -730,7 +727,7 @@ export function setupSwapButton(phaseType, currentMonster, enemyAttacker, enemyS
 
                         if (phaseType === 1) {
                             actionMenu.classList.add('hide');
-                            setTimeout(() => { resumeLoop(); }, 1000);
+                            setTimeout(() => { resumeLoop(); }, 400);
                         } else {
                             resolveDefensePhase(appState.timeline.p1_active, "swapped", enemyAttacker, enemySkillId, false);
                         }
@@ -839,7 +836,7 @@ export function resolveDefensePhase(defender, reactId, attacker, attackSkillId, 
         const currentDefender = appState.timeline.p1_active;
         executeAction(2, attacker, currentDefender, attackSkillId);
         if (currentDefender) currentDefender.is_defending = false;
-    }, 1200);
+    }, 800);
 }
 
 export function executeAction(playerNum, attacker, defender, skillId) {
@@ -941,7 +938,7 @@ export function executeAction(playerNum, attacker, defender, skillId) {
       showTutorialStep('st-chip', null);
     }
 
-    setTimeout(() => { resumeLoop(); }, 1200);
+    setTimeout(() => { resumeLoop(); }, 700);
   });
 }
 
@@ -968,7 +965,7 @@ function _showEndOverlay(isPlayerWin, isBoss) {
 
     setTimeout(() => {
         document.dispatchEvent(new CustomEvent('battle-end', { detail: { win: isPlayerWin } }));
-    }, 1900);
+    }, isTutorialActive() ? 1000 : 1900);
 }
 
 let _endBattleAbort = null;
@@ -1010,7 +1007,7 @@ export function endBattle(isPlayerWin) {
 
     const abort = new AbortController();
     _endBattleAbort = abort;
-    const timer = setTimeout(trigger, 800);
+    const timer = setTimeout(trigger, isTutorialActive() ? 400 : 800);
     setTimeout(() => {
         document.addEventListener('touchstart', () => { clearTimeout(timer); trigger(); }, { once: true, passive: true, signal: abort.signal });
         document.addEventListener('mousedown',  () => { clearTimeout(timer); trigger(); }, { once: true, signal: abort.signal });

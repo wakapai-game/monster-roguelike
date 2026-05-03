@@ -79,23 +79,23 @@ const JUMA_DATA = [
 const TUTORIAL_JUMA_1 = {
   id: "j_tutorial_1", name: "おためしジュウマ",
   main_element: "none", sub_element: "none",
-  base_stats: { hp: 1200, atk: 8, def: 20, mag: 15, spd: 5, max_en: 60, en_rec: 0 },
+  base_stats: { hp: 400, atk: 8, def: 5, mag: 15, spd: 5, max_en: 30, en_rec: 0 },
   tech: ["tp_strike"], drop: null
 };
 
-// Battle2用: 反撃してくる相手。炎属性・SPD高めで防御フェーズが確実に発生
+// Battle2用: 反撃してくる相手。風属性・SPD高めで防御フェーズが確実に発生
 const TUTORIAL_JUMA_2 = {
-  id: "j_tutorial_2", name: "あついジュウマ",
-  main_element: "fire", sub_element: "none",
-  base_stats: { hp: 1000, atk: 32, def: 10, mag: 28, spd: 22, max_en: 80, en_rec: 0 },
-  tech: ["tp_strike", "tp_fireball"], drop: null
+  id: "j_tutorial_2", name: "かぜのジュウマ",
+  main_element: "wind", sub_element: "none",
+  base_stats: { hp: 500, atk: 22, def: 5, mag: 80, spd: 22, max_en: 80, en_rec: 0 },
+  tech: ["tp_strike", "tp_wind_blade"], drop: null
 };
 
 // Boss用: EN削り特化。氷属性（ガタ=火で弱点）・プレイヤーのEN切れ→パージを誘発
 const TUTORIAL_BOSS_JUMA = {
   id: "j_tutorial_boss", name: "おためしジュウマ・改",
   main_element: "ice", sub_element: "none",
-  base_stats: { hp: 2000, atk: 30, def: 20, mag: 45, spd: 20, max_en: 120, en_rec: 10 },
+  base_stats: { hp: 1000, atk: 30, def: 8, mag: 35, spd: 20, max_en: 120, en_rec: 5 },
   tech: ["tp_water_gun", "tp_strike", "tp_slow", "tp_weaken"], drop: null
 };
 

@@ -66,7 +66,7 @@ function lerp(a, b, t) { return a + (b - a) * t; }
 const EFFECT_MAP = {
   // ---- Fire: rising flame particles ----
   fire: {
-    duration: 700,
+    duration: 450,
     init(w, h) {
       return Array.from({ length: 30 }, () => ({
         x: rand(w * 0.2, w * 0.8),
@@ -95,7 +95,7 @@ const EFFECT_MAP = {
 
   // ---- Water: splashing droplets ----
   water: {
-    duration: 700,
+    duration: 450,
     init(w, h) {
       return Array.from({ length: 25 }, () => ({
         x: rand(w * 0.3, w * 0.7),
@@ -123,7 +123,7 @@ const EFFECT_MAP = {
 
   // ---- Thunder: zigzag lightning bolts ----
   thunder: {
-    duration: 500,
+    duration: 350,
     init(w, h) {
       // Generate 3 lightning bolts
       return Array.from({ length: 3 }, () => {
@@ -168,7 +168,7 @@ const EFFECT_MAP = {
 
   // ---- Ice: crystalline shards ----
   ice: {
-    duration: 800,
+    duration: 350,
     init(w, h) {
       return Array.from({ length: 20 }, () => ({
         x: rand(w * 0.2, w * 0.8),
@@ -208,7 +208,7 @@ const EFFECT_MAP = {
 
   // ---- Earth: rock fragments ----
   earth: {
-    duration: 700,
+    duration: 450,
     init(w, h) {
       return Array.from({ length: 15 }, () => ({
         x: rand(w * 0.2, w * 0.8),
@@ -238,7 +238,7 @@ const EFFECT_MAP = {
 
   // ---- Wind: swirling arcs ----
   wind: {
-    duration: 700,
+    duration: 450,
     init(w, h) {
       return Array.from({ length: 12 }, () => ({
         cx: w * 0.5 + rand(-20, 20),
@@ -267,7 +267,7 @@ const EFFECT_MAP = {
 
   // ---- Dark: spreading shadow waves ----
   dark: {
-    duration: 800,
+    duration: 350,
     init(w, h) {
       return Array.from({ length: 3 }, (_, i) => ({
         cx: w * 0.5,
@@ -310,7 +310,7 @@ const EFFECT_MAP = {
 
   // ---- Light: radiant golden particles ----
   light: {
-    duration: 700,
+    duration: 450,
     init(w, h) {
       return Array.from({ length: 20 }, () => ({
         x: w * 0.5 + rand(-30, 30),
@@ -348,7 +348,7 @@ const EFFECT_MAP = {
 
   // ---- None (physical): impact shockwave ----
   none: {
-    duration: 500,
+    duration: 350,
     init(w, h) {
       return [{ cx: w * 0.5, cy: h * 0.5, maxRadius: 50 }];
     },

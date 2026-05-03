@@ -219,6 +219,49 @@ if (_btnMenuToggle && _floatMenuPanel) {
   });
 })();
 
+// ---- スクリーンショット ----
+(function() {
+  const btn = document.getElementById('btn-screenshot');
+  if (!btn || typeof html2canvas === 'undefined') return;
+
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    btn.classList.add('capturing');
+    btn.textContent = '⏳';
+
+    // backdrop-filter は html2canvas 非対応のため一時無効化（パネルが透明になる問題の回避）
+    const fix = document.createElement('style');
+    fix.textContent = '* { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }';
+    document.head.appendChild(fix);
+    // フローティングボタン自体をスクショに写さない
+    const floatBtns = document.getElementById('float-btns');
+    if (floatBtns) floatBtns.style.visibility = 'hidden';
+
+    try {
+      // document.body を対象にすることで背景 canvas (#bg-pixel-canvas) も含める
+      const canvas = await html2canvas(document.body, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#0f172a',
+        scale: window.devicePixelRatio || 1,
+        foreignObjectRendering: false,
+      });
+      const link = document.createElement('a');
+      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      link.download = `bilga-mata-${ts}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.warn('[screenshot] 失敗:', err);
+    } finally {
+      document.head.removeChild(fix);
+      if (floatBtns) floatBtns.style.visibility = '';
+      btn.classList.remove('capturing');
+      btn.textContent = '📷';
+    }
+  });
+})();
+
 // ---- Cork NPC Portraits ----
 function initCorkPortraits() {
   document.querySelectorAll('.screen').forEach(screen => {
@@ -381,22 +424,23 @@ document.addEventListener('tutorial-node-event', (e) => {
     rewardEl.appendChild(card);
 
   } else if (type === 'event_item') {
-    // ワザギアを付与（水属性 + EN回復 → 次の炎敵に有効）
+    // 炎ワザギア + EN回復アイテムを付与
     if (!appState.tutorialSkillsGiven) {
-      const grantedParts = ['tp_water_gun', 'tp_charge'];
-      grantedParts.forEach(id => appState.globalInventory.skills.push(id));
+      appState.globalInventory.skills.push('tp_fireball');
+      appState.globalInventory.battleItems.push('bitem_en_potion');
       appState.tutorialSkillsGiven = true;
     }
 
     titleEl.textContent = '属性とワザギア';
     npcEl.innerHTML =
       '<p>コルク：「攻撃には"属性"がある。相手の弱点を突くと大ダメージになる。」</p>' +
-      '<p>コルク：「炎の相手には水が刺さる。ウォーターガンを持っていけ。EN回復技もある。使え。」</p>' +
-      '<p>コルク：「パーティ画面でガタに装備させろ。装備したら先へ進む。」</p>';
+      '<p>コルク：「風の相手には炎が刺さる。ファイアボールを装備していけ。」</p>' +
+      '<p>コルク：「EN回復アイテムも渡す。バトル中にアイテムタブから使え。」</p>' +
+      '<p>コルク：「パーティ画面でガタにワザギアを装備させろ。装備したら先へ進む。」</p>';
 
     const parts = [
-      { name: 'ウォーターガン・ノズル', sub: 'ワザギア / 水攻撃', color: '#60a5fa', icon: '💧' },
-      { name: 'エネルギー充填ユニット', sub: 'ワザギア / EN回復', color: '#a78bfa', icon: '⚡' },
+      { name: 'ファイアボール・ノズル', sub: 'ワザギア / 炎攻撃', color: '#f97316', icon: '🔥' },
+      { name: 'エネルギー缶',           sub: 'アイテム / EN回復', color: '#a78bfa', icon: '⚡' },
     ];
     parts.forEach(it => {
       const card = document.createElement('div');

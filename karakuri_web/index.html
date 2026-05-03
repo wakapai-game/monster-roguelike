@@ -6,7 +6,7 @@
   <title>ビルガ・マタ</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
@@ -390,7 +390,7 @@
 
         <!-- アクションメニュー（防御フェーズ + アイテム） -->
         <div id="action-menu" class="action-menu hide">
-          <div id="action-phase-header" style="text-align:center; font-weight:bold; margin-bottom:10px; padding:5px; border-radius:5px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6;">防御フェーズ</div>
+          <div id="action-phase-header" style="text-align:center; font-weight:bold; margin-bottom:10px; padding:5px; border-radius:5px; background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6;">攻撃フェーズ</div>
 
           <div id="tutorial-hint" class="tutorial-hint hide">
             <span id="tutorial-hint-text"></span>
@@ -504,6 +504,7 @@
     </div>
     <div id="float-btns-row">
       <button id="btn-sound-toggle" class="float-circle-btn sound-toggle-btn" title="サウンドON/OFF">🔊</button>
+      <button id="btn-screenshot" class="float-circle-btn screenshot-btn" title="スクリーンショット">📷</button>
       <button id="btn-float-menu-toggle" class="float-circle-btn menu-toggle-btn" title="メニュー">☰</button>
     </div>
   </div>
@@ -516,6 +517,7 @@
   <div id="tutorial-spotlight-label"  class="tutorial-spotlight-label hide">👆 タップして説明を見る</div>
 
   <!-- ES Modules -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script type="module" src="app.js"></script>
   <script type="module">
     import { initTitleArt } from './title-art.js';
