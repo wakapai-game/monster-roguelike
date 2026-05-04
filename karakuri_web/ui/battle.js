@@ -87,7 +87,7 @@ function showDamagePopup(side, hpDmg, stDmg, info = {}) {
                  : aff < 1.0  ? `<span class="dmg-badge dmg-badge-resist">いまいち ×${aff}</span>`
                  : '';
   const stabBadge = is_stab ? `<span class="dmg-badge dmg-badge-stab">STAB</span>` : '';
-  const overflowBadge = `<span class="dmg-badge dmg-badge-overflow">溢れ</span>`;
+  const overflowBadge = `<span class="dmg-badge dmg-badge-overflow">HP直撃</span>`;
   if (hpDmg > 0) spawn(`-${hpDmg} HP${overflowBadge}`, 'dmg-popup-hp', 30);
   if (stDmg > 0) spawn(`-${stDmg} EN${affBadge}${stabBadge}`, 'dmg-popup-st', 50);
 }
@@ -598,7 +598,7 @@ export function showAttackPhase(monster) {
 
   if (itemCount > 0) {
     actionMenu.classList.remove('hide');
-    btnTabItems.onclick();
+    // アイテムタブは自動選択しない。GearDeckがデフォルト表示
   } else {
     actionMenu.classList.add('hide');
   }

@@ -567,6 +567,14 @@ document.getElementById('btn-stage-tutorial').onclick = () => {
 
 document.getElementById('btn-tutorial-intro-start').onclick = () => {
   document.getElementById('tutorial-intro-overlay').classList.add('hide');
+  // チュートリアル2周目リセット
+  appState.globalRoster = [];
+  appState.selectedIds = [];
+  appState.tutorialItemsGiven = false;
+  appState.tutorialSkillsGiven = false;
+  appState.tutorialAwaitEquip = null;
+  appState.tutorialAwaitEquipSkillId = null;
+  appState.tutorialAwaitStatView = false;
   initTutorial('full');
   // チュートリアルアイテムを1回だけ付与
   if (!appState.tutorialItemsGiven) {
@@ -632,6 +640,22 @@ function updateHubUI() {
 
 // ---- Battle Setup ----
 function confirmBattleSetup() {
+  if (!appState.globalRoster || appState.globalRoster.length === 0) {
+    alert('ビルガマタがいません。先にイベントを進めてください。');
+    return;
+  }
+  if (!appState.isTutorialMap && (!appState.selectedIds || appState.selectedIds.length === 0)) {
+    alert('ビルガマタを選択してください。');
+    return;
+  }
+  if (appState.tutorialAwaitEquip) {
+    alert('先にビルガマタにワザギアを装備してください。');
+    return;
+  }
+  if (appState.tutorialAwaitStatView) {
+    alert('先にパーティ画面でボディギアを確認してください。');
+    return;
+  }
   screenSelection.classList.remove('active');
   screenSelection.classList.add('hide');
   screenMap.classList.remove('active');
@@ -645,9 +669,13 @@ function confirmBattleSetup() {
 
   appState.engine = new BattleEngine();
   const rosterOrder = appState.globalRoster.map(m => m.uid || m.id);
-  appState.p1Team = [...appState.selectedIds]
-    .sort((a, b) => rosterOrder.indexOf(a) - rosterOrder.indexOf(b))
-    .map(id => new Monster(JSON.parse(JSON.stringify(appState.globalRoster.find(m => m.uid === id || m.id === id)))));
+  if (appState.isTutorialMap) {
+    appState.p1Team = appState.globalRoster.map(m => new Monster(JSON.parse(JSON.stringify(m))));
+  } else {
+    appState.p1Team = [...appState.selectedIds]
+      .sort((a, b) => rosterOrder.indexOf(a) - rosterOrder.indexOf(b))
+      .map(id => new Monster(JSON.parse(JSON.stringify(appState.globalRoster.find(m => m.uid === id || m.id === id)))));
+  }
 
   const currentNode = appState.mapGenerator?.getNodes().find(n => n.id === appState.currentNodeId);
   if (!currentNode) { console.warn('Node not found:', appState.currentNodeId); return; }

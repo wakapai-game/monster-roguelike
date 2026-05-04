@@ -1474,7 +1474,6 @@ header h1 {
   background: var(--accent);
   color: white;
   margin-top: 20px;
-  width: 200px;
 }
 
 .primary-btn:hover:not(:disabled) { background: var(--btn-hover); transform: scale(1.05); }

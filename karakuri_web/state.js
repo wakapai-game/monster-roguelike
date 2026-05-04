@@ -23,7 +23,7 @@ export const appState = {
     techParts:    [],         // ワザギア在庫 [{ id, count }]
     statParts:    [],         // ボディギア在庫 [{ id, count }]
     optionParts:  [],         // コアギア在庫 [{ id, count }]
-    battleItems:  [],         // バトルアイテム在庫 [{ id, count }]
+    battleItems:  [],         // バトルアイテム在庫（文字列IDの配列）
     materials:    [],         // 素材在庫 [{ id, count }]
     // 旧互換
     skills: [], battleItems_legacy: [], mapItems: []
