@@ -18,7 +18,11 @@ import {
 import { initTutorial, showTutorialStep } from './ui/tutorial.js';
 import { openInventory, openParty } from './ui/inventory.js';
 import { renderMap, generateRewards, collectPendingReward } from './ui/map-render.js';
-import { toast, updateUI, resumeLoop, playBattleStart } from './ui/battle.js';
+import { toast, updateUI, resumeLoop, playBattleStart, handleTurn } from './ui/battle.js';
+import { startLiveTest, abortLiveTest, resetTestHP, stepEnemyOnly } from './ui/battle-test/index.js';
+import { renderBattleTestSetup, buildP1Data, buildP2Data } from './ui/battle-test/setup-ui.js';
+import { runHeadlessBattleN } from './ui/battle-test/headless.js';
+import { initLiveOverlay } from './ui/battle-test/live-overlay.js';
 import { openEncyclopedia } from './ui/encyclopedia.js';
 import { saveGame, loadGame, deleteSave } from './persistence.js';
 import { openHelp, openHelpTab, initHelp, openGlossary, initGlossary } from './ui/help.js';
@@ -42,6 +46,114 @@ import { initPresentation } from './ui/presentation.js';
 
 // ---- Dev Overlay (?dev で有効化) ----
 initDevOverlay();
+
+// ---- 戦闘テストモード ----
+initLiveOverlay();
+(function initBattleTest() {
+  const btnOpen  = document.getElementById('btn-battle-test');
+  const screenBT = document.getElementById('screen-battle-test');
+  if (!btnOpen || !screenBT) return;
+
+  btnOpen.addEventListener('click', () => {
+    renderBattleTestSetup();
+    screenStart.classList.remove('active');
+    screenStart.classList.add('hide');
+    screenBT.classList.remove('hide');
+    screenBT.classList.add('active');
+    mainHeader.style.display = 'none';
+  });
+
+  // セットアップ画面のボタン群（動的生成のためイベント委譲）
+  screenBT.addEventListener('click', async e => {
+    if (e.target.id === 'btn-test-to-title') {
+      screenBT.classList.remove('active');
+      screenBT.classList.add('hide');
+      screenStart.classList.remove('hide');
+      screenStart.classList.add('active');
+      return;
+    }
+
+    if (e.target.id === 'btn-test-start') {
+      const p1 = buildP1Data();
+      const p2 = buildP2Data();
+      if (!p1.length) { alert('味方を1体以上選択してください。'); return; }
+      const forceWeakness = document.getElementById('test-force-weakness')?.checked ?? false;
+      if (!startLiveTest(p1, p2, { forceWeakness })) return;
+
+      screenBT.classList.remove('active');
+      screenBT.classList.add('hide');
+      screenBattle.classList.remove('hide');
+      screenBattle.classList.add('active');
+      mainHeader.style.display = 'block';
+      _showTestOverlay();
+      if (battleLog) battleLog.innerHTML = '';
+      resumeLoop();
+      return;
+    }
+
+    if (e.target.id === 'btn-test-auto') {
+      const nRaw = parseInt(document.getElementById('test-auto-n')?.value) || 10;
+      const n = Math.min(500, Math.max(1, nRaw));
+      const p1 = buildP1Data();
+      const p2 = buildP2Data();
+      if (!p1.length) { alert('味方を1体以上選択してください。'); return; }
+      const forceWeakness = document.getElementById('test-force-weakness')?.checked ?? false;
+      const r = runHeadlessBattleN(n, p1, p2, { forceWeakness });
+      const resultEl = document.getElementById('test-auto-result');
+      if (resultEl) {
+        resultEl.textContent =
+          `勝率: ${(r.winRate * 100).toFixed(1)}%  ` +
+          `平均ターン: ${r.avgTurns.toFixed(1)}  ` +
+          `平均残HP(P1): ${r.avgP1HP.toFixed(0)}` +
+          (r.timeouts > 0 ? `  (タイムアウト: ${r.timeouts})` : '');
+      }
+    }
+  });
+
+  function _showTestOverlay() {
+    const overlay = document.getElementById('test-overlay');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => {
+      const screenBattleEl = document.getElementById('screen-battle');
+      if (screenBattleEl) screenBattleEl.style.paddingBottom = overlay.offsetHeight + 'px';
+    });
+  }
+
+  document.addEventListener('battle-attack-resolved', () => {
+    if (appState.isTestMode) _showTestOverlay();
+  });
+
+  function _hideTestOverlay() {
+    const overlay = document.getElementById('test-overlay');
+    if (overlay) overlay.style.display = 'none';
+    const screenBattleEl = document.getElementById('screen-battle');
+    if (screenBattleEl) screenBattleEl.style.paddingBottom = '';
+  }
+
+  // テストコントロールバーのボタン
+  document.getElementById('btn-test-abort')?.addEventListener('click', () => {
+    abortLiveTest();
+    _hideTestOverlay();
+    screenBattle.classList.remove('active');
+    screenBattle.classList.add('hide');
+    mainHeader.style.display = 'none';
+    renderBattleTestSetup();
+    screenBT.classList.remove('hide');
+    screenBT.classList.add('active');
+  });
+
+  document.getElementById('btn-test-reset-hp')?.addEventListener('click', () => {
+    resetTestHP();
+    resumeLoop();
+  });
+
+  document.getElementById('btn-test-enemy-turn')?.addEventListener('click', () => {
+    const r = stepEnemyOnly();
+    if (r) handleTurn(2, r.active);
+    else resumeLoop();
+  });
+})();
 
 // ---- スタート画面モンスターパレード ----
 initStartScene();
@@ -737,6 +849,7 @@ function confirmBattleSetup() {
 
 // ---- Map / Reward Flow ----
 document.addEventListener('battle-end', (e) => {
+  if (appState.isTestMode) return;
   if (!e.detail.win) {
     setTimeout(() => {
       document.getElementById('beo-restart-btn')?.classList.remove('hide');

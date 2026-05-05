@@ -37,5 +37,6 @@ export const appState = {
   p2Team: [],
   tutorialMode: null,
   tutorialShownSteps: new Set(),
-  tutorialReward: false
+  tutorialReward: false,
+  isTestMode: false,
 };

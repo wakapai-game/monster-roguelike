@@ -1,5 +1,5 @@
 // ui/gear-deck.js
-// GearHandDeck: slot→fan ejection animation for the attack phase (Industrial Rust aesthetic)
+// GearHandDeck: unified TECH / BODY / CORE card fan animation
 
 const ELEM_COLORS = {
   fire:    { bg: '#c0622a', glow: '#ff9966' },
@@ -12,23 +12,41 @@ const ELEM_COLORS = {
   none:    { bg: '#4a4a5a', glow: '#8888aa' },
 };
 
+const STAT_COLORS = {
+  hp:     { bg: '#7f1d1d', glow: '#f87171' },
+  atk:    { bg: '#7c2d12', glow: '#fb923c' },
+  def:    { bg: '#1e3a5f', glow: '#60a5fa' },
+  mag:    { bg: '#581c87', glow: '#c084fc' },
+  spd:    { bg: '#14532d', glow: '#4ade80' },
+  max_en: { bg: '#164e63', glow: '#22d3ee' },
+  en_rec: { bg: '#164e63', glow: '#22d3ee' },
+};
+
+const CORE_COLOR = { bg: '#713f12', glow: '#fbbf24' };
+const STAT_LABEL = { hp: 'HP', atk: 'ATK', def: 'DEF', mag: 'MAG', spd: 'SPD', max_en: 'EN', en_rec: 'EN+' };
+
+function _cardColor(card) {
+  if (card.cardType === 'core') return CORE_COLOR;
+  if (card.cardType === 'body') return STAT_COLORS[card.primaryStat] || STAT_COLORS.def;
+  return ELEM_COLORS[card.elem] || ELEM_COLORS.none;
+}
+
 function calcFanParams(count) {
   const c = Math.max(1, count);
-  const cardW  = Math.max(46, Math.round(72 - (c - 4) * 2.8));
-  const xStep  = Math.max(28, Math.round(52 - (c - 4) * 3));
-  const spread = Math.min(38, 18 + c * 2);
-  const baseY  = Math.min(24, 12 + c * 1.2);
+  const cardW  = Math.max(44, Math.round(70 - (c - 4) * 2.4));
+  const xStep  = Math.max(26, Math.round(52 - (c - 4) * 2.5));
+  const spread = Math.min(42, 16 + c * 2);
+  const baseY  = Math.min(20, 10 + c * 1.0);
   const cardH  = Math.round(cardW * 1.38);
-  const contW  = Math.min(c * xStep + cardW, 800);
+  const contW  = Math.min(c * xStep + cardW, 960);
   return { cardW, cardH, xStep, spread, baseY, contW };
 }
 
 /**
- * Renders an animated gear hand deck into container.
  * @param {HTMLElement} container - #parts-deck-tech-row
- * @param {Array<{id,name,elem,en,desc,isPurged,affinity}>} cards
- * @param {'idle'|'attack'} mode  - attack triggers ejection animation after 300ms
- * @param {(partId: string) => void} onCardClick
+ * @param {Array} cards  - unified array of tech/body/core card objects
+ * @param {'idle'|'attack'} mode
+ * @param {(partId: string) => void} onCardClick  - only fires for tech cards
  */
 export function renderGearDeck(container, cards, mode, onCardClick) {
   if (container._gdCleanup) {
@@ -42,19 +60,31 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
   const count = Math.min(cards.length, 10);
   const validCards = cards.slice(0, count);
   const { cardW, cardH, xStep, spread, baseY, contW } = calcFanParams(count);
-  const slotW = Math.max(36, cardW - 4);
-  const slotGap = Math.max(4, xStep - slotW + 4);
+  const slotW   = Math.max(32, cardW - 6);
+  const slotGap = Math.max(3, xStep - slotW + 3);
 
   let ejectedCount = 0;
   let phase = 'idle';
   let ejectionTimer = null;
 
-  // ── Wrapper ──────────────────────────────────────────────────────────────
+  // ── Wrapper ───────────────────────────────────────────────────────────
   const wrapper = document.createElement('div');
   wrapper.className = 'gd-wrapper';
   container.appendChild(wrapper);
 
-  // ── Slot Row ─────────────────────────────────────────────────────────────
+  // ── Fan Layer (absolute, bottom-anchored, overflows above wrapper) ───
+  const fanLayer = document.createElement('div');
+  fanLayer.className = 'gd-fan-layer';
+  fanLayer.style.height = `${cardH + 26}px`;
+  wrapper.appendChild(fanLayer);
+
+  const fanInner = document.createElement('div');
+  fanInner.className = 'gd-fan-inner';
+  fanInner.style.width  = `${contW}px`;
+  fanInner.style.height = `${cardH + 26}px`;
+  fanLayer.appendChild(fanInner);
+
+  // ── Slot Row (absolute, bottom-anchored within wrapper) ──────────────
   const slotRow = document.createElement('div');
   slotRow.className = 'gd-slot-row';
   slotRow.style.gap = `${slotGap}px`;
@@ -65,26 +95,26 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
   labelEl.textContent = `GEAR DECK — ${count}/10`;
   slotRow.appendChild(labelEl);
 
-  const slotEls = validCards.map((card, i) => {
-    const e = ELEM_COLORS[card.elem] || ELEM_COLORS.none;
+  const slotEls = validCards.map((card) => {
+    const e = _cardColor(card);
 
     const slot = document.createElement('div');
     slot.className = 'gd-slot';
-    slot.style.width = `${slotW}px`;
+    slot.style.width       = `${slotW}px`;
     slot.style.borderColor = `${e.bg}55`;
 
     const railL = document.createElement('div');
-    railL.className = 'gd-slot-rail gd-slot-rail-l';
+    railL.className  = 'gd-slot-rail gd-slot-rail-l';
     railL.style.background = `${e.bg}44`;
 
     const railR = document.createElement('div');
-    railR.className = 'gd-slot-rail gd-slot-rail-r';
+    railR.className  = 'gd-slot-rail gd-slot-rail-r';
     railR.style.background = `${e.bg}44`;
 
     const dot = document.createElement('div');
     dot.className = 'gd-slot-dot';
     dot.style.background = e.glow;
-    dot.style.boxShadow = `0 0 6px ${e.glow}`;
+    dot.style.boxShadow  = `0 0 6px ${e.glow}`;
 
     slot.appendChild(railL);
     slot.appendChild(railR);
@@ -94,74 +124,114 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
     return { slot, dot, railL, railR, e };
   });
 
-  // ── Fan Layer ────────────────────────────────────────────────────────────
-  const fanLayer = document.createElement('div');
-  fanLayer.className = 'gd-fan-layer';
-  wrapper.appendChild(fanLayer);
-
-  const fanInner = document.createElement('div');
-  fanInner.className = 'gd-fan-inner';
-  fanInner.style.width = `${contW}px`;
-  fanInner.style.height = `${cardH + 26}px`;
-  fanLayer.appendChild(fanInner);
-
+  // ── Card Elements ─────────────────────────────────────────────────────
   const mid = (count - 1) / 2;
   const totalSlotsW = count * slotW + (count - 1) * slotGap;
 
-  // ── Card Elements ─────────────────────────────────────────────────────────
   const cardInfos = validCards.map((card, i) => {
     const offset = i - mid;
-    const norm = mid > 0 ? offset / mid : 0;
-    const angle = norm * (spread / 2);
-    const yDrop = Math.abs(norm) * baseY;
+    const norm   = mid > 0 ? offset / mid : 0;
+    const angle  = norm * (spread / 2);
+    const yDrop  = Math.abs(norm) * baseY;
     const xOffset = offset * xStep;
     const slotCenterX = -totalSlotsW / 2 + slotW / 2 + i * (slotW + slotGap);
-    const e = ELEM_COLORS[card.elem] || ELEM_COLORS.none;
+    const e = _cardColor(card);
 
     const cardEl = document.createElement('div');
     cardEl.className = 'gd-card';
-    cardEl.style.cssText = `width:${cardW}px;height:${cardH}px;margin-left:${-cardW/2}px;transform:translateX(${slotCenterX}px) translateY(${cardH+20}px) rotate(0deg) scale(0.7);opacity:0;z-index:${i};cursor:default;transition:none;`;
-    const tooltipText = card.desc ? `${card.name}\n${card.desc}\nEN:${card.en}` : `${card.name}\nEN:${card.en}`;
+    cardEl.style.cssText = `width:${cardW}px;height:${cardH}px;margin-left:${-cardW / 2}px;` +
+      `transform:translateX(${slotCenterX}px) translateY(${cardH + 20}px) rotate(0deg) scale(0.7);` +
+      `opacity:0;z-index:${i};cursor:default;transition:none;`;
+
+    // ── Tooltip ──
+    let tooltipText = card.name || card.id;
+    if (card.cardType === 'tech') {
+      tooltipText = card.desc ? `${card.name}\n${card.desc}\nEN:${card.en}` : `${card.name}\nEN:${card.en}`;
+    } else if (card.cardType === 'body') {
+      const bLines = Object.entries(card.bonus   || {}).map(([k, v]) => `${STAT_LABEL[k] || k}+${v}`);
+      const pLines = Object.entries(card.penalty || {}).map(([k, v]) => `${STAT_LABEL[k] || k}${v}`);
+      tooltipText = card.name
+        + (bLines.length ? '\n▲ ' + bLines.join(' ') : '')
+        + (pLines.length ? '\n▼ ' + pLines.join(' ') : '');
+    } else if (card.cardType === 'core') {
+      tooltipText = card.name + (card.desc ? '\n' + card.desc : '');
+    }
     cardEl.dataset.tooltip = tooltipText;
 
     const shortName = card.name.length > 5 ? card.name.slice(0, 4) + '…' : card.name;
-    const iconSz = Math.round(cardW * 0.36);
+    const iconSz    = Math.round(cardW * 0.36);
+    const typeLabel = card.cardType === 'body' ? 'BODY' : card.cardType === 'core' ? 'CORE' : 'TECH';
+    const idFs      = Math.max(5, Math.round(cardW * 0.085));
+    const nameFs    = Math.max(8, cardW * 0.13);
+    const footerFs  = Math.max(7, cardW * 0.11);
+    const enLabelFs = Math.max(6, cardW * 0.09);
+
     const affBadge = card.affinity === 'strong'
       ? `<span class="gd-aff-badge tech-aff-strong">◎</span>`
       : card.affinity === 'weak'
       ? `<span class="gd-aff-badge tech-aff-weak">△</span>`
       : '';
 
-    cardEl.innerHTML = `
-      <div class="gd-card-inner">
-        <div class="gd-card-stripe" style="background:linear-gradient(90deg,${e.bg},${e.glow}88);"></div>
-        <div class="gd-card-type" style="font-size:${Math.max(6,cardW*0.1)}px;color:${e.glow}99;">TECH</div>
+    // ── Card body per type ──
+    let cardBody;
+    if (card.cardType === 'tech') {
+      cardBody = `
         <div class="gd-card-icon-wrap" style="background:radial-gradient(ellipse at 50% 60%,${e.bg}1a,transparent 70%);">
           <div class="gd-card-icon-star" style="width:${iconSz}px;height:${iconSz}px;background:${e.bg}44;border-color:${e.bg}88;">
             <div class="gd-card-icon-dot" style="width:${Math.round(iconSz*0.36)}px;height:${Math.round(iconSz*0.36)}px;background:${e.glow};box-shadow:0 0 6px ${e.glow};"></div>
           </div>
         </div>
-        <div class="gd-card-name" style="font-size:${Math.max(8,cardW*0.13)}px;">${shortName}</div>
+        <div class="gd-card-name" style="font-size:${nameFs}px;">${shortName}</div>
+        <div style="font-size:${idFs}px;color:#6b7280;font-family:monospace;opacity:0.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px;text-align:center;">${card.id}</div>
         <div class="gd-card-footer">
-          <span class="gd-card-en" style="font-size:${Math.max(7,cardW*0.11)}px;">${card.en}<span class="gd-card-en-label" style="font-size:${Math.max(6,cardW*0.09)}px;">EN</span></span>
+          <span class="gd-card-en" style="font-size:${footerFs}px;">${card.en}<span class="gd-card-en-label" style="font-size:${enLabelFs}px;">EN</span></span>
+        </div>`;
+    } else if (card.cardType === 'body') {
+      const mainKey = Object.keys(card.bonus || {})[0];
+      const mainVal = mainKey ? `+${card.bonus[mainKey]}` : '';
+      const statLbl = STAT_LABEL[card.primaryStat] || card.primaryStat || '?';
+      cardBody = `
+        <div class="gd-card-icon-wrap" style="background:radial-gradient(ellipse at 50% 60%,${e.bg}1a,transparent 70%);">
+          <div style="font-size:${Math.max(10,Math.round(cardW*0.22))}px;font-weight:bold;color:${e.glow};font-family:'JetBrains Mono',monospace;text-align:center;line-height:1;">${statLbl}</div>
         </div>
+        <div class="gd-card-name" style="font-size:${nameFs}px;">${shortName}</div>
+        <div style="font-size:${idFs}px;color:#6b7280;font-family:monospace;opacity:0.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px;text-align:center;">${card.id}</div>
+        <div class="gd-card-footer">
+          <span class="gd-card-en" style="font-size:${footerFs}px;color:${e.glow};">${mainVal}</span>
+        </div>`;
+    } else {
+      // CORE
+      cardBody = `
+        <div class="gd-card-icon-wrap" style="background:radial-gradient(ellipse at 50% 60%,${e.bg}1a,transparent 70%);">
+          <div style="font-size:${Math.max(14,Math.round(cardW*0.28))}px;color:${e.glow};text-align:center;line-height:1;">✦</div>
+        </div>
+        <div class="gd-card-name" style="font-size:${nameFs}px;">${shortName}</div>
+        <div style="font-size:${idFs}px;color:#6b7280;font-family:monospace;opacity:0.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px;text-align:center;">${card.id}</div>
+        <div class="gd-card-footer"></div>`;
+    }
+
+    cardEl.innerHTML = `
+      <div class="gd-card-inner">
+        <div class="gd-card-stripe" style="background:linear-gradient(90deg,${e.bg},${e.glow}88);"></div>
+        <div class="gd-card-type" style="font-size:${Math.max(6,cardW*0.1)}px;color:${e.glow}99;">${typeLabel}</div>
+        ${cardBody}
         ${affBadge}
         ${card.isPurged ? '<div class="gd-purged-overlay">PURGED</div>' : ''}
-      </div>
-    `;
+      </div>`;
 
     fanInner.appendChild(cardEl);
     return { cardEl, xOffset, yDrop, angle, slotCenterX, e, card, isHovered: false, isSelected: false };
   });
 
-  // ── Position Updater ──────────────────────────────────────────────────────
+  // ── Position Updater ──────────────────────────────────────────────────
   function updateCard(ci) {
     const info = cardInfos[ci];
     const { cardEl, xOffset, yDrop, angle, slotCenterX } = info;
-    const isEjected = ci < ejectedCount;
+    const isEjected          = ci < ejectedCount;
     const isCurrentlyEjecting = phase === 'ejecting' && ci === ejectedCount;
     const isHov = info.isHovered && phase === 'ready';
     const isSel = info.isSelected;
+    const isTech = info.card.cardType === 'tech';
 
     let tx, ty, rot, opacity, scale, transition;
     if (!isEjected && !isCurrentlyEjecting) {
@@ -178,36 +248,36 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
     }
 
     cardEl.style.transition = transition;
-    cardEl.style.transform = `translateX(${tx}px) translateY(${ty}px) rotate(${rot}deg) scale(${scale})`;
-    cardEl.style.opacity = opacity;
-    cardEl.style.zIndex = isHov || isSel ? 50 : isCurrentlyEjecting ? 30 : ci;
-    cardEl.style.cursor = phase === 'ready' && !info.card.isPurged ? 'pointer' : 'default';
+    cardEl.style.transform  = `translateX(${tx}px) translateY(${ty}px) rotate(${rot}deg) scale(${scale})`;
+    cardEl.style.opacity    = opacity;
+    cardEl.style.zIndex     = isHov || isSel ? 50 : isCurrentlyEjecting ? 30 : ci;
+    cardEl.style.cursor     = isTech && phase === 'ready' && !info.card.isPurged ? 'pointer' : 'default';
 
     const inner = cardEl.querySelector('.gd-card-inner');
     if (inner) {
       const e = info.e;
-      if (isSel) {
+      if (isSel && isTech) {
         inner.style.borderColor = e.bg;
-        inner.style.boxShadow = `0 0 18px ${e.glow}66, 0 8px 24px rgba(0,0,0,0.7)`;
-        inner.style.background = `linear-gradient(160deg,${e.bg}55,#1a0f0a)`;
-      } else if (isHov) {
+        inner.style.boxShadow   = `0 0 18px ${e.glow}66, 0 8px 24px rgba(0,0,0,0.7)`;
+        inner.style.background  = `linear-gradient(160deg,${e.bg}55,#1a0f0a)`;
+      } else if (isHov && isTech) {
         inner.style.borderColor = `${e.bg}88`;
-        inner.style.boxShadow = `0 4px 20px rgba(0,0,0,0.5)`;
-        inner.style.background = `linear-gradient(160deg,${e.bg}33,#1a0f0a)`;
+        inner.style.boxShadow   = `0 4px 20px rgba(0,0,0,0.5)`;
+        inner.style.background  = `linear-gradient(160deg,${e.bg}33,#1a0f0a)`;
       } else {
         inner.style.borderColor = '#4a3728';
-        inner.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4)';
-        inner.style.background = '#1a0f0a';
+        inner.style.boxShadow   = '0 2px 8px rgba(0,0,0,0.4)';
+        inner.style.background  = '#1a0f0a';
       }
     }
   }
 
-  // ── Slot State ────────────────────────────────────────────────────────────
+  // ── Slot State ────────────────────────────────────────────────────────
   function ejectSlot(ci) {
     const { slot, dot, railL, railR } = slotEls[ci];
-    slot.style.background = 'rgba(0,0,0,0.4)';
+    slot.style.background  = 'rgba(0,0,0,0.4)';
     slot.style.borderColor = 'rgba(255,255,255,0.06)';
-    dot.style.display = 'none';
+    dot.style.display      = 'none';
     railL.style.background = 'rgba(255,255,255,0.04)';
     railR.style.background = 'rgba(255,255,255,0.04)';
     const empty = document.createElement('div');
@@ -215,7 +285,7 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
     slot.appendChild(empty);
   }
 
-  // ── Ejection Sequence ─────────────────────────────────────────────────────
+  // ── Ejection Sequence ─────────────────────────────────────────────────
   function ejectStep() {
     if (ejectedCount >= count) {
       ejectionTimer = setTimeout(() => {
@@ -239,7 +309,7 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
     ejectStep();
   }
 
-  // ── Hover / Click ─────────────────────────────────────────────────────────
+  // ── Hover / Click ─────────────────────────────────────────────────────
   cardInfos.forEach((info, ci) => {
     info.cardEl.addEventListener('mouseenter', () => {
       if (phase !== 'ready') return;
@@ -252,7 +322,7 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
       updateCard(ci);
     });
     info.cardEl.addEventListener('click', () => {
-      if (phase !== 'ready' || info.card.isPurged) return;
+      if (phase !== 'ready' || info.card.isPurged || info.card.cardType !== 'tech') return;
       cardInfos.forEach(c => { c.isSelected = false; });
       info.isSelected = true;
       cardInfos.forEach((_, idx) => updateCard(idx));
@@ -260,7 +330,7 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
     });
   });
 
-  // ── Start ─────────────────────────────────────────────────────────────────
+  // ── Start ─────────────────────────────────────────────────────────────
   let startTimer = null;
   if (mode === 'attack') {
     startTimer = setTimeout(startEjection, 300);

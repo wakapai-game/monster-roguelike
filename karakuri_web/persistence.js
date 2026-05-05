@@ -17,6 +17,7 @@ function serializeRoster(roster) {
 }
 
 export function saveGame(appState) {
+  if (appState.isTestMode) return false;
   const data = { version: 1, savedAt: new Date().toISOString() };
   for (const key of SERIALIZABLE_FIELDS) {
     if (key === 'monsterIdCounter') {

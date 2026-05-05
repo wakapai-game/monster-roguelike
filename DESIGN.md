@@ -235,6 +235,87 @@ HELP を閉じると元の画面に戻ります（オーバーレイなので画
 
 ---
 
+---
+
+## 開発技術リファレンス
+
+### ファイルマップ（変更時に読むファイル）
+
+| 変更内容 | 読むファイル |
+|---------|------------|
+| UI レイアウト / スタイル | `karakuri_web/styles.css` |
+| 画面構造 / HTML | `karakuri_web/index.html` |
+| 画面遷移・ゲームフロー | `karakuri_web/app.js` |
+| バトルロジック（ダメージ計算・ATB） | `karakuri_web/game.js` |
+| バトルUI（フェーズ表示・トースト） | `karakuri_web/ui/battle.js` |
+| インベントリ・パーティ画面 | `karakuri_web/ui/inventory.js` |
+| マップ描画 | `karakuri_web/ui/map-render.js` |
+| DOM要素参照・画面切替 | `karakuri_web/ui/dom.js` |
+| モンスター/スキル/アイテムデータ | `karakuri_web/data.js` |
+| グローバル状態 | `karakuri_web/state.js` |
+| セーブ/ロード | `karakuri_web/persistence.js` |
+
+### 主要クラス・関数の場所
+
+**game.js**
+- `Monster` クラス: `feed_count`（えさ回数最大10回）、`getSizeLabel()`（SS/S/M/L/LL）、`getIntelligenceLevel()`（Lv.1〜5）
+- `Timeline` クラス: ATB制御・交代
+- `BattleEngine` クラス: 攻撃実行・属性相性
+
+**ui/battle.js**
+- `showAttackPhase(monster)`: 攻撃フェーズUI
+- `showDefensePhase(target, attacker, skillId)`: 防御フェーズUI
+- `setupSwapButton(...)`: 交代ボタン設定
+- `resumeLoop()`: バトルループ（100msインターバル）
+- `updatePartsDeck(monster, mode)`: ギアハンドデッキ更新（TECH/BODY/CORE統合）
+
+**app.js**
+- `confirmBattleSetup()`: バトル開始・敵生成
+- `startStage(stageNum, floors)`: ステージ開始
+- `generateRosterFromEgg(type)`: 卵からモンスター生成
+
+### バトル画面HTML構造
+
+```
+#screen-battle (flex column)
+  ├── .battle-arena (CSS Grid: 3fr 4fr 3fr)
+  │     ├── .p1-side / .center-panel / .p2-side / #action-menu
+  └── #parts-deck (外側、フルwidth)
+        ├── #parts-deck-tech-row → gd-wrapper → ギアハンドデッキ
+        └── #parts-deck-bottom → #parts-deck-stat-opt / #parts-deck-actions
+```
+
+### ギアハンドデッキ（GearHandDeck）CSS構造
+
+```
+gd-wrapper (position:relative, height: slotRow のみ = 52px)
+  ├── gd-fan-layer (position:absolute, bottom:12px, z-index:10)
+  │    カードが上方向にはみ出してバトルアリーナ上に浮かぶ
+  └── gd-slot-row (position:relative, height:52px, in-flow)
+```
+
+### CSSレイアウト原則（ノースクロール設計）
+
+- `html, body`: `height: 100%; overflow: hidden`
+- `#app-container`: `height: 100dvh; overflow: hidden`
+- `.screen:not(.hide)`: `flex: 1; min-height: 0`
+- `#screen-battle`: `overflow: hidden`（gd-fan-layerはz-index:10でarena上に表示）
+
+### メディアクエリ
+
+1. `(max-width: 900px)`: タブレット
+2. `(max-width: 600px) and (orientation: portrait)`: スマホ縦向き（バトル2列）
+3. `(orientation: landscape) and (max-height: 500px)`: スマホ横向き
+
+### 画面ID一覧
+
+メインフロー: `screen-start` → `screen-presentation` → `screen-story` → `screen-starter-event` → `screen-tutorial-select` → `screen-egg` → `screen-hub` → `screen-map` → `screen-selection` → `screen-battle` → `screen-reward`
+
+オーバーレイ: `screen-encyclopedia`（図鑑）、`screen-help`（ヘルプ）
+サブ画面: `screen-party`（2ペイン育成）・`screen-inventory`（持ち物確認のみ）・`screen-sound-test`
+
+---
+
 ## 🔹 マップシステム
 
 `MapGenerator` クラスが各ステージのノードツリーをランダム生成します。

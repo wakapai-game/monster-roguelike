@@ -229,8 +229,8 @@ const STAT_ICON = {
 export function updatePartsDeck(monster, mode = 'idle') {
   const techRow    = document.getElementById('parts-deck-tech-row');
   const statOptRow = document.getElementById('parts-deck-stat-opt');
-  if (!techRow || !statOptRow) return;
-  statOptRow.innerHTML = '';
+  if (!techRow) return;
+  if (statOptRow) statOptRow.innerHTML = '';
 
   if (!monster) {
     if (techRow._gdCleanup) { techRow._gdCleanup(); techRow._gdCleanup = null; }
@@ -238,12 +238,13 @@ export function updatePartsDeck(monster, mode = 'idle') {
     return;
   }
 
-  // ── TECH カード（GearHandDeck animated） ──
-  const techCards = [];
+  const allCards = [];
+
+  // ── TECH cards (4 slots) ──
   for (let i = 0; i < 4; i++) {
     const partId = monster.tech_parts[i];
     if (!partId) continue;
-    const skill    = findTechPart(partId);
+    const skill = findTechPart(partId);
     if (!skill) continue;
     const isPurged = !!monster.purged_tech.has(partId);
 
@@ -257,7 +258,8 @@ export function updatePartsDeck(monster, mode = 'idle') {
       }
     }
 
-    techCards.push({
+    allCards.push({
+      cardType: 'tech',
       id:       partId,
       name:     skill.name,
       elem:     skill.element || 'none',
@@ -268,54 +270,51 @@ export function updatePartsDeck(monster, mode = 'idle') {
     });
   }
 
-  renderGearDeck(techRow, techCards, mode, (partId) => {
+  // ── BODY cards (5 slots) ──
+  for (let i = 0; i < 5; i++) {
+    const partId = monster.stat_parts[i];
+    if (!partId) continue;
+    const part = findStatPart(partId);
+    if (!part) continue;
+    const isPurged = !!monster.purged_stats.has(partId);
+    const primaryStat = Object.keys(part.bonus || {})[0] || 'def';
+
+    allCards.push({
+      cardType:    'body',
+      id:          partId,
+      name:        part.name,
+      primaryStat,
+      bonus:       part.bonus   || {},
+      penalty:     part.penalty || {},
+      desc:        part.description || '',
+      isPurged,
+      affinity:    null,
+    });
+  }
+
+  // ── CORE card (1 slot) ──
+  {
+    const partId = monster.option_part;
+    if (partId) {
+      const part     = findOptionPart(partId);
+      const isPurged = !!monster.purged_option;
+      allCards.push({
+        cardType:   'core',
+        id:         partId,
+        name:       part?.name || partId,
+        effectType: part?.effect?.type || '',
+        desc:       part?.description || '',
+        isPurged,
+        affinity:   null,
+      });
+    }
+  }
+
+  renderGearDeck(techRow, allCards, mode, (partId) => {
     actionMenu.classList.add('hide');
     updatePartsDeck(monster, 'idle');
     executeAction(1, monster, appState.timeline.p2_active, partId);
   });
-
-  // ── STAT カード（小・情報表示） ──
-  for (let i = 0; i < 5; i++) {
-    const partId   = monster.stat_parts[i];
-    const card     = document.createElement('div');
-    const isPurged = partId && monster.purged_stats.has(partId);
-
-    if (!partId) {
-      card.className = 'part-card-small slot-empty';
-      card.innerHTML = '—';
-    } else {
-      const part    = findStatPart(partId);
-      const bonuses = Object.entries(part?.bonus || {});
-      const mainStat = bonuses[0];
-      const icon = mainStat ? (STAT_ICON[mainStat[0]] || '📦') : '📦';
-      const tipLines = [part?.name || partId];
-      if (bonuses.length) tipLines.push('▲ ' + bonuses.map(([k,v]) => `${k}+${v}`).join(', '));
-      const penalties = Object.entries(part?.penalty || {});
-      if (penalties.length) tipLines.push('▼ ' + penalties.map(([k,v]) => `${k}${v}`).join(', '));
-      card.className = `part-card-small stat-card${isPurged ? ' purged' : ''}`;
-      card.innerHTML = icon;
-      card.dataset.tooltip = tipLines.join('\n');
-    }
-    statOptRow.appendChild(card);
-  }
-
-  // ── OPT カード（小・情報表示） ──
-  {
-    const partId    = monster.option_part;
-    const card      = document.createElement('div');
-    const isPurged  = monster.purged_option;
-    if (!partId) {
-      card.className = 'part-card-small slot-empty';
-      card.innerHTML = '—';
-    } else {
-      const part = findOptionPart(partId);
-      const icon = part?.effect?.type === 'regen_hp' ? '💚' : part?.effect?.type === 'regen_en' ? '🔋' : '✦';
-      card.className = `part-card-small option-card${isPurged ? ' purged' : ''}`;
-      card.innerHTML = icon;
-      card.dataset.tooltip = (part?.name || partId) + (part?.description ? '\n' + part.description : '');
-    }
-    statOptRow.appendChild(card);
-  }
 }
 
 function renderP1Reserves() {
@@ -529,7 +528,7 @@ btnTabItems.onclick = () => {
     if (isTutorialActive()) showTutorialStep('item-use', null);
 };
 
-function _selectEnemySkill(attacker, defender) {
+export function selectEnemySkill(attacker, defender, engine = appState.engine) {
   const skills = attacker.skills;
   if (!skills || skills.length === 0) return null;
 
@@ -538,26 +537,28 @@ function _selectEnemySkill(attacker, defender) {
   // HP30%以下: 回復・防御技を優先
   if (hpRatio < 0.3) {
     const healSkill = skills.find(id => {
-      const s = appState.engine.getSkill(id);
-      return s && (s.category === 'defense' || s.effects?.some(e => e.type === 'recover_st_direct' || e.type === 'recover_hp'));
+      const s = engine.getSkill(id);
+      return s && (s.category === 'defense' || s.effects?.some(e =>
+        e.type === 'recover_st_direct' || e.type === 'recover_hp' || e.type === 'recover_en_direct'
+      ));
     });
     if (healSkill) return healSkill;
   }
 
   // 攻撃スキルの中からバツグン優先・バフ次点・ランダムフォールバック
   const attackSkills = skills.filter(id => {
-    const s = appState.engine.getSkill(id);
+    const s = engine.getSkill(id);
     return s && (s.category === 'attack' || s.category === 'trap');
   });
   const buffSkills = skills.filter(id => {
-    const s = appState.engine.getSkill(id);
+    const s = engine.getSkill(id);
     return s && s.category === 'support';
   });
 
   // バツグン属性スキルを探す
   const weaknessSkill = attackSkills.find(id => {
-    const s = appState.engine.getSkill(id);
-    const aff = appState.engine.calcAffinity(s.element || 'none', defender);
+    const s = engine.getSkill(id);
+    const aff = engine.calcAffinity(s.element || 'none', defender);
     return aff > 1.0;
   });
   if (weaknessSkill) return weaknessSkill;
@@ -570,6 +571,10 @@ function _selectEnemySkill(attacker, defender) {
   // 攻撃スキルからランダム
   if (attackSkills.length > 0) return attackSkills[Math.floor(Math.random() * attackSkills.length)];
   return skills[Math.floor(Math.random() * skills.length)];
+}
+
+function _selectEnemySkill(attacker, defender) {
+  return selectEnemySkill(attacker, defender, appState.engine);
 }
 
 export function showAttackPhase(monster) {
@@ -865,6 +870,11 @@ export function executeAction(playerNum, attacker, defender, skillId) {
     appState._lastAttackPlayer = null;
   }
   const result = appState.engine.executeSkill(attacker, defender, skillId);
+  if (appState.isTestMode) {
+    document.dispatchEvent(new CustomEvent('battle-attack-resolved', {
+      detail: { result, attacker, defender, playerNum, defender_was_defending: defender.is_defending }
+    }));
+  }
   const targetSide = playerNum === 1 ? 'p2' : 'p1';
 
   // Determine skill element for effect
