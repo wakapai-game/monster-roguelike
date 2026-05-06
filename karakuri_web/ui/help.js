@@ -51,6 +51,35 @@ export function initHelp() {
 function buildBattleContent() {
   return `
 <div class="help-section">
+  <h3 class="help-h3">🖥️ バトル画面の見方</h3>
+  <div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:10px 12px; font-size:0.82rem; line-height:1.8;">
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; text-align:center; margin-bottom:8px;">
+      <div style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); border-radius:4px; padding:6px;">
+        <div style="color:#3b82f6; font-weight:bold; margin-bottom:4px;">← 左エリア</div>
+        <div style="color:#94a3b8; font-size:0.78rem;">自分のビルガマタ<br><span style="color:#ef4444;">HP</span>・<span style="color:#eab308;">EN</span>・<span style="color:#10b981;">ATB</span>バー<br>控えパーティ</div>
+      </div>
+      <div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); border-radius:4px; padding:6px;">
+        <div style="color:#10b981; font-weight:bold; margin-bottom:4px;">中央エリア</div>
+        <div style="color:#94a3b8; font-size:0.78rem;">ACTION QUEUE<br>（行動順表示）<br>バトルログ</div>
+      </div>
+      <div style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:4px; padding:6px;">
+        <div style="color:#ef4444; font-weight:bold; margin-bottom:4px;">右エリア →</div>
+        <div style="color:#94a3b8; font-size:0.78rem;">敵ジュウマ<br><span style="color:#ef4444;">HP</span>・<span style="color:#eab308;">EN</span>・<span style="color:#10b981;">ATB</span>バー<br>控え敵</div>
+      </div>
+    </div>
+    <div style="background:rgba(234,179,8,0.1); border:1px solid rgba(234,179,8,0.25); border-radius:4px; padding:6px; text-align:center;">
+      <span style="color:#eab308; font-weight:bold;">↓ 下部：ギアデッキ</span>
+      <span style="color:#94a3b8; font-size:0.78rem;">　ワザ・ボディ・コアの全ギアが並ぶ（操作方法は攻撃フェーズの項を参照）</span>
+    </div>
+  </div>
+  <ul class="help-list" style="margin-top:6px;">
+    <li><b style="color:#ef4444;">HP バー（赤）</b>：本体HP。ENが高いうちはHPへのダメージが抑えられる。ENが0になると全ダメージが直撃する</li>
+    <li><b style="color:#eab308;">EN バー（黄）</b>：防御壁の残量。0になるとパージ発生</li>
+    <li><b style="color:#10b981;">ATB ゲージ（緑）</b>：SPDで増加し100で行動。高いほど先に動ける</li>
+  </ul>
+</div>
+
+<div class="help-section">
   <h3 class="help-h3">⚙️ バトルの基本フロー</h3>
   <p class="help-p">バトルは <b>ATB（Active Time Battle）</b> 方式です。ビルガマタとジュウマの <b>スピード(SPD)</b> に応じてゲージが自動で溜まり、ゲージが 100 に達したときに行動します。</p>
   <p class="help-p">自分のビルガマタがゲージ満タン → <b>攻撃フェーズ</b>（ギアデッキからTECH技を選ぶ）<br>
@@ -77,6 +106,23 @@ function buildBattleContent() {
     <li><b>アイテム</b>（アイテムタブ）：バトルアイテムを使用</li>
     <li><b>交代</b>：控えのビルガマタに交代。交代後のビルガマタが攻撃を受ける</li>
   </ul>
+  <div style="margin-top:8px; background:rgba(0,0,0,0.25); border-radius:6px; padding:8px 12px;">
+    <div style="color:#94a3b8; font-size:0.78rem; margin-bottom:6px;">▼ アイテムタブで使えるアイテム一覧</div>
+    <div style="display:grid; gap:6px;">
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span style="color:#f87171; font-weight:bold; min-width:7em;">🔧 修理キット</span>
+        <span style="color:#94a3b8; font-size:0.82rem;">HPを <b style="color:#f87171;">500</b> 回復。HPが削られたときに使う</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span style="color:#facc15; font-weight:bold; min-width:7em;">⚡ エネルギー缶</span>
+        <span style="color:#94a3b8; font-size:0.82rem;">ENを <b style="color:#facc15;">50</b> 直接回復。パージ直前の緊急手段</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span style="color:#fb923c; font-weight:bold; min-width:7em;">💣 バクダン</span>
+        <span style="color:#94a3b8; font-size:0.82rem;">敵HPに <b style="color:#fb923c;">30</b> の防御無視ダメージ。ENを無視して直接削る</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="help-section">
@@ -214,8 +260,8 @@ function buildAffinityContent() {
 // ============================
 function buildSkillsContent() {
   const items = [
-    { name:'キズぐすり',       effect:'味方のHPを 50 回復。防御フェーズのアイテムタブから使用' },
-    { name:'エネルギードリンク',effect:'味方のENを 50 直接回復。パージ直前の緊急手段として有効' },
+    { name:'修理キット',   effect:'味方のHPを 500 回復。防御フェーズのアイテムタブから使用' },
+    { name:'エネルギー缶', effect:'味方のENを 50 直接回復。パージ直前の緊急手段として有効' },
     { name:'バクダン',          effect:'敵のHPに 30 の防御無視ダメージ。ENを無視して直接削る' },
   ];
 
