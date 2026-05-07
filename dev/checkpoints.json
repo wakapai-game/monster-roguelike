@@ -1,0 +1,17 @@
+[
+  {
+    "date": "2026-05-06",
+    "label": "CLAUDE.md圧縮（42→30行）",
+    "type": "efficiency"
+  },
+  {
+    "date": "2026-05-08",
+    "label": "autoCompact導入・続きフック追加",
+    "type": "efficiency"
+  },
+  {
+    "date": "2026-05-08",
+    "label": "game-director圧縮（173→131行）・品質ゲート必須化",
+    "type": "quality"
+  }
+]
