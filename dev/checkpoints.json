@@ -13,5 +13,10 @@
     "date": "2026-05-08",
     "label": "game-director圧縮（173→131行）・品質ゲート必須化",
     "type": "quality"
+  },
+  {
+    "date": "2026-05-08",
+    "label": "PET v1.2: サブエージェント分析・タスク別比較ダッシュボード",
+    "type": "observability"
   }
 ]
