@@ -32,14 +32,17 @@ function _cardColor(card) {
 }
 
 function calcFanParams(count) {
-  const c = Math.max(1, count);
+  const c      = Math.max(1, count);
   const cardW  = Math.max(44, Math.round(70 - (c - 4) * 2.4));
-  const xStep  = Math.max(26, Math.round(52 - (c - 4) * 2.5));
+  const slotW  = Math.max(32, cardW - 6);
+  const slotGap = Math.max(2, Math.round(52 - (c - 4) * 2.5) - slotW + 2);
   const spread = Math.min(42, 16 + c * 2);
   const baseY  = Math.min(20, 10 + c * 1.0);
   const cardH  = Math.round(cardW * 1.38);
-  const contW  = Math.min(c * xStep + cardW, 960);
-  return { cardW, cardH, xStep, spread, baseY, contW };
+  // fanInner幅はスロット総幅＋カード半幅マージンで決まる（slotとcard位置を一致させる）
+  const totalSlotsW = c * slotW + (c - 1) * slotGap;
+  const contW  = Math.min(totalSlotsW + cardW, 960);
+  return { cardW, cardH, slotW, slotGap, spread, baseY, contW, totalSlotsW };
 }
 
 /**
@@ -59,9 +62,7 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
 
   const count = Math.min(cards.length, 10);
   const validCards = cards.slice(0, count);
-  const { cardW, cardH, xStep, spread, baseY, contW } = calcFanParams(count);
-  const slotW   = Math.max(32, cardW - 6);
-  const slotGap = Math.max(3, xStep - slotW + 3);
+  const { cardW, cardH, slotW, slotGap, spread, baseY, contW, totalSlotsW } = calcFanParams(count);
 
   let ejectedCount = 0;
   let phase = 'idle';
@@ -84,7 +85,7 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
   fanInner.style.height = `${cardH + 26}px`;
   fanLayer.appendChild(fanInner);
 
-  // ── Slot Row (absolute, bottom-anchored within wrapper) ──────────────
+  // ── Slot Row (in-flow, 52px height) ──────────────────────────────────
   const slotRow = document.createElement('div');
   slotRow.className = 'gd-slot-row';
   slotRow.style.gap = `${slotGap}px`;
@@ -126,14 +127,13 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
 
   // ── Card Elements ─────────────────────────────────────────────────────
   const mid = (count - 1) / 2;
-  const totalSlotsW = count * slotW + (count - 1) * slotGap;
 
   const cardInfos = validCards.map((card, i) => {
     const offset = i - mid;
     const norm   = mid > 0 ? offset / mid : 0;
     const angle  = norm * (spread / 2);
     const yDrop  = Math.abs(norm) * baseY;
-    const xOffset = offset * xStep;
+    // カードX位置はスロット中心と完全一致させる（xOffsetをslotCenterXに統一）
     const slotCenterX = -totalSlotsW / 2 + slotW / 2 + i * (slotW + slotGap);
     const e = _cardColor(card);
 
@@ -220,14 +220,14 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
       </div>`;
 
     fanInner.appendChild(cardEl);
-    return { cardEl, xOffset, yDrop, angle, slotCenterX, e, card, isHovered: false, isSelected: false };
+    return { cardEl, slotCenterX, yDrop, angle, e, card, isHovered: false, isSelected: false };
   });
 
   // ── Position Updater ──────────────────────────────────────────────────
   function updateCard(ci) {
     const info = cardInfos[ci];
-    const { cardEl, xOffset, yDrop, angle, slotCenterX } = info;
-    const isEjected          = ci < ejectedCount;
+    const { cardEl, slotCenterX, yDrop, angle } = info;
+    const isEjected           = ci < ejectedCount;
     const isCurrentlyEjecting = phase === 'ejecting' && ci === ejectedCount;
     const isHov = info.isHovered && phase === 'ready';
     const isSel = info.isSelected;
@@ -235,14 +235,17 @@ export function renderGearDeck(container, cards, mode, onCardClick) {
 
     let tx, ty, rot, opacity, scale, transition;
     if (!isEjected && !isCurrentlyEjecting) {
+      // 隠れている状態: スロット真上に整列（slotCenterXで位置合わせ）
       tx = slotCenterX; ty = cardH + 20; rot = 0; opacity = 0; scale = 0.7;
       transition = 'none';
     } else if (isCurrentlyEjecting) {
-      tx = xOffset; ty = isHov || isSel ? -22 : yDrop;
+      // エジェクション中: スロット中心から飛び出す（中央カードも必ず10px上げる）
+      tx = slotCenterX; ty = isHov || isSel ? -(yDrop + 22) : -(yDrop + 10);
       rot = isHov || isSel ? 0 : angle; opacity = 1; scale = 1.05;
       transition = 'transform 0.28s cubic-bezier(0.1,1.4,0.3,1), opacity 0.12s ease';
     } else {
-      tx = xOffset; ty = isHov || isSel ? -22 : yDrop;
+      // ready状態: スロット中心から扇形に展開（中央カードも必ず10px上げる）
+      tx = slotCenterX; ty = isHov || isSel ? -(yDrop + 22) : -(yDrop + 10);
       rot = isHov || isSel ? 0 : angle; opacity = 1; scale = 1;
       transition = 'transform 0.16s cubic-bezier(0.2,0.8,0.3,1)';
     }
