@@ -453,7 +453,7 @@ POST_BATTLE（VICTORY/DEFEAT演出）
 
 **SYNTHESIS_RECIPES**: 18種のレシピ。素材組み合わせでワザ/ボディ/コアギアを合成。
 
-**BATTLE_ITEMS_DATA**: 3種（修理キット HP+500・エネルギー缶 EN+50・バクダン 30ダメージ）
+**BATTLE_ITEMS_DATA**: 4種（修理キット HP+500・エネルギー缶 EN+50・バクダン 30ダメージ・ビルガバッテリー EN全回復）
 
 ---
 

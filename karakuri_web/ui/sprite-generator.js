@@ -863,6 +863,24 @@ export function generateItemIcon(canvas, itemId, itemType, element) {
         addOutline(buf, '#0f172a', W, H);
         break;
       }
+      case 'bitem_bilga_battery': {
+        // 黄色い電池パック
+        fillRect(buf, 8, 5, 8, 14, '#ca8a04', W, H);  // 胴体
+        fillRect(buf, 9, 6, 6, 12, '#eab308', W, H);  // 胴体内（明るい面）
+        fillRect(buf, 10, 4, 4, 2, '#a16207', W, H);  // プラス端子
+        fillRect(buf, 10, 19, 4, 2, '#a16207', W, H); // マイナス端子
+        // ハイライト
+        fillRect(buf, 9, 6, 1, 10, '#fef08a', W, H);
+        // ロゴ（稲妻マーク）
+        setPixel(buf, 13, 9, '#0f172a', W, H);
+        setPixel(buf, 12, 10, '#0f172a', W, H);
+        setPixel(buf, 13, 10, '#0f172a', W, H);
+        setPixel(buf, 12, 11, '#0f172a', W, H);
+        setPixel(buf, 11, 12, '#0f172a', W, H);
+        setPixel(buf, 12, 12, '#0f172a', W, H);
+        addOutline(buf, '#78350f', W, H);
+        break;
+      }
       default: {
         // 汎用の箱
         fillRect(buf, 6, 7, 12, 12, '#92400e', W, H);

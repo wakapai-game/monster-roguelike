@@ -540,6 +540,24 @@ export class KarakuriEngine extends BattleEngineBase {
       }
     }
 
+    // アイテム（effect 単体プロパティ）の処理
+    if (skill.effect) {
+      const eff = skill.effect;
+      if (eff.type === 'recover_en_full') {
+        attacker.current_en = attacker.stats.max_en;
+        attacker.current_st = attacker.current_en;
+      } else if (eff.type === 'recover_en_direct' || eff.type === 'recover_st_direct') {
+        attacker.current_en = Math.min(attacker.stats.max_en, attacker.current_en + (eff.value || 0));
+        attacker.current_st = attacker.current_en;
+      } else if (eff.type === 'recover_hp') {
+        defender.current_hp = Math.min(defender.stats.hp, defender.current_hp + (eff.value || 0));
+      } else if (eff.type === 'damage_hp_direct') {
+        const d = Math.floor((eff.value || 0) * (defender.is_defending ? 0.5 : 1));
+        defender.current_hp = Math.max(0, defender.current_hp - d);
+        result.hp_damage += d;
+      }
+    }
+
     const opt = attacker.getActiveOption?.();
     if (opt?.effect?.type === 'on_hit_en_recover' && result.hp_damage > 0) {
       attacker.current_en = Math.min(attacker.stats.max_en, attacker.current_en + opt.effect.value);

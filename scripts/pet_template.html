@@ -12,7 +12,7 @@
   --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;
   --border:#30363d;--border2:#21262d;
   --text:#e6edf3;--muted:#7d8590;--muted2:#484f58;
-  --blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;
+  --blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--orange:#f59e0b;
 }}
 body{{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;padding:28px;max-width:820px;margin:0 auto}}
 .mono{{font-family:'JetBrains Mono',monospace}}
@@ -38,6 +38,7 @@ details[open] .chevron{{transform:rotate(90deg)}}
 .guide-item ul{{padding-left:14px}}
 code{{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);background:var(--surface);padding:1px 5px;border-radius:3px}}
 .divider{{height:1px;background:var(--border2);margin:16px 0}}
+th{{font-weight:500}}
 </style>
 </head>
 <body>
@@ -46,7 +47,7 @@ code{{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);ba
 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px">
   <div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span class="badge">PET v1.0</span>
+      <span class="badge">PET v1.2</span>
       <span style="font-size:11px;color:var(--muted)">Project Evolution Tracker</span>
     </div>
     <h1 style="font-size:22px;font-weight:600;color:var(--text)">Monster Roguelike</h1>
@@ -103,7 +104,7 @@ code{{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);ba
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
       <div>
         <div class="chart-title">実質トークン推移</div>
-        <div class="chart-desc">▼ マーカー（施策日）の後に値が下がれば効果あり</div>
+        <div class="chart-desc">青: メインセッション　橙: サブエージェント合計　▼ 施策マーカー</div>
       </div>
       <span class="chart-unit">tokens / day</span>
     </div>
@@ -121,6 +122,30 @@ code{{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);ba
     <canvas id="chart2" height="70"></canvas>
   </div>
 
+</div>
+
+<!-- サブエージェント内訳（種別集計） -->
+<div class="card" style="margin-top:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div>
+      <div class="chart-title">サブエージェント内訳</div>
+      <div class="chart-desc">エージェント種別ごとの合計タスク数・ターン・トークン消費</div>
+    </div>
+    <div style="text-align:right">
+      <div class="kpi-label" style="margin-bottom:4px">7日合計</div>
+      <div class="mono" style="font-size:20px;font-weight:600;color:var(--orange)">{kpi_sa_eff}</div>
+    </div>
+  </div>
+  {sa_summary}
+</div>
+
+<!-- タスク別詳細（個別実行） -->
+<div class="card" style="margin-top:14px">
+  <div style="margin-bottom:14px">
+    <div class="chart-title">タスク別詳細</div>
+    <div class="chart-desc">実装・仕様変更ごとのトークン消費比較（直近20件）★ = 施策日</div>
+  </div>
+  {sa_table}
 </div>
 
 <!-- ガイド（折りたたみ） -->
@@ -160,7 +185,6 @@ code{{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);ba
 <script>
 Chart.register(window['chartjs-plugin-annotation']);
 
-// キャッシュ効率の色分け
 const cr = {kpi_cache};
 document.getElementById('cache-val').style.color = cr>=90?'var(--green)':cr>=70?'var(--yellow)':'var(--red)';
 document.getElementById('cache-status').innerHTML = cr>=90
@@ -178,7 +202,10 @@ const pl = {{annotation:{{annotations}},legend:{{labels:{{color:'#7d8590',font:{
 
 new Chart(document.getElementById('chart1'),{{
   type:'line',
-  data:{{labels,datasets:[{{label:'実質トークン',data:{eff},borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.07)',fill:true,tension:0.35,pointRadius:3,pointBackgroundColor:'#58a6ff',borderWidth:2}}]}},
+  data:{{labels,datasets:[
+    {{label:'メインセッション',data:{eff},borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.07)',fill:true,tension:0.35,pointRadius:3,pointBackgroundColor:'#58a6ff',borderWidth:2}},
+    {{label:'サブエージェント',data:{sa_eff},borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.07)',fill:true,tension:0.35,pointRadius:3,pointBackgroundColor:'#f59e0b',borderWidth:2}}
+  ]}},
   options:{{plugins:pl,scales:sc}}
 }});
 new Chart(document.getElementById('chart2'),{{

@@ -690,7 +690,7 @@ document.getElementById('btn-tutorial-intro-start').onclick = () => {
   initTutorial('full');
   // チュートリアルアイテムを1回だけ付与
   if (!appState.tutorialItemsGiven) {
-    appState.globalInventory.battleItems.push('bitem_hp_potion', 'bitem_hp_potion', 'bitem_en_potion');
+    appState.globalInventory.battleItems.push('bitem_hp_potion', 'bitem_hp_potion', 'bitem_en_potion', 'bitem_bilga_battery');
     appState.tutorialItemsGiven = true;
   }
   appState.isTutorialMap = true;

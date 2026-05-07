@@ -141,7 +141,8 @@ const SYNTHESIS_RECIPES = [
 const BATTLE_ITEMS_DATA = [
   { id: "bitem_hp_potion", name: "修理キット",   type: "item_battle", description: "ビルガマタのHPを500回復",   effect: { type: "recover_hp", value: 500 } },
   { id: "bitem_en_potion", name: "エネルギー缶", type: "item_battle", description: "ビルガマタのENを50回復",    effect: { type: "recover_en_direct", value: 50 } },
-  { id: "bitem_bomb",      name: "バクダン",      type: "item_battle", description: "敵に30の防御無視ダメージ",effect: { type: "damage_hp_direct", value: 30 } }
+  { id: "bitem_bomb",      name: "バクダン",      type: "item_battle", description: "敵に30の防御無視ダメージ",effect: { type: "damage_hp_direct", value: 30 } },
+  { id: "bitem_bilga_battery", name: "ビルガバッテリー", type: "item_battle", description: "ビルガマタ用の予備バッテリー。エネルギー切れで動けなくなったビルガマタに取り付けることで、再び動き出す。", effect: { type: "recover_en_full" } }
 ];
 
 // ─── クエストデータ ────────────────────────────────────────────────────
