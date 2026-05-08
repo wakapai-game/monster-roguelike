@@ -13,42 +13,42 @@ const AFFINITY = {
 
 // ─── ワザギア（スキル）定義 ───────────────────────────────────────────
 const TECH_PARTS = [
-  { id: "tp_strike",       name: "タイアタリ・ユニット",    element: "none",    category: "attack",  type: "physical", cost_en: 10, effects: [{ type: "damage_en", base_power: 50 }],   description: "基本物理攻撃ユニット。敵のENを削る。" },
-  { id: "tp_fireball",     name: "ファイアボール・ノズル",  element: "fire",    category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   description: "炎属性の魔法砲。弱点の敵に大ダメージ。" },
-  { id: "tp_water_gun",    name: "ウォーターガン・ポンプ",  element: "water",   category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   description: "水属性の高圧噴射。" },
-  { id: "tp_thunder_bolt", name: "サンダーボルト・コイル",  element: "thunder", category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   description: "雷属性の放電攻撃。" },
-  { id: "tp_smash",        name: "フルスイング・アーム",    element: "none",    category: "attack",  type: "physical", cost_en: 20, effects: [{ type: "damage_en", base_power: 120 }, { type: "delay_gauge", value: 20 }], description: "強力な一撃。次の行動が遅れる。" },
-  { id: "tp_pierce",       name: "貫通ニードル・ユニット",  element: "none",    category: "attack",  type: "pierce",   cost_en: 30, effects: [{ type: "damage_hp_direct", base_power: 20 }], description: "ENを無視してHPに直接20ダメージ。" },
-  { id: "tp_shield",       name: "シールド・ジェネレータ",  element: "none",    category: "defense", type: "buff",     cost_en: 15, effects: [{ type: "add_status", status: "buff_def_50" }], description: "DEFを高めるバフを付与。" },
-  { id: "tp_charge",       name: "エネルギー充填ユニット",  element: "none",    category: "defense", type: "heal",     cost_en: 10, effects: [{ type: "recover_en_direct", value: 40 }], description: "自分のENを40回復。" },
-  { id: "tp_power_up",     name: "出力ブースター",          element: "none",    category: "support", type: "buff",     cost_en: 15, effects: [{ type: "buff_stat", stat: "atk", mult: 1.5, target: "self", turns: 2 }], description: "ATKを1.5倍に強化（2ターン）。" },
-  { id: "tp_guard_up",     name: "防御強化ユニット",        element: "none",    category: "support", type: "buff",     cost_en: 15, effects: [{ type: "buff_stat", stat: "def", mult: 1.5, target: "self", turns: 2 }], description: "DEFを1.5倍に強化（2ターン）。" },
-  { id: "tp_weaken",       name: "弱体化ビーム",            element: "none",    category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "buff_stat", stat: "def", mult: 0.6, target: "enemy", turns: 2 }], description: "敵のDEFを0.6倍に低下（2ターン）。" },
-  { id: "tp_slow",         name: "スロウ・パルス",          element: "none",    category: "attack",  type: "magic",    cost_en: 20, effects: [{ type: "delay_gauge", value: 50 }, { type: "buff_stat", stat: "atk", mult: 0.7, target: "enemy", turns: 2 }], description: "敵の行動ゲージを50削り、ATKを低下。" },
-  { id: "tp_ice_shot",     name: "アイスショット・ノズル",  element: "ice",     category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   description: "氷属性の冷凍砲。" },
-  { id: "tp_wind_blade",   name: "ウィンドブレード・ファン",element: "wind",    category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   description: "風属性の回転刃。" },
+  { id: "tp_strike",       name: "タイアタリ・ユニット",    element: "none",    category: "attack",  type: "physical", cost_en: 10, effects: [{ type: "damage_en", base_power: 50 }],   en_purge_recovery: 25, description: "基本物理攻撃ユニット。敵のENを削る。" },
+  { id: "tp_fireball",     name: "ファイアボール・ノズル",  element: "fire",    category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   en_purge_recovery: 30, description: "炎属性の魔法砲。弱点の敵に大ダメージ。" },
+  { id: "tp_water_gun",    name: "ウォーターガン・ポンプ",  element: "water",   category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   en_purge_recovery: 30, description: "水属性の高圧噴射。" },
+  { id: "tp_thunder_bolt", name: "サンダーボルト・コイル",  element: "thunder", category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   en_purge_recovery: 30, description: "雷属性の放電攻撃。" },
+  { id: "tp_smash",        name: "フルスイング・アーム",    element: "none",    category: "attack",  type: "physical", cost_en: 20, effects: [{ type: "damage_en", base_power: 120 }, { type: "delay_gauge", value: 20 }], en_purge_recovery: 35, description: "強力な一撃。次の行動が遅れる。" },
+  { id: "tp_pierce",       name: "貫通ニードル・ユニット",  element: "none",    category: "attack",  type: "pierce",   cost_en: 30, effects: [{ type: "damage_hp_direct", base_power: 20 }], en_purge_recovery: 35, description: "ENを無視してHPに直接20ダメージ。" },
+  { id: "tp_shield",       name: "シールド・ジェネレータ",  element: "none",    category: "defense", type: "buff",     cost_en: 15, effects: [{ type: "add_status", status: "buff_def_50" }], en_purge_recovery: 25, description: "DEFを高めるバフを付与。" },
+  { id: "tp_charge",       name: "エネルギー充填ユニット",  element: "none",    category: "defense", type: "heal",     cost_en: 10, effects: [{ type: "recover_en_direct", value: 40 }], en_purge_recovery: 25, description: "自分のENを40回復。" },
+  { id: "tp_power_up",     name: "出力ブースター",          element: "none",    category: "support", type: "buff",     cost_en: 15, effects: [{ type: "buff_stat", stat: "atk", mult: 1.5, target: "self", turns: 2 }], en_purge_recovery: 30, description: "ATKを1.5倍に強化（2ターン）。" },
+  { id: "tp_guard_up",     name: "防御強化ユニット",        element: "none",    category: "support", type: "buff",     cost_en: 15, effects: [{ type: "buff_stat", stat: "def", mult: 1.5, target: "self", turns: 2 }], en_purge_recovery: 30, description: "DEFを1.5倍に強化（2ターン）。" },
+  { id: "tp_weaken",       name: "弱体化ビーム",            element: "none",    category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "buff_stat", stat: "def", mult: 0.6, target: "enemy", turns: 2 }], en_purge_recovery: 30, description: "敵のDEFを0.6倍に低下（2ターン）。" },
+  { id: "tp_slow",         name: "スロウ・パルス",          element: "none",    category: "attack",  type: "magic",    cost_en: 20, effects: [{ type: "delay_gauge", value: 50 }, { type: "buff_stat", stat: "atk", mult: 0.7, target: "enemy", turns: 2 }], en_purge_recovery: 30, description: "敵の行動ゲージを50削り、ATKを低下。" },
+  { id: "tp_ice_shot",     name: "アイスショット・ノズル",  element: "ice",     category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   en_purge_recovery: 30, description: "氷属性の冷凍砲。" },
+  { id: "tp_wind_blade",   name: "ウィンドブレード・ファン",element: "wind",    category: "attack",  type: "magic",    cost_en: 15, effects: [{ type: "damage_en", base_power: 80 }],   en_purge_recovery: 30, description: "風属性の回転刃。" },
 ];
 
 // ─── ボディギア（ステータス変動・デメリットあり）───────────────────────
 const STAT_PARTS = [
-  { id: "sp_heavy_armor",   name: "ヘビーアーマー",    description: "HP+500 DEF+20 SPD-10",  bonus: { hp: 500, def: 20 },      penalty: { spd: -10 } },
-  { id: "sp_power_core",    name: "パワーコア",        description: "ATK+20 DEF-10",          bonus: { atk: 20 },               penalty: { def: -10 } },
-  { id: "sp_speed_booster", name: "スピードブースター",description: "SPD+15 HP-200",           bonus: { spd: 15 },               penalty: { hp: -200 } },
-  { id: "sp_en_tank",       name: "ENタンク",          description: "EN+50 SPD-5",             bonus: { max_en: 50 },            penalty: { spd: -5 } },
-  { id: "sp_mag_amp",       name: "魔力増幅器",        description: "MAG+20 HP-150",           bonus: { mag: 20 },               penalty: { hp: -150 } },
-  { id: "sp_reactive_shield",name: "リアクティブシールド",description: "DEF+15 ATK-10",        bonus: { def: 15 },               penalty: { atk: -10 } },
-  { id: "sp_overclocked",   name: "オーバークロック",  description: "SPD+20 ATK+10 DEF-20",   bonus: { spd: 20, atk: 10 },      penalty: { def: -20 } },
-  { id: "sp_bulk_frame",    name: "バルクフレーム",    description: "HP+300 DEF+10 SPD-8",    bonus: { hp: 300, def: 10 },      penalty: { spd: -8 } },
+  { id: "sp_heavy_armor",   name: "ヘビーアーマー",    en_purge_recovery: 40, description: "HP+500 DEF+20 SPD-10",  bonus: { hp: 500, def: 20 },      penalty: { spd: -10 } },
+  { id: "sp_power_core",    name: "パワーコア",        en_purge_recovery: 35, description: "ATK+20 DEF-10",          bonus: { atk: 20 },               penalty: { def: -10 } },
+  { id: "sp_speed_booster", name: "スピードブースター",en_purge_recovery: 30, description: "SPD+15 HP-200",           bonus: { spd: 15 },               penalty: { hp: -200 } },
+  { id: "sp_en_tank",       name: "ENタンク",          en_purge_recovery: 35, description: "EN+50 SPD-5",             bonus: { max_en: 50 },            penalty: { spd: -5 } },
+  { id: "sp_mag_amp",       name: "魔力増幅器",        en_purge_recovery: 35, description: "MAG+20 HP-150",           bonus: { mag: 20 },               penalty: { hp: -150 } },
+  { id: "sp_reactive_shield",name: "リアクティブシールド",en_purge_recovery: 35, description: "DEF+15 ATK-10",        bonus: { def: 15 },               penalty: { atk: -10 } },
+  { id: "sp_overclocked",   name: "オーバークロック",  en_purge_recovery: 35, description: "SPD+20 ATK+10 DEF-20",   bonus: { spd: 20, atk: 10 },      penalty: { def: -20 } },
+  { id: "sp_bulk_frame",    name: "バルクフレーム",    en_purge_recovery: 40, description: "HP+300 DEF+10 SPD-8",    bonus: { hp: 300, def: 10 },      penalty: { spd: -8 } },
 ];
 
 // ─── コアギア（特殊パッシブ×1スロット）──────────────────────────
 const OPTION_PARTS = [
-  { id: "op_auto_repair",  name: "自動修復ユニット",    description: "毎ターンHP+30回復",         effect: { type: "regen_hp", value: 30 } },
-  { id: "op_float",        name: "浮遊ブースター",      description: "地属性ダメージを無効",       effect: { type: "immune_element", element: "earth" } },
-  { id: "op_en_regen",     name: "EN自動充電",          description: "毎ターンEN+10回復",          effect: { type: "regen_en", value: 10 } },
-  { id: "op_purge_guard",  name: "パージガード",        description: "自動パージを1回無効",        effect: { type: "purge_guard" } },
-  { id: "op_berserker",    name: "バーサーカーモード",  description: "HP50%以下でATK+50%",         effect: { type: "low_hp_atk_boost", threshold: 0.5, mult: 1.5 } },
-  { id: "op_en_absorb",    name: "エネルギー吸収",      description: "攻撃命中時にEN+5回復",       effect: { type: "on_hit_en_recover", value: 5 } },
+  { id: "op_auto_repair",  name: "自動修復ユニット",    en_purge_recovery: 25, description: "毎ターンHP+30回復",         effect: { type: "regen_hp", value: 30 } },
+  { id: "op_float",        name: "浮遊ブースター",      en_purge_recovery: 20, description: "地属性ダメージを無効",       effect: { type: "immune_element", element: "earth" } },
+  { id: "op_en_regen",     name: "EN自動充電",          en_purge_recovery: 20, description: "毎ターンEN+10回復",          effect: { type: "regen_en", value: 10 } },
+  { id: "op_purge_guard",  name: "パージガード",        en_purge_recovery: 25, description: "自動パージを1回無効",        effect: { type: "purge_guard" } },
+  { id: "op_berserker",    name: "バーサーカーモード",  en_purge_recovery: 25, description: "HP50%以下でATK+50%",         effect: { type: "low_hp_atk_boost", threshold: 0.5, mult: 1.5 } },
+  { id: "op_en_absorb",    name: "エネルギー吸収",      en_purge_recovery: 20, description: "攻撃命中時にEN+5回復",       effect: { type: "on_hit_en_recover", value: 5 } },
 ];
 
 // ─── ビルガマタボディデータ（味方ユニット本体）──────────────────────────────

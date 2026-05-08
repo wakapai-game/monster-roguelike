@@ -11,6 +11,12 @@ HISTORY_FILE = ROOT / ".claude/metrics_history.json"
 CHECKPOINTS_FILE = ROOT / "dev/checkpoints.json"
 DASHBOARD_FILE = ROOT / "docs/metrics_dashboard.html"
 
+TASK_FILTER_FROM = "2026-05-08"
+
+DESCRIPTION_OVERRIDES = {
+    "EN turn-drain + purge mechanic implementation": "ENターン開始ドレイン＋パージ選択実装",
+}
+
 BADGE_CONFIG = {
     "game-director":    "#3fb950",
     "qa-tester":        "#f85149",
@@ -27,6 +33,52 @@ BADGE_CONFIG = {
     "general-purpose":  "#7d8590",
     "unknown":          "#484f58",
 }
+
+BADGE_LABEL = {
+    "game-director":    "ゲームDR",
+    "qa-tester":        "QA",
+    "logic-engineer":   "ロジック",
+    "data-engineer":    "データ",
+    "ui-engineer":      "UI",
+    "Explore":          "探索",
+    "Plan":             "プラン",
+    "balance-designer": "バランス",
+    "scenario-writer":  "シナリオ",
+    "level-designer":   "LV設計",
+    "uiux-designer":    "UIUX",
+    "teammate":         "チーム",
+    "general-purpose":  "汎用",
+    "unknown":          "不明",
+}
+
+SCALE_COLOR = {"S": "#3fb950", "M": "#58a6ff", "L": "#f59e0b", "XL": "#f85149"}
+
+
+def get_scale(turns):
+    t = int(turns) if turns else 0
+    if t <= 3:  return "S"
+    if t <= 8:  return "M"
+    if t <= 15: return "L"
+    return "XL"
+
+
+def build_scale_buttons():
+    defs = [("all", "全", "#7d8590"), ("S", "S", SCALE_COLOR["S"]),
+            ("M", "M", SCALE_COLOR["M"]), ("L", "L", SCALE_COLOR["L"]),
+            ("XL", "XL", SCALE_COLOR["XL"])]
+    parts = []
+    for sc, label, color in defs:
+        is_active = sc == "all"
+        bg = f"{color}33" if is_active else "transparent"
+        fg = color if is_active else "#7d8590"
+        border = f"{color}88" if is_active else "#30363d"
+        parts.append(
+            f'<button class="scale-btn" data-scale="{sc}" data-color="{color}" '
+            f'style="background:{bg};color:{fg};border:1px solid {border};'
+            f'border-radius:4px;padding:3px 10px;font-size:11px;font-family:monospace;cursor:pointer">'
+            f'{label}</button>'
+        )
+    return "".join(parts)
 
 
 def load_history():
@@ -133,7 +185,8 @@ def parse_all_subagents():
             continue
         cr, inp = totals["cache_read"], totals["input"]
         result[key] = {
-            "date_jst": mtime_jst.strftime("%Y-%m-%d"),
+            "date_jst":     mtime_jst.strftime("%Y-%m-%d"),
+            "datetime_jst": mtime_jst.isoformat(),
             "session_id": session_id,
             "agent_id": agent_id,
             "subagent_type": "unknown",
@@ -216,35 +269,44 @@ def aggregate_daily(entries):
 
 def build_task_chart_data(sa_entries):
     rows = sorted(
-        (e for e in sa_entries.values() if e.get("subagent_type") == "game-director"),
-        key=lambda x: x["date_jst"]
-    )[-20:]
-    labels = [r["date_jst"][5:] + " " + (r.get("description") or "")[:18] for r in rows]
-    eff    = [r["effective_tokens"] for r in rows]
-    cache  = [r["cached_rate"] for r in rows]
-    return json.dumps(labels), json.dumps(eff), json.dumps(cache)
+        (e for e in sa_entries.values()
+         if e.get("subagent_type") == "game-director" and e["date_jst"] >= TASK_FILTER_FROM),
+        key=lambda x: x.get("datetime_jst", x["date_jst"])
+    )
+    def make_dataset(filtered):
+        return {
+            "labels": [r["date_jst"][5:] + " " + (r.get("description") or "")[:18] for r in filtered],
+            "eff":    [r["effective_tokens"] for r in filtered],
+            "cache":  [r["cached_rate"] for r in filtered],
+            "turns":  [r.get("turns", 0) for r in filtered],
+        }
+    result = {"all": make_dataset(rows)}
+    for sc in ("S", "M", "L", "XL"):
+        result[sc] = make_dataset([r for r in rows if get_scale(r.get("turns", 0)) == sc])
+    return json.dumps(result)
 
 
 def build_sa_table(sa_entries, cp_dates):
     all_rows = sorted(
-        (e for e in sa_entries.values() if e.get("subagent_type") == "game-director" and e["date_jst"] >= "2026-05-08"),
+        (e for e in sa_entries.values() if e.get("subagent_type") == "game-director" and e["date_jst"] >= TASK_FILTER_FROM),
         key=lambda x: (x["date_jst"], x["effective_tokens"]), reverse=True
     )
     if not all_rows:
         return '<p style="color:#484f58;text-align:center;padding:16px;font-size:12px">データなし</p>'
     max_eff = max(r["effective_tokens"] for r in all_rows) or 1
 
+    # 8列: 識別×2 + 規模×3(バッジ+ターン+実質) + キャッシュ×3
     thead = (
         '<thead>'
         '<tr style="border-bottom:1px solid #21262d">'
-        '<th colspan="3" style="padding:4px 8px;color:#484f58;font-weight:500;font-size:10px;text-align:left">識別</th>'
-        '<th colspan="2" style="padding:4px 8px;color:#484f58;font-weight:500;font-size:10px;text-align:right">規模</th>'
+        '<th colspan="2" style="padding:4px 8px;color:#484f58;font-weight:500;font-size:10px;text-align:left">識別</th>'
+        '<th colspan="3" style="padding:4px 8px;color:#484f58;font-weight:500;font-size:10px;text-align:right">規模</th>'
         '<th colspan="3" style="padding:4px 8px;color:#484f58;font-weight:500;font-size:10px;text-align:right">キャッシュ詳細</th>'
         '</tr>'
         '<tr style="border-bottom:1px solid #30363d">'
         '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:left;white-space:nowrap;font-size:11px">日付</th>'
-        '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:left;font-size:11px">種別</th>'
-        '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:left;min-width:200px;font-size:11px">タスク</th>'
+        '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:left;min-width:180px;font-size:11px">タスク</th>'
+        '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:center;font-size:11px">規模</th>'
         '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:right;white-space:nowrap;font-size:11px">ターン</th>'
         '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:right;min-width:130px;font-size:11px">実質</th>'
         '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:right;white-space:nowrap;font-size:11px">Read</th>'
@@ -256,13 +318,14 @@ def build_sa_table(sa_entries, cp_dates):
     def make_row(r):
         is_cp = r["date_jst"] in cp_dates
         bg = "background:rgba(245,158,11,0.06);" if is_cp else ""
-        stype = r.get("subagent_type", "unknown")
-        color = BADGE_CONFIG.get(stype, "#484f58")
-        badge = (
-            f'<span style="background:{color}22;color:{color};border:1px solid {color}55;'
-            f'border-radius:3px;padding:1px 6px;font-size:10px;font-family:monospace;white-space:nowrap">{stype}</span>'
+        scale = get_scale(r.get("turns", 0))
+        sc_color = SCALE_COLOR[scale]
+        scale_badge = (
+            f'<span style="background:{sc_color}22;color:{sc_color};border:1px solid {sc_color}55;'
+            f'border-radius:3px;padding:1px 6px;font-size:10px;font-family:monospace">{scale}</span>'
         )
-        desc = ((r.get("description") or "") or stype)[:60]
+        raw_desc = (r.get("description") or "")
+        desc = DESCRIPTION_OVERRIDES.get(raw_desc, raw_desc or stype)[:60]
         date_disp = r["date_jst"][5:] + (" ★" if is_cp else "")
         bar_pct = round(r["effective_tokens"] / max_eff * 100)
         bar = (
@@ -274,10 +337,10 @@ def build_sa_table(sa_entries, cp_dates):
         )
         rate_color = "#3fb950" if r["cached_rate"] >= 90 else "#d29922" if r["cached_rate"] >= 70 else "#f85149"
         return (
-            f'<tr style="{bg}border-bottom:1px solid #21262d">'
+            f'<tr data-scale="{scale}" style="{bg}border-bottom:1px solid #21262d">'
             f'<td style="padding:7px 8px;color:#7d8590;white-space:nowrap;font-family:monospace;font-size:11px">{date_disp}</td>'
-            f'<td style="padding:7px 8px">{badge}</td>'
-            f'<td style="padding:7px 8px;color:#e6edf3;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{desc}">{desc}</td>'
+            f'<td style="padding:7px 8px;color:#e6edf3;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{desc}">{desc}</td>'
+            f'<td style="padding:7px 8px;text-align:center">{scale_badge}</td>'
             f'<td style="padding:7px 8px;font-family:monospace;text-align:right;color:#7d8590;font-size:11px">{r.get("turns","—")}</td>'
             f'<td style="padding:7px 8px">{bar}</td>'
             f'<td style="padding:7px 8px;font-family:monospace;text-align:right;color:#484f58;font-size:11px">{format_compact(r["cache_read_tokens"])}</td>'
@@ -291,9 +354,10 @@ def build_sa_table(sa_entries, cp_dates):
     if rest:
         rest_tbl = f'<table style="width:100%;border-collapse:collapse;font-size:12px">{thead}<tbody>{"".join(make_row(r) for r in rest)}</tbody></table>'
         main_tbl += (
-            f'<details style="margin-top:2px"><summary style="padding:8px;color:#7d8590;font-size:11px;'
+            f'<details class="rest-details" style="margin-top:2px">'
+            f'<summary style="padding:8px;color:#7d8590;font-size:11px;'
             f'cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px">'
-            f'<span class="chevron">▶</span> 残り {len(rest)} 件を表示</summary>'
+            f'<span class="chevron">▶</span> <span class="rest-count">残り {len(rest)} 件を表示</span></summary>'
             f'<div style="overflow-x:auto;margin-top:2px">{rest_tbl}</div></details>'
         )
     return main_tbl
@@ -381,14 +445,15 @@ def build_html(history, checkpoints, sa_entries):
     kpi_sa_eff = format_compact(sum(sa_daily.get(d, 0) for d in recent))
     sa_summary = build_sa_summary(sa_entries)
     sa_table = build_sa_table(sa_entries, cp_dates)
-    task_labels, task_eff, task_cache = build_task_chart_data(sa_entries)
+    task_scale_data = build_task_chart_data(sa_entries)
+    scale_filter_buttons = build_scale_buttons()
     ts = datetime.now(JST).strftime("%Y-%m-%d %H:%M JST")
     return (ROOT / "scripts/pet_template.html").read_text().format(
         ts=ts, kpi_eff=f"{kpi_eff:,}", kpi_cache=kpi_cache, kpi_sess=kpi_sess,
         kpi_sa_eff=kpi_sa_eff,
         labels=json.dumps(dates), eff=json.dumps(eff), cache=json.dumps(cache),
         sa_eff=json.dumps(sa_eff), ann=ann_js,
-        task_labels=task_labels, task_eff=task_eff, task_cache=task_cache,
+        task_scale_data=task_scale_data, scale_filter_buttons=scale_filter_buttons,
         sa_summary=sa_summary, sa_table=sa_table,
     )
 

@@ -95,10 +95,25 @@ export class Karakuri {
   }
 
   manualPurge(partId, partType) {
-    if (partType === 'tech')   { this.purged_tech.add(partId);  this.recalculateStats(); return true; }
-    if (partType === 'stat')   { this.purged_stats.add(partId); this.recalculateStats(); return true; }
-    if (partType === 'option') { this.purged_option = true; this.purge_guard_count = 0; return true; }
-    return false;
+    // パーツデータから en_purge_recovery を取得してENを回復
+    const partData = findTechPart(partId) || findStatPart(partId) || findOptionPart(partId);
+    const recovery = partData?.en_purge_recovery ?? 0;
+    if (partType === 'tech') {
+      this.purged_tech.add(partId);
+      this.recalculateStats();
+    } else if (partType === 'stat') {
+      this.purged_stats.add(partId);
+      this.recalculateStats();
+    } else if (partType === 'option') {
+      this.purged_option = true;
+      this.purge_guard_count = 0;
+    } else {
+      return false;
+    }
+    if (recovery > 0) {
+      this.current_en = Math.min(this.stats.max_en, this.current_en + recovery);
+    }
+    return recovery;
   }
 
   autoPurge() {
@@ -120,7 +135,10 @@ export class Karakuri {
       return { purged: false, shutdown: true };
     }
     const target = candidates[Math.floor(Math.random() * candidates.length)];
-    this.manualPurge(target.id, target.type);
+    // autoPurge は独自EN回復（max_en × 40%）を使うため、直接パージ処理を実行
+    if (target.type === 'tech')   { this.purged_tech.add(target.id);  this.recalculateStats(); }
+    if (target.type === 'stat')   { this.purged_stats.add(target.id); this.recalculateStats(); }
+    if (target.type === 'option') { this.purged_option = true; this.purge_guard_count = 0; }
     const recovered = Math.floor(this.stats.max_en * 0.4);
     this.current_en = Math.min(this.stats.max_en, this.current_en + recovered);
     this.current_st = this.current_en;

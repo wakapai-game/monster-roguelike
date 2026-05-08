@@ -492,7 +492,13 @@ function _startLoop() {
 
 export function handleTurn(player, activeMonster) {
   if (player === 1) {
-    showAttackPhase(activeMonster);
+    // ターン開始時ENドレイン（ATBゲージ充填のエネルギーを消費）
+    activeMonster.current_en = Math.max(0, activeMonster.current_en - 10);
+    if (activeMonster.current_en === 0) {
+      showTurnStartPurgeUI(activeMonster);
+    } else {
+      showAttackPhase(activeMonster);
+    }
   } else {
     // Enemy Turn: immediately lock player input, then show defense UI
     actionMenu.classList.add('hide');
@@ -752,6 +758,78 @@ export function setupSwapButton(phaseType, currentMonster, enemyAttacker, enemyS
         btnSwapAction.style.opacity = '0.5';
         btnSwapAction.onclick = null;
     }
+}
+
+// ─── ターン開始ENドレイン：パージ選択UI ────────────────────────────────
+function showTurnStartPurgeUI(monster) {
+  updateUI();
+  toast(`<span class="log-system"><b>${monster.name}</b> のENが切れた！ギアをパージして続行するか？</span>`);
+
+  // action-menu を非表示にしてパージ専用UIを構築
+  actionMenu.classList.add('hide');
+
+  const purgePanel   = document.getElementById('purge-select-panel');
+  const purgeList    = document.getElementById('purge-parts-list');
+  if (!purgePanel || !purgeList) { showAttackPhase(monster); return; }
+
+  // パネルを開く
+  purgePanel.classList.remove('hide');
+  purgeList.innerHTML = '';
+
+  const active = monster.getActiveParts();
+  const hasPurgeable = active.tech.length > 0 || active.stats.length > 0 || !!active.option;
+
+  if (!hasPurgeable) {
+    // パージできるギアなし → 敵ターン移行
+    purgePanel.classList.add('hide');
+    toast(`<span class="log-system">パージできるギアがない！行動をスキップ</span>`);
+    appState.timeline.onActionCompleted(1);
+    updateUI();
+    setTimeout(() => resumeLoop(), 200);
+    return;
+  }
+
+  // スキップボタン
+  const skipBtn = document.createElement('button');
+  skipBtn.className = 'btn skill-btn';
+  skipBtn.style.cssText = 'width:100%; margin-bottom:6px;';
+  skipBtn.innerHTML = '<span style="color:#94a3b8;">スキップ（行動しない）</span>';
+  skipBtn.onclick = () => {
+    purgePanel.classList.add('hide');
+    appState.timeline.onActionCompleted(1);
+    updateUI();
+    setTimeout(() => resumeLoop(), 200);
+  };
+  purgeList.appendChild(skipBtn);
+
+  // パージ可能ギア一覧
+  const addBtn = (label, partId, partType, recovery) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn skill-btn';
+    btn.style.cssText = 'width:100%; margin-bottom:6px; text-align:left; padding:6px 10px;';
+    btn.innerHTML = `<span style="color:#c4b5fd;">&#x1F4A5; ${label}</span><span style="color:#64748b; font-size:0.75rem; margin-left:8px;">EN+${recovery}</span>`;
+    btn.onclick = () => {
+      monster.manualPurge(partId, partType);
+      toast(`<span class="log-system">${monster.name} は <b>${label}</b> をパージ！EN+${recovery}回復</span>`);
+      purgePanel.classList.add('hide');
+      updateUI();
+      showAttackPhase(monster);
+    };
+    purgeList.appendChild(btn);
+  };
+
+  active.tech.forEach(id => {
+    const p = findTechPart(id);
+    if (p) addBtn(p.name, id, 'tech', p.en_purge_recovery ?? 0);
+  });
+  active.stats.forEach(id => {
+    const p = findStatPart(id);
+    if (p) addBtn(p.name, id, 'stat', p.en_purge_recovery ?? 0);
+  });
+  if (active.option) {
+    const p = findOptionPart(active.option);
+    if (p) addBtn(p.name, active.option, 'option', p.en_purge_recovery ?? 0);
+  }
 }
 
 // ─── ギアパージUI ──────────────────────────────────────────────────
