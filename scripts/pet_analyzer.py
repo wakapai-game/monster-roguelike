@@ -214,6 +214,17 @@ def aggregate_daily(entries):
     return sorted(daily.keys()), daily
 
 
+def build_task_chart_data(sa_entries):
+    rows = sorted(
+        (e for e in sa_entries.values() if e.get("subagent_type") == "game-director"),
+        key=lambda x: x["date_jst"]
+    )[-20:]
+    labels = [r["date_jst"][5:] + " " + (r.get("description") or "")[:18] for r in rows]
+    eff    = [r["effective_tokens"] for r in rows]
+    cache  = [r["cached_rate"] for r in rows]
+    return json.dumps(labels), json.dumps(eff), json.dumps(cache)
+
+
 def build_sa_table(sa_entries, cp_dates):
     all_rows = sorted(
         (e for e in sa_entries.values() if e.get("subagent_type") == "game-director" and e["date_jst"] >= "2026-05-08"),
@@ -370,12 +381,14 @@ def build_html(history, checkpoints, sa_entries):
     kpi_sa_eff = format_compact(sum(sa_daily.get(d, 0) for d in recent))
     sa_summary = build_sa_summary(sa_entries)
     sa_table = build_sa_table(sa_entries, cp_dates)
+    task_labels, task_eff, task_cache = build_task_chart_data(sa_entries)
     ts = datetime.now(JST).strftime("%Y-%m-%d %H:%M JST")
     return (ROOT / "scripts/pet_template.html").read_text().format(
         ts=ts, kpi_eff=f"{kpi_eff:,}", kpi_cache=kpi_cache, kpi_sess=kpi_sess,
         kpi_sa_eff=kpi_sa_eff,
         labels=json.dumps(dates), eff=json.dumps(eff), cache=json.dumps(cache),
         sa_eff=json.dumps(sa_eff), ann=ann_js,
+        task_labels=task_labels, task_eff=task_eff, task_cache=task_cache,
         sa_summary=sa_summary, sa_table=sa_table,
     )
 
