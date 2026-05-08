@@ -48,40 +48,40 @@
 ## 2. ファイル構成
 
 ```
-karakuri_web/
-├── index.html              # ゲームコンテナ（全画面のHTMLを含む）
-├── app.js                  # 画面遷移・ゲームループ統合制御
-├── game.js                 # Karakuri / Timeline クラス定義
-├── state.js                # グローバル状態（appState）
-├── data.js                 # ゲームデータ定義（モンスター・技・ギア）
-├── map.js                  # マップジェネレータ
-├── persistence.js          # セーブ/ロード（localStorage）
-├── test-engines.js         # バトルエンジン実装（4パターン）
-├── title-art.js            # タイトルロゴ Canvas 描画
-├── styles.css              # 全スタイル定義
-├── design_context.md       # UI設計の補足メモ（CSS変数・ID依存）
-├── DESIGN.md               # 本設計書
-├── title_logo.png          # タイトルロゴ画像
+karakuri_web/                        命名規約: [CATEGORY]_[Module]_[Action].js
+├── index.html                       # ゲームコンテナ（全画面のHTMLを含む）
+├── app.js                           # 画面遷移・ゲームループ統合制御 [entrypoint例外]
+├── DATA_Game_Master.js              # 全マスターデータ（モンスター・技・ギア・アイテム）
+├── DATA_App_State.js                # グローバル状態（appState）
+├── LOGIC_Battle_Core.js             # Karakuri / Timeline クラス定義
+├── LOGIC_Battle_Engines.js          # バトルエンジン実装（EngineCase1-4）
+├── LOGIC_Map_Generator.js           # マップジェネレータ
+├── LOGIC_Save_Persistence.js        # セーブ/ロード（localStorage）
+├── LOGIC_Audio_BGM.js               # BGM/SE管理・画面遷移で自動切替
+├── LOGIC_Sprite_Generator.js        # キャラスプライト生成（procedural Canvas）
+├── UI_Title_Art.js                  # タイトルロゴ Canvas 描画
+├── styles.css                       # 全スタイル定義
+├── design_context.md                # UI設計の補足メモ（CSS変数・ID依存）
+├── DESIGN.md                        # 本設計書
+├── .claudecode_index.md             # ファイルインデックス（Claude用）
+├── title_logo.png                   # タイトルロゴ画像
 ├── ui/
-│   ├── dom.js              # DOM要素セレクタ集約
-│   ├── battle.js           # バトル画面UIロジック
-│   ├── inventory.js        # パーティ・持ち物画面
-│   ├── map-render.js       # マップ描画・戦利品UI
-│   ├── gear-deck.js        # ギアデッキUI（ワザ/ボディ/コア統合）
-│   ├── presentation.js     # スライドプレゼン（5枚）
-│   ├── tutorial.js         # チュートリアルシステム
-│   ├── help.js             # ヘルプ・属性相性表・用語集
-│   ├── encyclopedia.js     # 図鑑（ビルガマタ・ジュウマ・技・アイテム）
-│   ├── sprite-generator.js # キャラスプライト生成（procedural）
-│   ├── effects.js          # 攻撃エフェクト・ダメージポップアップ
-│   ├── start-scene.js      # タイトル画面モンスターパレード
-│   ├── bgm.js              # BGM/SE管理
-│   ├── dev-overlay.js      # デバッグオーバーレイ（常時表示）
-│   └── battle-test/
-│       ├── index.js        # テストモード統合
-│       ├── setup-ui.js     # テスト設定UI
-│       ├── headless.js     # ヘッドレステスト（確率計算）
-│       └── live-overlay.js # リアルタイムテストオーバーレイ
+│   ├── UI_Dom_Elements.js           # DOM要素セレクタ集約
+│   ├── UI_Battle_Main.js            # バトル画面UIロジック
+│   ├── UI_Inventory_Screen.js       # パーティ・持ち物画面
+│   ├── UI_Map_Render.js             # マップ描画・戦利品UI
+│   ├── UI_GearDeck_Render.js        # ギアデッキUI（ワザ/ボディ/コア統合）
+│   ├── UI_Cutscene_Presentation.js  # スライドプレゼン（5枚）
+│   ├── UI_Tutorial_Flow.js          # チュートリアルシステム
+│   ├── UI_Help_Screen.js            # ヘルプ・属性相性表・用語集
+│   ├── UI_Encyclopedia_Screen.js    # 図鑑（ビルガマタ・ジュウマ・技・アイテム）
+│   ├── UI_Visual_Effects.js         # 攻撃エフェクト・ダメージポップアップ
+│   ├── UI_Title_StartScene.js       # タイトル画面モンスターパレード
+│   ├── UI_Dev_Overlay.js            # デバッグオーバーレイ（常時表示）
+│   ├── UI_BattleTest_Core.js        # テストモード統合
+│   ├── UI_BattleTest_Setup.js       # テスト設定UI
+│   ├── UI_BattleTest_Headless.js    # ヘッドレステスト（確率計算）
+│   └── UI_BattleTest_LiveOverlay.js # リアルタイムテストオーバーレイ
 └── docs/
     └── plans/
         └── 2026-04-26-tutorial-party-rebuild.md
@@ -97,21 +97,21 @@ karakuri_web/
 ┌─────────────────────────────────────────┐
 │  app.js（画面遷移・ゲームフロー制御）         │
 ├─────────────────────────────────────────┤
-│  ui/ 層（各画面の描画・インタラクション）       │
-│  battle.js / inventory.js / gear-deck.js ...│
-├─────────────────────────────────────────┤
-│  game.js（Karakuri / Timeline クラス）      │
-│  test-engines.js（KarakuriEngine）         │
-├─────────────────────────────────────────┤
-│  state.js（appState グローバル状態）         │
-│  data.js（マスターデータ定数）               │
-│  persistence.js（セーブ/ロード）            │
+│  ui/ 層（各画面の描画・インタラクション）                │
+│  UI_Battle_Main / UI_Inventory_Screen / UI_GearDeck_Render ...│
+├─────────────────────────────────────────────────┤
+│  LOGIC_Battle_Core.js（Karakuri / Timeline クラス）  │
+│  LOGIC_Battle_Engines.js（KarakuriEngine）           │
+├─────────────────────────────────────────────────┤
+│  DATA_App_State.js（appState グローバル状態）        │
+│  DATA_Game_Master.js（マスターデータ定数）           │
+│  LOGIC_Save_Persistence.js（セーブ/ロード）          │
 └─────────────────────────────────────────┘
 ```
 
 ### グローバル状態（appState）
 
-`state.js` で定義。ゲーム全体で共有される。
+`DATA_App_State.js` で定義。ゲーム全体で共有される。
 
 ```javascript
 appState = {
@@ -217,7 +217,7 @@ unlockedStages = 1 → Quest1解放
 
 ### バトルエンジン（本番採用: KarakuriEngine）
 
-`test-engines.js` に4案を実装。本番はKarakuriEngine。
+`LOGIC_Battle_Engines.js` に4案を実装。本番はKarakuriEngine。
 
 | エンジン | 方式 | 備考 |
 |---------|------|------|
@@ -226,7 +226,7 @@ unlockedStages = 1 → Quest1解放
 | EngineCase3 | ENグラデーション | 実験版 |
 | **KarakuriEngine** | **EN管理 + autoPurge** | **本番採用** |
 
-### Karakuri クラス（`game.js`）
+### Karakuri クラス（`LOGIC_Battle_Core.js`）
 
 ```javascript
 class Karakuri {
@@ -265,7 +265,7 @@ class Karakuri {
 | `getAvailableTech()` | 使用可能なワザ一覧 |
 | `getActiveOption()` | 有効なコアギア取得 |
 
-### Timeline クラス（`game.js`）
+### Timeline クラス（`LOGIC_Battle_Core.js`）
 
 ATBゲージを管理し行動順を決定する。
 
@@ -357,7 +357,7 @@ POST_BATTLE（VICTORY/DEFEAT演出）
 
 ## 6. データ定義
 
-すべてのデータは `data.js` にJSオブジェクト定数として定義。
+すべてのデータは `DATA_Game_Master.js` にJSオブジェクト定数として定義。
 
 ### ビルガマタ（KARAKURI_DATA）
 
@@ -493,22 +493,22 @@ POST_BATTLE（VICTORY/DEFEAT演出）
 
 | ファイル | 担当画面 | 主な役割 |
 |---------|---------|---------|
-| `dom.js` | 全体 | `getElementById` 結果を集約export |
-| `battle.js` | バトル | トースト・ゲージ更新・スキル実行・アクションメニュー |
-| `inventory.js` | パーティ・持ち物 | 2ペインレイアウト・ギア装備切替・ドラッグ&ドロップ |
-| `gear-deck.js` | バトル | ギアデッキ表示（TECH/BODY/CORE 10枚統合） |
-| `map-render.js` | マップ | SVGノード描画・線描画・戦利品ボックス |
-| `tutorial.js` | チュートリアル | ステップ表示・スポットライト・進行管理 |
-| `help.js` | ヘルプ | 6タブ（バトル・EN/パージ・属性相性・技・育成・マップ） |
-| `encyclopedia.js` | 図鑑 | 4タブ（ビルガマタ・ジュウマ・技・アイテム） |
-| `sprite-generator.js` | 全体 | Canvas procedural pixel artスプライト生成 |
-| `effects.js` | バトル | 攻撃エフェクト・ダメージポップアップ・パージアニメ |
-| `start-scene.js` | タイトル | モンスターパレードCanvas描画 |
-| `bgm.js` | 全体 | BGM/SE管理・画面遷移で自動切替 |
-| `presentation.js` | プレゼン | スライドショー5枚 |
-| `dev-overlay.js` | 全体 | デバッグオーバーレイ（常時表示） |
+| `ui/UI_Dom_Elements.js` | 全体 | `getElementById` 結果を集約export |
+| `ui/UI_Battle_Main.js` | バトル | トースト・ゲージ更新・スキル実行・アクションメニュー |
+| `ui/UI_Inventory_Screen.js` | パーティ・持ち物 | 2ペインレイアウト・ギア装備切替・ドラッグ&ドロップ |
+| `ui/UI_GearDeck_Render.js` | バトル | ギアデッキ表示（TECH/BODY/CORE 10枚統合） |
+| `ui/UI_Map_Render.js` | マップ | SVGノード描画・線描画・戦利品ボックス |
+| `ui/UI_Tutorial_Flow.js` | チュートリアル | ステップ表示・スポットライト・進行管理 |
+| `ui/UI_Help_Screen.js` | ヘルプ | 6タブ（バトル・EN/パージ・属性相性・技・育成・マップ） |
+| `ui/UI_Encyclopedia_Screen.js` | 図鑑 | 4タブ（ビルガマタ・ジュウマ・技・アイテム） |
+| `LOGIC_Sprite_Generator.js` | 全体 | Canvas procedural pixel artスプライト生成 |
+| `ui/UI_Visual_Effects.js` | バトル | 攻撃エフェクト・ダメージポップアップ・パージアニメ |
+| `ui/UI_Title_StartScene.js` | タイトル | モンスターパレードCanvas描画 |
+| `LOGIC_Audio_BGM.js` | 全体 | BGM/SE管理・画面遷移で自動切替 |
+| `ui/UI_Cutscene_Presentation.js` | プレゼン | スライドショー5枚 |
+| `ui/UI_Dev_Overlay.js` | 全体 | デバッグオーバーレイ（常時表示） |
 
-### ギアデッキUI（`ui/gear-deck.js`）
+### ギアデッキUI（`ui/UI_GearDeck_Render.js`）
 
 バトル画面下部に10枚統合表示。TECH・BODY・CORE全スロットを一覧する。
 
@@ -516,7 +516,7 @@ POST_BATTLE（VICTORY/DEFEAT演出）
 - EN残量によってコストが赤く警告表示
 - タップで技使用 / 長押しでツールチップ
 
-### BGMトラック定義（`ui/bgm.js`）
+### BGMトラック定義（`LOGIC_Audio_BGM.js`）
 
 | トラック | 対応画面 |
 |---------|---------|
@@ -530,22 +530,22 @@ POST_BATTLE（VICTORY/DEFEAT演出）
 
 ## 8. 開発・テストツール
 
-### デバッグオーバーレイ（`ui/dev-overlay.js`）
+### デバッグオーバーレイ（`ui/UI_Dev_Overlay.js`）
 
 常時表示。以下の情報をリアルタイム表示:
 - 現在の画面ID
 - appState主要値
 - ATBゲージ・EN値
 
-### バトルテストモード（`ui/battle-test/`）
+### バトルテストモード（`ui/UI_BattleTest_*`）
 
 タイトル画面から「戦闘テスト」で起動。
 
 | ファイル | 機能 |
 |---------|------|
-| `setup-ui.js` | テスト対戦カードの設定UI |
-| `headless.js` | 1000回シミュレーション → 勝率・平均ターン数を算出 |
-| `live-overlay.js` | リアルタイムで戦闘ログ・ゲージをオーバーレイ表示 |
+| `UI_BattleTest_Setup.js` | テスト対戦カードの設定UI |
+| `UI_BattleTest_Headless.js` | 1000回シミュレーション → 勝率・平均ターン数を算出 |
+| `UI_BattleTest_LiveOverlay.js` | リアルタイムで戦闘ログ・ゲージをオーバーレイ表示 |
 
 ---
 
@@ -568,7 +568,7 @@ POST_BATTLE（VICTORY/DEFEAT演出）
 ### データ変更時の確認事項
 
 - バランス値（HP・ATK・DEF・SPD・EN）変更 → `DESIGN.md` のデータ表を更新
-- 新ギア・新モンスター追加 → `data.js` + 図鑑テキスト（`encyclopedia.js`）+ スプライト定義を同時更新
+- 新ギア・新モンスター追加 → `DATA_Game_Master.js` + 図鑑テキスト（`UI_Encyclopedia_Screen.js`）+ スプライト定義を同時更新
 - 属性追加 → `AFFINITY` マトリクスの全行/全列を更新
 
 ### 世界観・表記の固定事項

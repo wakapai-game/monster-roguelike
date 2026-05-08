@@ -1,21 +1,21 @@
-import { appState } from '../state.js';
-import { BATTLE_ITEMS_DATA, TECH_PARTS, STAT_PARTS, OPTION_PARTS } from '../data.js';
-import { findTechPart, findStatPart, findOptionPart } from '../game.js';
-import { renderGearDeck } from './gear-deck.js';
+import { appState } from '../DATA_App_State.js';
+import { BATTLE_ITEMS_DATA, TECH_PARTS, STAT_PARTS, OPTION_PARTS } from '../DATA_Game_Master.js';
+import { findTechPart, findStatPart, findOptionPart } from '../LOGIC_Battle_Core.js';
+import { renderGearDeck } from './UI_GearDeck_Render.js';
 
 function _getPartName(partId) {
   return (findTechPart(partId) || findStatPart(partId) || findOptionPart(partId))?.name || partId;
 }
-import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
-import { isTutorialActive, isTutorialFullMode, hasShownStep, showTutorialStep, hideTutorialHint } from './tutorial.js';
-import { playEffect } from './effects.js';
+import { generateMonsterSprite, createElementBadge } from '../LOGIC_Sprite_Generator.js';
+import { isTutorialActive, isTutorialFullMode, hasShownStep, showTutorialStep, hideTutorialHint } from './UI_Tutorial_Flow.js';
+import { playEffect } from './UI_Visual_Effects.js';
 import {
   actionMenu, actionPhaseHeader, actionTabs,
   defendWrapper, btnDefendAction, btnSwapAction, swapSelectPanel,
   skillButtons, itemButtons, btnTabSkills, btnTabItems,
   itemCountBadge,
   timelineQueue, toastContainer, battleLog
-} from './dom.js';
+} from './UI_Dom_Elements.js';
 
 // ---- Battle Start Fanfare ----
 export function playBattleStart(onDone) {

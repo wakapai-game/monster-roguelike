@@ -10,9 +10,9 @@
 
 | エージェント | 担当ファイル |
 |------------|------------|
-| **ui-engineer** | `karakuri_web/styles.css` / `karakuri_web/index.html` / `karakuri_web/ui/*.js` |
-| **logic-engineer** | `karakuri_web/game.js` / `test-engines.js` / `app.js` / `state.js` / `ui/battle.js` / `ui/tutorial.js` / `map.js` |
-| **data-engineer** | `karakuri_web/data.js` / `karakuri_web/persistence.js` |
+| **ui-engineer** | `karakuri_web/styles.css` / `karakuri_web/index.html` / `karakuri_web/ui/UI_*.js` |
+| **logic-engineer** | `karakuri_web/LOGIC_Battle_Core.js` / `LOGIC_Battle_Engines.js` / `LOGIC_Map_Generator.js` / `app.js` / `DATA_App_State.js` / `ui/UI_Battle_Main.js` / `ui/UI_Tutorial_Flow.js` |
+| **data-engineer** | `karakuri_web/DATA_Game_Master.js` / `karakuri_web/LOGIC_Save_Persistence.js` |
 
 ---
 

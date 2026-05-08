@@ -1,4 +1,4 @@
-import { MONSTERS_DATA, SKILLS } from '../data.js';
+import { MONSTERS_DATA, SKILLS } from '../DATA_Game_Master.js';
 
 // ---- HELP System ----
 

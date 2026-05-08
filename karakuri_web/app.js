@@ -1,12 +1,12 @@
 import { KARAKURI_DATA, JUMA_DATA, TUTORIAL_JUMA_1, TUTORIAL_JUMA_2, TUTORIAL_BOSS_JUMA,
          TECH_PARTS, MATERIAL_DATA, SYNTHESIS_RECIPES, QUEST_DATA,
-         MONSTERS_DATA, ENEMY_DATA } from './data.js';
-import { Karakuri, Timeline, BattleEngine, findTechPart } from './game.js';
+         MONSTERS_DATA, ENEMY_DATA } from './DATA_Game_Master.js';
+import { Karakuri, Timeline, BattleEngine, findTechPart } from './LOGIC_Battle_Core.js';
 
 const EGG_DATA = [];
 const Monster  = Karakuri;
-import { MapGenerator, TutorialMapGenerator } from './map.js';
-import { appState } from './state.js';
+import { MapGenerator, TutorialMapGenerator } from './LOGIC_Map_Generator.js';
+import { appState } from './DATA_App_State.js';
 import {
   screenStart, screenPresentation, screenEgg, screenMap, screenSelection,
   screenBattle, screenHub, screenReward,
@@ -14,23 +14,23 @@ import {
   btnHubInventory, btnMapInventory, btnHubParty, btnMapParty,
   btnCollectReward,
   switchScreen
-} from './ui/dom.js';
-import { initTutorial, showTutorialStep } from './ui/tutorial.js';
-import { openInventory, openParty } from './ui/inventory.js';
-import { renderMap, generateRewards, collectPendingReward } from './ui/map-render.js';
-import { toast, updateUI, resumeLoop, playBattleStart, handleTurn } from './ui/battle.js';
-import { startLiveTest, abortLiveTest, resetTestHP, stepEnemyOnly } from './ui/battle-test/index.js';
-import { renderBattleTestSetup, buildP1Data, buildP2Data } from './ui/battle-test/setup-ui.js';
-import { runHeadlessBattleN } from './ui/battle-test/headless.js';
-import { initLiveOverlay } from './ui/battle-test/live-overlay.js';
-import { openEncyclopedia } from './ui/encyclopedia.js';
-import { saveGame, loadGame, deleteSave } from './persistence.js';
-import { openHelp, openHelpTab, initHelp, openGlossary, initGlossary } from './ui/help.js';
-import { generateNPCSprite, generateUIIcon, generateEggSprite } from './ui/sprite-generator.js';
-import { initDevOverlay } from './ui/dev-overlay.js';
-import { initStartScene } from './ui/start-scene.js';
-import { play, stop, setVolume, getVolume, initBgmObserver, TRACKS, screenToBgm } from './ui/bgm.js';
-import { initPresentation } from './ui/presentation.js';
+} from './ui/UI_Dom_Elements.js';
+import { initTutorial, showTutorialStep } from './ui/UI_Tutorial_Flow.js';
+import { openInventory, openParty } from './ui/UI_Inventory_Screen.js';
+import { renderMap, generateRewards, collectPendingReward } from './ui/UI_Map_Render.js';
+import { toast, updateUI, resumeLoop, playBattleStart, handleTurn } from './ui/UI_Battle_Main.js';
+import { startLiveTest, abortLiveTest, resetTestHP, stepEnemyOnly } from './ui/UI_BattleTest_Core.js';
+import { renderBattleTestSetup, buildP1Data, buildP2Data } from './ui/UI_BattleTest_Setup.js';
+import { runHeadlessBattleN } from './ui/UI_BattleTest_Headless.js';
+import { initLiveOverlay } from './ui/UI_BattleTest_LiveOverlay.js';
+import { openEncyclopedia } from './ui/UI_Encyclopedia_Screen.js';
+import { saveGame, loadGame, deleteSave } from './LOGIC_Save_Persistence.js';
+import { openHelp, openHelpTab, initHelp, openGlossary, initGlossary } from './ui/UI_Help_Screen.js';
+import { generateNPCSprite, generateUIIcon, generateEggSprite } from './LOGIC_Sprite_Generator.js';
+import { initDevOverlay } from './ui/UI_Dev_Overlay.js';
+import { initStartScene } from './ui/UI_Title_StartScene.js';
+import { play, stop, setVolume, getVolume, initBgmObserver, TRACKS, screenToBgm } from './LOGIC_Audio_BGM.js';
+import { initPresentation } from './ui/UI_Cutscene_Presentation.js';
 
 // ---- ボタンアイコン（マップ画面・ハブ画面共通） ----
 [

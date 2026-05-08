@@ -1,8 +1,8 @@
 // ▼ 本番エンジン切替ライン
-export { KarakuriEngine as BattleEngine } from './test-engines.js';
+export { KarakuriEngine as BattleEngine } from './LOGIC_Battle_Engines.js';
 export const BATTLE_SYSTEM_VARIANT = 'karakuri';
 
-import { TECH_PARTS, STAT_PARTS, OPTION_PARTS } from './data.js';
+import { TECH_PARTS, STAT_PARTS, OPTION_PARTS } from './DATA_Game_Master.js';
 
 const CONSTANTS = {
   GAUGE_MAX: 100.0,

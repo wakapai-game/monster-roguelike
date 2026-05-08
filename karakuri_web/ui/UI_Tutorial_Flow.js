@@ -1,5 +1,5 @@
-import { appState } from '../state.js';
-import { BATTLE_SYSTEM_VARIANT } from '../game.js';
+import { appState } from '../DATA_App_State.js';
+import { BATTLE_SYSTEM_VARIANT } from '../LOGIC_Battle_Core.js';
 
 // ============================================================
 // バリアント別チュートリアルステップ定義

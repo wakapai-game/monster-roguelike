@@ -1,5 +1,5 @@
-import { Karakuri, Timeline, BattleEngine } from '../../game.js';
-import { appState } from '../../state.js';
+import { Karakuri, Timeline, BattleEngine } from '../LOGIC_Battle_Core.js';
+import { appState } from '../DATA_App_State.js';
 
 const MIN_STAT_VALUE = 1;
 let _snapshot = null;

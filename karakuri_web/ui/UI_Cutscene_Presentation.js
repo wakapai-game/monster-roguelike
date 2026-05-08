@@ -1,5 +1,5 @@
-import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
-import { MONSTERS_DATA } from '../data.js';
+import { generateMonsterSprite, createElementBadge } from '../LOGIC_Sprite_Generator.js';
+import { MONSTERS_DATA } from '../DATA_Game_Master.js';
 
 // ─── スライド定義 ────────────────────────────────────────────────
 const SLIDES = [

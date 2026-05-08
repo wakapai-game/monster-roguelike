@@ -1,5 +1,5 @@
-import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, TUTORIAL_ENEMY } from '../data.js';
-import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
+import { MONSTERS_DATA, ENEMY_DATA, SKILLS, BATTLE_ITEMS_DATA, TUTORIAL_ENEMY } from '../DATA_Game_Master.js';
+import { generateMonsterSprite, createElementBadge } from '../LOGIC_Sprite_Generator.js';
 
 const overlay = document.getElementById('screen-encyclopedia');
 const content = document.getElementById('enc-content');

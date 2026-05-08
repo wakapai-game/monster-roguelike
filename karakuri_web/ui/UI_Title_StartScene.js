@@ -6,8 +6,8 @@
  * - screen-start が非表示になると自動停止
  */
 
-import { MONSTERS_DATA, ENEMY_DATA } from '../data.js';
-import { generateMonsterSprite } from './sprite-generator.js';
+import { MONSTERS_DATA, ENEMY_DATA } from '../DATA_Game_Master.js';
+import { generateMonsterSprite } from '../LOGIC_Sprite_Generator.js';
 
 const PIXEL_SCALE = 4;          // 32px × 4 = 128px で描画
 const SPRITE_PX = 32 * PIXEL_SCALE;

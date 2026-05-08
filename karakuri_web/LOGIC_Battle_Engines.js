@@ -2,7 +2,7 @@
 // 全バトルエンジン実装の唯一の場所。
 // 本番エンジンの切替は game.js の切替ラインを1行変えるだけ。
 
-import { AFFINITY, TECH_PARTS, BATTLE_ITEMS_DATA } from './data.js';
+import { AFFINITY, TECH_PARTS, BATTLE_ITEMS_DATA } from './DATA_Game_Master.js';
 
 // 旧互換: SKILLSエイリアス（EngineCase1/2/3/4が参照）
 const SKILLS = TECH_PARTS;

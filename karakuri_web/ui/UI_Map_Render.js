@@ -1,7 +1,7 @@
-import { appState } from '../state.js';
-import { SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA } from '../data.js';
-import { mapNodesContainer, mapLinesContainer, rosterGrid, screenMap, screenSelection, switchScreen } from './dom.js';
-import { generateItemIcon } from './sprite-generator.js';
+import { appState } from '../DATA_App_State.js';
+import { SKILLS, BATTLE_ITEMS_DATA, FOOD_DATA } from '../DATA_Game_Master.js';
+import { mapNodesContainer, mapLinesContainer, rosterGrid, screenMap, screenSelection, switchScreen } from './UI_Dom_Elements.js';
+import { generateItemIcon } from '../LOGIC_Sprite_Generator.js';
 
 // ---- 戦利品ツールチップ ----
 const _tooltip = document.getElementById('reward-tooltip');

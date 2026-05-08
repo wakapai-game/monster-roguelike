@@ -1,6 +1,6 @@
-import { Karakuri, Timeline, BattleEngine } from '../../game.js';
-import { selectEnemySkill } from '../battle.js';
-import { buildKarakuri } from './index.js';
+import { Karakuri, Timeline, BattleEngine } from '../LOGIC_Battle_Core.js';
+import { selectEnemySkill } from './UI_Battle_Main.js';
+import { buildKarakuri } from './UI_BattleTest_Core.js';
 
 const MAX_TURNS = 1000;
 

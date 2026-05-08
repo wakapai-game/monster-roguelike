@@ -1,4 +1,4 @@
-import { KARAKURI_DATA, JUMA_DATA, STAT_PARTS, TECH_PARTS } from '../../data.js';
+import { KARAKURI_DATA, JUMA_DATA, STAT_PARTS, TECH_PARTS } from '../DATA_Game_Master.js';
 
 const MIN_STAT_VALUE = 1;
 

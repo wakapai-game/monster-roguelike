@@ -1,14 +1,14 @@
-import { appState } from '../state.js';
-import { SKILLS, TECH_PARTS, STAT_PARTS, FOOD_DATA } from '../data.js';
-import { Karakuri } from '../game.js';
-import { generateMonsterSprite, createElementBadge } from './sprite-generator.js';
+import { appState } from '../DATA_App_State.js';
+import { SKILLS, TECH_PARTS, STAT_PARTS, FOOD_DATA } from '../DATA_Game_Master.js';
+import { Karakuri } from '../LOGIC_Battle_Core.js';
+import { generateMonsterSprite, createElementBadge } from '../LOGIC_Sprite_Generator.js';
 import {
   switchScreen,
   screenInventory, screenParty, screenHub,
   invSkillsContent, invFoodContent,
   partyDetailsGrid, btnCloseInventory, btnCloseParty,
   btnMapParty
-} from './dom.js';
+} from './UI_Dom_Elements.js';
 
 let dragSrcIndex = -1;
 

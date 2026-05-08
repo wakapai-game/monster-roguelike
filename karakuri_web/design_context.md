@@ -109,7 +109,7 @@
 
 ## 2. State & Data（状態変数とデータ型）
 
-### appState（グローバル状態 — state.js）
+### appState（グローバル状態 — DATA_App_State.js）
 
 ```typescript
 appState: {
@@ -144,7 +144,7 @@ appState: {
 }
 ```
 
-### Monster インスタンス（game.js）
+### Monster インスタンス（LOGIC_Battle_Core.js）
 
 ```typescript
 Monster: {
@@ -288,9 +288,9 @@ font-family: 'Inter', sans-serif  （Google Fonts: weight 400/600/800）
    → スクロールを発生させるレイアウト変更は禁止
 
 3. **Canvas要素**  
-   - `#title-canvas` — タイトルロゴ（title-art.jsで生成）
+   - `#title-canvas` — タイトルロゴ（UI_Title_Art.jsで生成）
    - `#bg-pixel-canvas` — 背景パーティクル
-   - `#p1-sprite`, `#p2-sprite` — モンスタースプライト（sprite-generator.jsで生成）
+   - `#p1-sprite`, `#p2-sprite` — モンスタースプライト（LOGIC_Sprite_Generator.jsで生成）
    - 各モンスターカードのスプライト Canvas は width/height が JS で設定される  
    → Canvas 要素の position/size を CSS で強制変更しないこと
 
@@ -323,7 +323,7 @@ font-family: 'Inter', sans-serif  （Google Fonts: weight 400/600/800）
 ### 属性カラー（elem-badge）
 
 属性バッジはCanvasで描画されており、CSS直接制御ではない。  
-属性ごとのカラーコードは `ui/sprite-generator.js` 内で定義されている。
+属性ごとのカラーコードは `LOGIC_Sprite_Generator.js` 内で定義されている。
 
 ---
 

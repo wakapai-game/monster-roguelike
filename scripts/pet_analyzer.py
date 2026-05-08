@@ -53,6 +53,10 @@ BADGE_LABEL = {
 
 SCALE_COLOR = {"S": "#3fb950", "M": "#58a6ff", "L": "#f59e0b", "XL": "#f85149"}
 
+CP_COLORS = {"efficiency": "#58a6ff", "quality": "#3fb950", "observability": "#f59e0b"}
+CP_TYPE_JP = {"efficiency": "効率化", "quality": "品質", "observability": "観測"}
+CHECKPOINT_OVERVIEW_FROM = "Rational Naming Protocol"
+
 
 def get_scale(turns):
     t = int(turns) if turns else 0
@@ -267,7 +271,45 @@ def aggregate_daily(entries):
     return sorted(daily.keys()), daily
 
 
-def build_task_chart_data(sa_entries):
+def _cp_lines(filtered_rows, checkpoints):
+    """チェックポイントのX位置をタスク昇順インデックスで計算する。"""
+    result = []
+    for cp in (checkpoints or []):
+        boundary = -0.5
+        for idx, r in enumerate(filtered_rows):
+            if r["date_jst"] < cp["date"]:
+                boundary = idx + 0.5
+        result.append({"x": boundary, "label": cp["label"][:20], "type": cp["type"]})
+    return result
+
+
+def build_checkpoint_summary(checkpoints):
+    start = next(
+        (i for i, cp in enumerate(checkpoints) if CHECKPOINT_OVERVIEW_FROM in cp["label"]),
+        len(checkpoints)
+    )
+    rows = ""
+    for cp in checkpoints[start:]:
+        color = CP_COLORS.get(cp["type"], "#7d8590")
+        badge = CP_TYPE_JP.get(cp["type"], cp["type"])
+        rows += (
+            f'<tr>'
+            f'<td style="padding:5px 8px;color:#8b949e;font-family:monospace;white-space:nowrap;font-size:11px">{cp["date"][5:]}</td>'
+            f'<td style="padding:5px 8px">'
+            f'<span style="background:{color}22;color:{color};border:1px solid {color}44;'
+            f'border-radius:3px;padding:1px 6px;font-size:10px;font-family:monospace">{badge}</span></td>'
+            f'<td style="padding:5px 8px">'
+            f'<div style="color:#e6edf3;font-size:12px">{cp["label"]}</div>'
+            + (f'<div style="color:#7d8590;font-size:11px;margin-top:2px">{cp["note"]}</div>' if cp.get("note") else "")
+            + '</td>'
+            f'</tr>'
+        )
+    if not rows:
+        rows = '<tr><td colspan="3" style="color:#484f58;padding:10px 8px;font-size:12px">記録なし</td></tr>'
+    return f'<table style="width:100%;border-collapse:collapse">{rows}</table>'
+
+
+def build_task_chart_data(sa_entries, checkpoints=None):
     rows = sorted(
         (e for e in sa_entries.values()
          if e.get("subagent_type") == "game-director" and e["date_jst"] >= TASK_FILTER_FROM),
@@ -275,10 +317,11 @@ def build_task_chart_data(sa_entries):
     )
     def make_dataset(filtered):
         return {
-            "labels": [r["date_jst"][5:] + " " + (r.get("description") or "")[:18] for r in filtered],
-            "eff":    [r["effective_tokens"] for r in filtered],
-            "cache":  [r["cached_rate"] for r in filtered],
-            "turns":  [r.get("turns", 0) for r in filtered],
+            "labels":   [r["date_jst"][5:] + " " + (r.get("description") or "")[:18] for r in filtered],
+            "eff":      [r["effective_tokens"] for r in filtered],
+            "cache":    [r["cached_rate"] for r in filtered],
+            "turns":    [r.get("turns", 0) for r in filtered],
+            "cp_lines": _cp_lines(filtered, checkpoints),
         }
     result = {"all": make_dataset(rows)}
     for sc in ("S", "M", "L", "XL"):
@@ -286,11 +329,13 @@ def build_task_chart_data(sa_entries):
     return json.dumps(result)
 
 
-def build_sa_table(sa_entries, cp_dates):
+def build_sa_table(sa_entries, cp_dates, checkpoints=None):
     all_rows = sorted(
         (e for e in sa_entries.values() if e.get("subagent_type") == "game-director" and e["date_jst"] >= TASK_FILTER_FROM),
         key=lambda x: (x["date_jst"], x["effective_tokens"]), reverse=True
     )
+    cp_type_map  = {cp["date"]: cp["type"]  for cp in (checkpoints or [])}
+    cp_label_map = {cp["date"]: cp["label"] for cp in (checkpoints or [])}
     if not all_rows:
         return '<p style="color:#484f58;text-align:center;padding:16px;font-size:12px">データなし</p>'
     max_eff = max(r["effective_tokens"] for r in all_rows) or 1
@@ -349,15 +394,47 @@ def build_sa_table(sa_entries, cp_dates):
             f'</tr>'
         )
 
-    top, rest = all_rows[:20], all_rows[20:]
-    main_tbl = f'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">{thead}<tbody>{"".join(make_row(r) for r in top)}</tbody></table></div>'
-    if rest:
-        rest_tbl = f'<table style="width:100%;border-collapse:collapse;font-size:12px">{thead}<tbody>{"".join(make_row(r) for r in rest)}</tbody></table>'
+    # チェックポイント区切り行付きでHTML生成（降順: 新しい順）
+    seen_cp = set()
+    top_html = rest_html = ""
+    data_count = 0
+    for r in all_rows:
+        d = r["date_jst"]
+        if d in cp_dates and d not in seen_cp:
+            seen_cp.add(d)
+            cp_type = cp_type_map.get(d, "quality")
+            color = CP_COLORS.get(cp_type, "#7d8590")
+            badge_text = CP_TYPE_JP.get(cp_type, cp_type)
+            label = cp_label_map.get(d, d)[:35]
+            divider = (
+                f'<tr class="cp-divider" style="display:table-row">'
+                f'<td colspan="8" style="padding:5px 8px;border-top:1px dashed {color}66;'
+                f'border-bottom:1px dashed {color}33;color:{color};font-size:11px;'
+                f'font-family:monospace;background:{color}08">'
+                f'✦ <span style="background:{color}22;color:{color};border:1px solid {color}44;'
+                f'border-radius:3px;padding:1px 5px;font-size:10px">[{badge_text}]</span>'
+                f' {label}</td></tr>'
+            )
+            if data_count < 20:
+                top_html += divider
+            else:
+                rest_html += divider
+        row_html = make_row(r)
+        data_count += 1
+        if data_count <= 20:
+            top_html += row_html
+        else:
+            rest_html += row_html
+
+    main_tbl = f'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">{thead}<tbody>{top_html}</tbody></table></div>'
+    if rest_html:
+        rest_data_count = data_count - 20
+        rest_tbl = f'<table style="width:100%;border-collapse:collapse;font-size:12px">{thead}<tbody>{rest_html}</tbody></table>'
         main_tbl += (
             f'<details class="rest-details" style="margin-top:2px">'
             f'<summary style="padding:8px;color:#7d8590;font-size:11px;'
             f'cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px">'
-            f'<span class="chevron">▶</span> <span class="rest-count">残り {len(rest)} 件を表示</span></summary>'
+            f'<span class="chevron">▶</span> <span class="rest-count">残り {rest_data_count} 件を表示</span></summary>'
             f'<div style="overflow-x:auto;margin-top:2px">{rest_tbl}</div></details>'
         )
     return main_tbl
@@ -430,12 +507,16 @@ def build_html(history, checkpoints, sa_entries):
         d = e["date_jst"]
         sa_daily[d] = sa_daily.get(d, 0) + e["effective_tokens"]
     sa_eff = [sa_daily.get(d, 0) for d in dates]
-    cp_map = {cp["date"]: cp["label"] for cp in checkpoints}
-    cp_dates = {cp["date"] for cp in checkpoints}
+    cp_map      = {cp["date"]: cp["label"] for cp in checkpoints}
+    cp_type_map = {cp["date"]: cp["type"]  for cp in checkpoints}
+    cp_dates    = {cp["date"] for cp in checkpoints}
     ann_js = "".join(
-        f'"{d}":{{type:"line",xMin:{i},xMax:{i},borderColor:"#f59e0b",borderWidth:2,'
-        f'borderDash:[5,5],label:{{content:{json.dumps(cp_map[d])},display:true,'
-        f'position:"start",color:"#f59e0b",font:{{size:10}}}}}},'
+        f'"{d}":{{type:"line",xMin:{i},xMax:{i},'
+        f'borderColor:"{CP_COLORS.get(cp_type_map.get(d,"quality"),"#f59e0b")}",'
+        f'borderWidth:2,borderDash:[5,5],'
+        f'label:{{content:{json.dumps(cp_map[d])},display:true,position:"start",'
+        f'color:"{CP_COLORS.get(cp_type_map.get(d,"quality"),"#f59e0b")}",'
+        f'font:{{size:10}}}}}},'
         for i, d in enumerate(dates) if d in cp_map
     )
     recent = dates[-7:]
@@ -443,10 +524,11 @@ def build_html(history, checkpoints, sa_entries):
     kpi_cache = round(sum(daily[d]["cr_sum"] / daily[d]["n"] for d in recent if daily[d]["n"]) / len(recent), 1) if recent else 0
     kpi_sess = sum(len(daily[d]["sessions"]) for d in recent)
     kpi_sa_eff = format_compact(sum(sa_daily.get(d, 0) for d in recent))
-    sa_summary = build_sa_summary(sa_entries)
-    sa_table = build_sa_table(sa_entries, cp_dates)
-    task_scale_data = build_task_chart_data(sa_entries)
+    sa_summary        = build_sa_summary(sa_entries)
+    sa_table          = build_sa_table(sa_entries, cp_dates, checkpoints)
+    task_scale_data   = build_task_chart_data(sa_entries, checkpoints)
     scale_filter_buttons = build_scale_buttons()
+    checkpoint_summary = build_checkpoint_summary(checkpoints)
     ts = datetime.now(JST).strftime("%Y-%m-%d %H:%M JST")
     return (ROOT / "scripts/pet_template.html").read_text().format(
         ts=ts, kpi_eff=f"{kpi_eff:,}", kpi_cache=kpi_cache, kpi_sess=kpi_sess,
@@ -455,6 +537,7 @@ def build_html(history, checkpoints, sa_entries):
         sa_eff=json.dumps(sa_eff), ann=ann_js,
         task_scale_data=task_scale_data, scale_filter_buttons=scale_filter_buttons,
         sa_summary=sa_summary, sa_table=sa_table,
+        checkpoint_summary=checkpoint_summary,
     )
 
 
