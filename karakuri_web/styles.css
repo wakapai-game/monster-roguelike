@@ -2274,11 +2274,19 @@ header h1 {
   width: 30px; height: 30px;
   margin-left: -15px; margin-top: -15px;
   border-radius: 50%;
-  display: flex; justify-content: center; align-items: center;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
   font-weight: bold; font-size: 0.7rem;
   cursor: pointer;
   transition: all 0.3s ease;
   border: 2px solid #fff;
+  overflow: visible;
+}
+.node-label {
+  font-size: 0.55rem;
+  line-height: 1;
+  color: rgba(255,255,255,0.85);
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 .node.battle { background: #3b82f6; }

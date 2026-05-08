@@ -180,6 +180,7 @@ export function renderMap(onBattleStart) {
   });
 
   // Draw Nodes
+  const questPrefix = appState.isTutorialMap ? 'T' : appState.currentStage;
   nodes.forEach(node => {
     const el = document.createElement('div');
     el.className = `node ${node.type} ${node.state}`;
@@ -195,7 +196,15 @@ export function renderMap(onBattleStart) {
     if (node.type === 'event_item')  icon = "📦";
     if (node.type === 'event_equip') icon = "⚙️";
     if (node.type === 'event_stat')  icon = "🔩";
-    el.innerText = icon;
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'node-icon';
+    iconSpan.textContent = icon;
+    const nodeIndex = parseInt(node.id.split('_n')[1], 10) + 1;
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'node-label';
+    labelSpan.textContent = `${questPrefix}-${node.floor + 1}-${nodeIndex}`;
+    el.appendChild(iconSpan);
+    el.appendChild(labelSpan);
 
     if (node.state === 'available') {
       el.onclick = () => handleNodeClick(node, onBattleStart);

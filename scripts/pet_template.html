@@ -144,11 +144,11 @@ th{{font-weight:500}}
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div>
       <div class="chart-title">タスク別詳細推移</div>
-      <div class="chart-desc">青: 実質トークン　緑: キャッシュ率　橙: ターン数　2026-05-08以降（ゲームDR）</div>
+      <div class="chart-desc">青: 実質トークン　緑: キャッシュ率　橙: ターン数　{task_chart_desc}</div>
     </div>
     <div style="text-align:right">
       <div style="display:flex;gap:5px;align-items:center;justify-content:flex-end">{scale_filter_buttons}</div>
-      <div style="color:#8b949e;font-size:10px;margin-top:4px;font-family:monospace">S≤3T &nbsp;M≤8T &nbsp;L≤15T &nbsp;XL=16+T</div>
+      <div style="font-size:10px;margin-top:4px;font-family:monospace">{scale_legend}</div>
     </div>
   </div>
   <canvas id="chart3" height="60" style="margin-bottom:16px"></canvas>
@@ -216,7 +216,7 @@ const annotations = {{{ann}}};
 const cpColor = t => t==='efficiency'?'#58a6ff':t==='quality'?'#3fb950':'#f59e0b';
 const buildCpAnnotations = lines => Object.fromEntries(
   (lines||[]).map((cp,i) => ['cp'+i, {{
-    type:'line', xMin:cp.x, xMax:cp.x,
+    type:'line', xMin:cp.x, xMax:cp.x, clip:false,
     borderColor:cpColor(cp.type), borderWidth:1.5, borderDash:[4,4],
     label:{{content:cp.label, display:true, position:'start',
            color:cpColor(cp.type), font:{{size:9}}}}

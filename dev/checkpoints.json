@@ -1,6 +1,7 @@
 [
   {
     "date": "2026-05-08",
+    "after_task": 2,
     "label": "Rational Naming Protocol適用",
     "note": "24ファイルの命名を統一規則に変換し、CLAUDE.md/エージェントにルールを組み込み。ファイル名を見ただけで役割がわかり、今後の実装でも規則が自然に守られるよう整備",
     "type": "quality"

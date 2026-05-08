@@ -497,7 +497,7 @@ POST_BATTLE（VICTORY/DEFEAT演出）
 | `ui/UI_Battle_Main.js` | バトル | トースト・ゲージ更新・スキル実行・アクションメニュー |
 | `ui/UI_Inventory_Screen.js` | パーティ・持ち物 | 2ペインレイアウト・ギア装備切替・ドラッグ&ドロップ |
 | `ui/UI_GearDeck_Render.js` | バトル | ギアデッキ表示（TECH/BODY/CORE 10枚統合） |
-| `ui/UI_Map_Render.js` | マップ | SVGノード描画・線描画・戦利品ボックス |
+| `ui/UI_Map_Render.js` | マップ | SVGノード描画・線描画・戦利品ボックス・ノード位置番号表示（{quest}-{floor}-{node} 3階層形式: チュートリアルは T-1-1〜T-6-1、通常クエストは 1-1-1〜3-x-x） |
 | `ui/UI_Tutorial_Flow.js` | チュートリアル | ステップ表示・スポットライト・進行管理 |
 | `ui/UI_Help_Screen.js` | ヘルプ | 6タブ（バトル・EN/パージ・属性相性・技・育成・マップ） |
 | `ui/UI_Encyclopedia_Screen.js` | 図鑑 | 4タブ（ビルガマタ・ジュウマ・技・アイテム） |

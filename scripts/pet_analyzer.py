@@ -57,13 +57,32 @@ CP_COLORS = {"efficiency": "#58a6ff", "quality": "#3fb950", "observability": "#f
 CP_TYPE_JP = {"efficiency": "効率化", "quality": "品質", "observability": "観測"}
 CHECKPOINT_OVERVIEW_FROM = "Rational Naming Protocol"
 
+# エージェント種別ごとのターン数閾値 (S上限, M上限, L上限)
+# game-director: N=26全履歴の四分位 (p25=9, p50=24, p75=41) から丸め
+_SCALE_THRESHOLDS = {
+    "game-director": (10, 25, 45),
+}
+_SCALE_DEFAULT = (3, 8, 15)  # 会話・探索系エージェント向け
 
-def get_scale(turns):
+
+def get_scale(turns, agent_type=None):
     t = int(turns) if turns else 0
-    if t <= 3:  return "S"
-    if t <= 8:  return "M"
-    if t <= 15: return "L"
+    s, m, l = _SCALE_THRESHOLDS.get(agent_type, _SCALE_DEFAULT)
+    if t <= s: return "S"
+    if t <= m: return "M"
+    if t <= l: return "L"
     return "XL"
+
+
+def build_scale_legend(agent_type="game-director"):
+    s, m, l = _SCALE_THRESHOLDS.get(agent_type, _SCALE_DEFAULT)
+    c = SCALE_COLOR
+    return (
+        f'<span style="color:{c["S"]}">S≤{s}T</span>&nbsp;&nbsp;'
+        f'<span style="color:{c["M"]}">M≤{m}T</span>&nbsp;&nbsp;'
+        f'<span style="color:{c["L"]}">L≤{l}T</span>&nbsp;&nbsp;'
+        f'<span style="color:{c["XL"]}">XL≥{l+1}T</span>'
+    )
 
 
 def build_scale_buttons():
@@ -271,14 +290,35 @@ def aggregate_daily(entries):
     return sorted(daily.keys()), daily
 
 
+def get_gd_tasks(sa_entries):
+    """game-directorタスクを時系列昇順で返し、_task_id（1始まり）を付与する。"""
+    rows = sorted(
+        (e for e in sa_entries.values()
+         if e.get("subagent_type") == "game-director" and e["date_jst"] >= TASK_FILTER_FROM),
+        key=lambda x: x.get("datetime_jst", x["date_jst"])
+    )
+    for i, r in enumerate(rows):
+        r["_task_id"] = i + 1
+    return rows
+
+
 def _cp_lines(filtered_rows, checkpoints):
-    """チェックポイントのX位置をタスク昇順インデックスで計算する。"""
+    """チェックポイントのX位置をタスク昇順インデックスで計算する。after_task優先、なければ日付フォールバック。"""
     result = []
+    n = len(filtered_rows)
     for cp in (checkpoints or []):
+        after_task = cp.get("after_task")
         boundary = -0.5
-        for idx, r in enumerate(filtered_rows):
-            if r["date_jst"] < cp["date"]:
-                boundary = idx + 0.5
+        if after_task is not None:
+            for idx, r in enumerate(filtered_rows):
+                if r.get("_task_id", 0) <= after_task:
+                    boundary = idx + 0.5
+        else:
+            for idx, r in enumerate(filtered_rows):
+                if r["date_jst"] <= cp["date"]:
+                    boundary = idx + 0.5
+        if n > 0:
+            boundary = min(boundary, n - 1)
         result.append({"x": boundary, "label": cp["label"][:20], "type": cp["type"]})
     return result
 
@@ -310,14 +350,10 @@ def build_checkpoint_summary(checkpoints):
 
 
 def build_task_chart_data(sa_entries, checkpoints=None):
-    rows = sorted(
-        (e for e in sa_entries.values()
-         if e.get("subagent_type") == "game-director" and e["date_jst"] >= TASK_FILTER_FROM),
-        key=lambda x: x.get("datetime_jst", x["date_jst"])
-    )
+    rows = get_gd_tasks(sa_entries)
     def make_dataset(filtered):
         return {
-            "labels":   [r["date_jst"][5:] + " " + (r.get("description") or "")[:18] for r in filtered],
+            "labels":   [f'#{r["_task_id"]:03d}' for r in filtered],
             "eff":      [r["effective_tokens"] for r in filtered],
             "cache":    [r["cached_rate"] for r in filtered],
             "turns":    [r.get("turns", 0) for r in filtered],
@@ -325,30 +361,28 @@ def build_task_chart_data(sa_entries, checkpoints=None):
         }
     result = {"all": make_dataset(rows)}
     for sc in ("S", "M", "L", "XL"):
-        result[sc] = make_dataset([r for r in rows if get_scale(r.get("turns", 0)) == sc])
+        result[sc] = make_dataset([r for r in rows if get_scale(r.get("turns", 0), "game-director") == sc])
     return json.dumps(result)
 
 
 def build_sa_table(sa_entries, cp_dates, checkpoints=None):
-    all_rows = sorted(
-        (e for e in sa_entries.values() if e.get("subagent_type") == "game-director" and e["date_jst"] >= TASK_FILTER_FROM),
-        key=lambda x: (x["date_jst"], x["effective_tokens"]), reverse=True
-    )
+    all_rows = get_gd_tasks(sa_entries)
     cp_type_map  = {cp["date"]: cp["type"]  for cp in (checkpoints or [])}
     cp_label_map = {cp["date"]: cp["label"] for cp in (checkpoints or [])}
     if not all_rows:
         return '<p style="color:#484f58;text-align:center;padding:16px;font-size:12px">データなし</p>'
     max_eff = max(r["effective_tokens"] for r in all_rows) or 1
 
-    # 8列: 識別×2 + 規模×3(バッジ+ターン+実質) + キャッシュ×3
+    # 9列: 識別×3(ID+日付+タスク) + 規模×3(バッジ+ターン+実質) + キャッシュ×3
     thead = (
         '<thead>'
         '<tr style="border-bottom:1px solid #21262d">'
-        '<th colspan="2" style="padding:4px 8px;color:#484f58;font-weight:500;font-size:10px;text-align:left">識別</th>'
+        '<th colspan="3" style="padding:4px 8px;color:#484f58;font-weight:500;font-size:10px;text-align:left">識別</th>'
         '<th colspan="3" style="padding:4px 8px;color:#484f58;font-weight:500;font-size:10px;text-align:right">規模</th>'
         '<th colspan="3" style="padding:4px 8px;color:#484f58;font-weight:500;font-size:10px;text-align:right">キャッシュ詳細</th>'
         '</tr>'
         '<tr style="border-bottom:1px solid #30363d">'
+        '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:left;white-space:nowrap;font-size:11px">#</th>'
         '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:left;white-space:nowrap;font-size:11px">日付</th>'
         '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:left;min-width:180px;font-size:11px">タスク</th>'
         '<th style="padding:5px 8px;color:#7d8590;font-weight:500;text-align:center;font-size:11px">規模</th>'
@@ -360,17 +394,17 @@ def build_sa_table(sa_entries, cp_dates, checkpoints=None):
         '</tr></thead>'
     )
 
-    def make_row(r):
+    def make_row(r, task_id):
         is_cp = r["date_jst"] in cp_dates
         bg = "background:rgba(245,158,11,0.06);" if is_cp else ""
-        scale = get_scale(r.get("turns", 0))
+        scale = get_scale(r.get("turns", 0), "game-director")
         sc_color = SCALE_COLOR[scale]
         scale_badge = (
             f'<span style="background:{sc_color}22;color:{sc_color};border:1px solid {sc_color}55;'
             f'border-radius:3px;padding:1px 6px;font-size:10px;font-family:monospace">{scale}</span>'
         )
         raw_desc = (r.get("description") or "")
-        desc = DESCRIPTION_OVERRIDES.get(raw_desc, raw_desc or stype)[:60]
+        desc = DESCRIPTION_OVERRIDES.get(raw_desc, raw_desc or r.get("subagent_type", ""))[:60]
         date_disp = r["date_jst"][5:] + (" ★" if is_cp else "")
         bar_pct = round(r["effective_tokens"] / max_eff * 100)
         bar = (
@@ -383,6 +417,7 @@ def build_sa_table(sa_entries, cp_dates, checkpoints=None):
         rate_color = "#3fb950" if r["cached_rate"] >= 90 else "#d29922" if r["cached_rate"] >= 70 else "#f85149"
         return (
             f'<tr data-scale="{scale}" style="{bg}border-bottom:1px solid #21262d">'
+            f'<td style="padding:7px 8px;color:#484f58;white-space:nowrap;font-family:monospace;font-size:11px">#{task_id:03d}</td>'
             f'<td style="padding:7px 8px;color:#7d8590;white-space:nowrap;font-family:monospace;font-size:11px">{date_disp}</td>'
             f'<td style="padding:7px 8px;color:#e6edf3;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{desc}">{desc}</td>'
             f'<td style="padding:7px 8px;text-align:center">{scale_badge}</td>'
@@ -394,37 +429,56 @@ def build_sa_table(sa_entries, cp_dates, checkpoints=None):
             f'</tr>'
         )
 
-    # チェックポイント区切り行付きでHTML生成（降順: 新しい順）
-    seen_cp = set()
+    # after_task指定ありのCPは task_id で挿入位置を決定、なしは date で決定
+    cp_after_map = {}  # task_id → (date, type, label)
+    cp_date_set  = set()
+    for cp in (checkpoints or []):
+        if "after_task" in cp:
+            cp_after_map[cp["after_task"]] = (cp["date"], cp.get("type", "quality"), cp.get("label", ""))
+        else:
+            cp_date_set.add(cp["date"])
+
+    def _make_divider(cp_date, cp_type, cp_label):
+        color = CP_COLORS.get(cp_type, "#7d8590")
+        badge_text = CP_TYPE_JP.get(cp_type, cp_type)
+        label = cp_label[:35]
+        return (
+            f'<tr class="cp-divider" style="display:table-row">'
+            f'<td colspan="9" style="padding:5px 8px;border-top:1px dashed {color}66;'
+            f'border-bottom:1px dashed {color}33;color:{color};font-size:11px;'
+            f'font-family:monospace;background:{color}08">'
+            f'✦ <span style="background:{color}22;color:{color};border:1px solid {color}44;'
+            f'border-radius:3px;padding:1px 5px;font-size:10px">[{badge_text}]</span>'
+            f' {label}</td></tr>'
+        )
+
+    # チェックポイント区切り行付きでHTML生成（昇順: 時系列）
+    seen_date_cp = set()
     top_html = rest_html = ""
     data_count = 0
     for r in all_rows:
         d = r["date_jst"]
-        if d in cp_dates and d not in seen_cp:
-            seen_cp.add(d)
+        tid = r["_task_id"]
+
+        # date基準のCP（after_task なし）→ その日付の最初のタスクの前に挿入
+        if d in cp_date_set and d not in seen_date_cp:
+            seen_date_cp.add(d)
             cp_type = cp_type_map.get(d, "quality")
-            color = CP_COLORS.get(cp_type, "#7d8590")
-            badge_text = CP_TYPE_JP.get(cp_type, cp_type)
-            label = cp_label_map.get(d, d)[:35]
-            divider = (
-                f'<tr class="cp-divider" style="display:table-row">'
-                f'<td colspan="8" style="padding:5px 8px;border-top:1px dashed {color}66;'
-                f'border-bottom:1px dashed {color}33;color:{color};font-size:11px;'
-                f'font-family:monospace;background:{color}08">'
-                f'✦ <span style="background:{color}22;color:{color};border:1px solid {color}44;'
-                f'border-radius:3px;padding:1px 5px;font-size:10px">[{badge_text}]</span>'
-                f' {label}</td></tr>'
-            )
-            if data_count < 20:
-                top_html += divider
-            else:
-                rest_html += divider
-        row_html = make_row(r)
+            divider = _make_divider(d, cp_type, cp_label_map.get(d, d))
+            if data_count < 20: top_html += divider
+            else: rest_html += divider
+
+        row_html = make_row(r, tid)
         data_count += 1
-        if data_count <= 20:
-            top_html += row_html
-        else:
-            rest_html += row_html
+        if data_count <= 20: top_html += row_html
+        else: rest_html += row_html
+
+        # after_task基準のCP → そのタスクの直後に挿入
+        if tid in cp_after_map:
+            cp_d, cp_tp, cp_lb = cp_after_map[tid]
+            divider = _make_divider(cp_d, cp_tp, cp_lb)
+            if data_count <= 20: top_html += divider
+            else: rest_html += divider
 
     main_tbl = f'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">{thead}<tbody>{top_html}</tbody></table></div>'
     if rest_html:
@@ -529,6 +583,11 @@ def build_html(history, checkpoints, sa_entries):
     task_scale_data   = build_task_chart_data(sa_entries, checkpoints)
     scale_filter_buttons = build_scale_buttons()
     checkpoint_summary = build_checkpoint_summary(checkpoints)
+    scale_legend = build_scale_legend("game-director")
+    gd_all = sum(1 for e in sa_entries.values() if e.get("subagent_type") == "game-director")
+    gd_filtered = sum(1 for e in sa_entries.values()
+                      if e.get("subagent_type") == "game-director" and e["date_jst"] >= TASK_FILTER_FROM)
+    task_chart_desc = f"{TASK_FILTER_FROM}以降 {gd_filtered}件（全{gd_all}件）（ゲームDR）"
     ts = datetime.now(JST).strftime("%Y-%m-%d %H:%M JST")
     return (ROOT / "scripts/pet_template.html").read_text().format(
         ts=ts, kpi_eff=f"{kpi_eff:,}", kpi_cache=kpi_cache, kpi_sess=kpi_sess,
@@ -538,6 +597,7 @@ def build_html(history, checkpoints, sa_entries):
         task_scale_data=task_scale_data, scale_filter_buttons=scale_filter_buttons,
         sa_summary=sa_summary, sa_table=sa_table,
         checkpoint_summary=checkpoint_summary,
+        scale_legend=scale_legend, task_chart_desc=task_chart_desc,
     )
 
 
