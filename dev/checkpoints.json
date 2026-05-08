@@ -18,5 +18,10 @@
     "date": "2026-05-08",
     "label": "PET v1.2: サブエージェント分析・タスク別比較ダッシュボード",
     "type": "observability"
+  },
+  {
+    "date": "2026-05-08",
+    "label": "Rational Naming Protocol適用: 24ファイルをCATEGORY_Module_Action形式に統一・NAMING_CONVENTION.md制定",
+    "type": "quality"
   }
 ]
